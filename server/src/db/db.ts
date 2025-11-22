@@ -3,12 +3,28 @@ import File from './file';
 import Course from './course';
 import DBflashcard from './flashcards';
 import Timer from './timer';
+import UserStats from './userstats';
 
 async function run() {
   await connect(process.env.MONGO_URI || 'mongodb://localhost:27017/reflash');
 
   // Initialize database with sample data only if it doesn't exist
   try {
+
+    const existingUserStat = await UserStats.findOne({ userId: 'sampleUser' });
+    if (!existingUserStat) {
+
+      const yesterday = new Date().getTime() - 24 * 60 * 60 * 1000;
+
+      const userStat = new UserStats({
+        userId: 'sampleUser',
+        streak: 0,
+        lastStudied: yesterday,
+      });
+
+      await userStat.save();
+      console.log('Sample user stats created');
+    }
 
     const timer = await Timer.findOne({});
     

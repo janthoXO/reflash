@@ -1,6 +1,7 @@
 import File from "./db/file";
 import Course from "./db/course";
 import Timer from "./db/timer";
+import UserStats from "./db/userstats";
 import DBflashcard from "./db/flashcards";
 import { Schema, Types } from "mongoose";
 import Flashcard from "./flashcard";
@@ -31,12 +32,11 @@ export async function getFlashcardsByCourseIds(courseIds: string, userId: string
 
     let results: Flashcard[] = [];
 
-    if (files.length >= 0) {
         for (const file of files) {
             const fileCards = await DBflashcard.find({ fileId: file._id }).lean();
             results = results.concat(fileCards);
         }
-    }
+
 
     console.log(`Found ${results.length} flashcards for courses: ${id}`);
     
@@ -44,7 +44,7 @@ export async function getFlashcardsByCourseIds(courseIds: string, userId: string
     const filteredResults = [];
     for (const card of results) {
         const timer = await Timer.findOne({ userId: userId, flashcardId: card._id });
-        if (timer && timer.time < currentTime) {
+        if (!timer || timer.time < currentTime) {
             filteredResults.push(card);
         }
     }
@@ -75,6 +75,11 @@ export async function getTimer(userId: string, cardId: string): Promise<number |
     return timer ? timer.time : null;
 }
 
+export async function getUserStats(userId: string): Promise<{number, number} | null> {
+    const stats = await UserStats.findOne({ userId: userId });
+    return stats ? { streak: stats.streak, lastStudied: stats.lastStudied } : null;
+}
+
 export async function updateCard(userId: string, cardId: string, solved: boolean): Promise<string> {
 
     if (solved) {
@@ -85,6 +90,33 @@ export async function updateCard(userId: string, cardId: string, solved: boolean
              { time: twentyFourHoursLater },
              { upsert: true, new: true }
         );
+
+        // check for user stats and update streak
+        const userStats = await UserStats.findOne({ userId: userId });
+        if (userStats) {
+            const lastStudiedDate = new Date(userStats.lastStudied);
+            const now = new Date();
+            const diffTime = now.getTime() - lastStudiedDate.getTime();
+            const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+
+            if (diffDays === 1) {
+                userStats.streak += 1;
+                userStats.lastStudied = now.getTime();
+                await userStats.save();
+            } else if (diffDays > 1) {
+                userStats.streak = 1;
+                userStats.lastStudied = now.getTime();
+                await userStats.save();
+            }
+        } else {
+            const newUserStats = new UserStats({
+                userId: userId,
+                streak: 1,
+                lastStudied: new Date().getTime(),
+            });
+            await newUserStats.save();  
+        }
+
         // log the updated time as date and time
         return `Timer updated to ${new Date(twentyFourHoursLater).toLocaleString()}`;
     } else {
@@ -129,7 +161,6 @@ async function processFiles(file: string, fileId: Types.ObjectId): Promise<any> 
     const cards = [];
     let llmResult;
     
-
         try {
             
             // Call LLM API to process the PDF
