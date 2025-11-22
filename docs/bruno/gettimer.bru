@@ -1,0 +1,21 @@
+meta {
+  name: gettimer
+  type: http
+  seq: 7
+}
+
+get {
+  url: {{base_url}}/api/flashcard/gettime?userId=sampleUser&cardId=6921ea084fa6850cfa1f4a74
+  body: json
+  auth: inherit
+}
+
+params:query {
+  userId: sampleUser
+  cardId: 6921ea084fa6850cfa1f4a74
+}
+
+settings {
+  encodeUrl: true
+  timeout: 0
+}
