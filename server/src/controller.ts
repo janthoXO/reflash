@@ -50,7 +50,8 @@ router.get("/cards", async (req, res) => {
 
   let flashcards: Flashcard[];
   try {
-    flashcards = await getFlashcardsByCourseIds(courseId as string, userId as string);
+    const idArray = Array.isArray(courseId) ? courseId : [courseId];
+    flashcards = await getFlashcardsByCourseIds(idArray as string, userId as string);
   } catch (error) {
     console.error("Error checking files in DB:", error);
     return res.status(500).json({ message: error instanceof Error ? error.message : String(error) });
@@ -103,7 +104,6 @@ router.post("/courses/:courseId/files", async (req, res) => {
   /* #swagger.description = 'Endpoint to upload files and process them into flashcards.' */
   
   try {
-    const contentType = req.headers['content-type'];
 
     const {courseUrl, fileUrl, filename, data} = req.body;
 

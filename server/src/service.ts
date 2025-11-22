@@ -2,7 +2,7 @@ import File from "./db/file";
 import Course from "./db/course";
 import Timer from "./db/timer";
 import DBflashcard from "./db/flashcards";
-import { Schema } from "mongoose";
+import { Schema, Types } from "mongoose";
 import Flashcard from "./flashcard";
 import { callLLMApi } from "./llmservice";
 
@@ -13,15 +13,45 @@ export async function checkFilesInDB(filenames: string[]): Promise<Map<string, b
     return new Map(filenames.map(name => [name, fileSet.has(name)]));
 }
 
-export async function getFlashcardsByCourseId(courseIds: string, userId: string): Promise<Flashcard[]> {
+export async function getFlashcardsByCourseIds(courseIds: string, userId: string): Promise<Flashcard[]> {
     const currentTime = new Date().getTime();
-    let results = await DBflashcard.find({ courseId: { $in: courseIds } });
-    results = results.filter(async (card) => {
-        const timer = await Timer.findOne({ userId: userId, flashcardId: card._id });
-        return (timer && timer.time < currentTime);
-    });
 
-    return results;
+    // Ensure it's a string and sanitize
+    const sanitizedCourseIds = String(courseIds).trim();
+
+    // Validate ObjectId format BEFORE creating ObjectId
+    if (!Types.ObjectId.isValid(sanitizedCourseIds)) {
+        console.error(`Invalid ObjectId format: "${sanitizedCourseIds}"`);
+        throw new Error(`Invalid course ID format: ${sanitizedCourseIds}`);
+    }
+
+    const id = new Types.ObjectId(sanitizedCourseIds);
+    let files = await File.find({ courseId: id }).lean();
+    console.log(`Found ${files.length} files for course: ${id}`);
+
+    let results: Flashcard[] = [];
+
+    if (files.length >= 0) {
+        for (const file of files) {
+            const fileCards = await DBflashcard.find({ fileId: file._id }).lean();
+            results = results.concat(fileCards);
+        }
+    }
+
+    console.log(`Found ${results.length} flashcards for courses: ${id}`);
+    
+    // Fix the async filter - need to properly handle Promise.all
+    const filteredResults = [];
+    for (const card of results) {
+        const timer = await Timer.findOne({ userId: userId, flashcardId: card._id });
+        if (timer && timer.time < currentTime) {
+            filteredResults.push(card);
+        }
+    }
+
+    console.log(`Filtered to ${filteredResults.length} due flashcards for user: ${userId}`);
+
+    return filteredResults;
 }
 
 async function getCourseIdByUrl(courseUrl: string): Promise<Schema.Types.ObjectId> {
@@ -90,11 +120,6 @@ export async function createCards(file: string, url: string, fileName: string, f
 
 
     return result;
-}
-
-interface FileData {
-    filename: string;
-    buffer: Buffer;
 }
 
 async function processFiles(file: string, fileId: Types.ObjectId): Promise<any> {
