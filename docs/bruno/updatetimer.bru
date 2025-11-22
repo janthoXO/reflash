@@ -1,11 +1,11 @@
 meta {
-  name: gettimer
+  name: updatetimer
   type: http
-  seq: 7
+  seq: 8
 }
 
 get {
-  url: {{base_url}}/api/flashcard/gettime?userId=sampleUser&cardId=6921ea084fa6850cfa1f4a74
+  url: {{base_url}}/api/flashcard/update?userId=sampleUser&cardId=6921ea084fa6850cfa1f4a74&solved=true
   body: json
   auth: inherit
 }
@@ -13,6 +13,7 @@ get {
 params:query {
   userId: sampleUser
   cardId: 6921ea084fa6850cfa1f4a74
+  solved: true
 }
 
 settings {

@@ -1,5 +1,5 @@
 import express from "express";
-import { checkFilesInDB, getFlashcardsByCourseIds, createCards, getTimer } from "./service";
+import { checkFilesInDB, getFlashcardsByCourseIds, createCards, getTimer, updateCard } from "./service";
 import Flashcard from "./flashcard";
 
 const router = express.Router();
@@ -20,7 +20,7 @@ router.get("/hello2", (req, res) => {
 });
 
 
-router.get("/files", async (req, res) => {
+router.get("/courses/:courseId/files", async (req, res) => {
   /* #swagger.description = 'Check if files are in the databse.' */
   
   const fileNames = req.query.filenames as string[];
@@ -41,16 +41,16 @@ router.get("/files", async (req, res) => {
 });
 
 
-router.get("/getcards", async (req, res) => {
-  /* #swagger.description = 'Endpoint to get flashcards.' */  
+router.get("/cards", async (req, res) => {
+  /* #swagger.description = 'Endpoint to get all due flashcards.' */  
 
-  const courseIds = req.query.courseIds as string[];
-  console.log("Received file names:", courseIds);
+  const {courseId, userId} = req.query;
+
+  console.log("Received file names:", courseId);
 
   let flashcards: Flashcard[];
   try {
-    const idArray = Array.isArray(courseIds) ? courseIds : [courseIds];
-    flashcards = await getFlashcardsByCourseIds(idArray);
+    flashcards = await getFlashcardsByCourseIds(courseId as string, userId as string);
   } catch (error) {
     console.error("Error checking files in DB:", error);
     return res.status(500).json({ message: error instanceof Error ? error.message : String(error) });
@@ -61,7 +61,7 @@ router.get("/getcards", async (req, res) => {
   return res.status(200).json(flashcards);
 });
 
-router.get("/flashcardtime", async (req, res) => {
+router.get("/flashcard/gettime", async (req, res) => {
   /* #swagger.description = 'Endpoint to get a flashcards repitition timer.' */
   const {userId, cardId} = req.query;
 
@@ -79,8 +79,24 @@ router.get("/flashcardtime", async (req, res) => {
   
 });
 
+router.put("/flashcard", async (req, res) => {
+  /* #swagger.description = 'Endpoint to send flashcard result.' */
+  const {userId, cardId, solved} = req.query;
 
+  if (!userId || typeof userId !== 'string' || !cardId || typeof cardId !== 'string' || !solved || (solved !== 'true' && solved !== 'false')) {
+    return res.status(400).json({ message: 'flashcardId and solved query parameters are required' });
+  }
 
+  try {    
+    const bool: boolean = solved === 'true';
+    const msg = await updateCard(userId, cardId, bool);
+    return res.status(200).json({ message: 'Flashcard result updated successfully. ' + msg });
+  } catch (error) {
+    console.error("Error updating flashcard result in DB:", error);
+    return res.status(500).json({ message: error instanceof Error ? error.message : String(error) });
+  }
+  
+});
 
 
 router.post("/courses/:courseId/files", async (req, res) => {
@@ -89,28 +105,20 @@ router.post("/courses/:courseId/files", async (req, res) => {
   try {
     const contentType = req.headers['content-type'];
 
-    const {courseUrl} = req.query;
+    const {courseUrl, fileUrl, filename, data} = req.body;
 
     if (!courseUrl || typeof courseUrl !== 'string') {
       return res.status(400).json({ message: 'courseUrl query parameter is required' });
     }
     
-    if (!contentType || !contentType.includes('application/pdf')) {
-      console.log('Invalid content type:', contentType);
-      return res.status(400).json({ message: 'Only PDF files are supported' });
-    }
-
-    const pdfBuffer = req.body as Buffer;
     
-    if (!pdfBuffer || pdfBuffer.length === 0) {
+    if (!data || data.length === 0) {
       return res.status(400).json({ message: 'No file data received' });
     }
 
-    const filename = req.headers['x-filename'] as string;
+    //const filename = req.headers['x-filename'] as string;
 
-    console.log(`Processing PDF file: ${filename}, size: ${pdfBuffer.length} bytes`);
-
-    const result = await createCards([{ filename: filename, buffer: pdfBuffer }], courseUrl, filename);
+    const result = await createCards(data, courseUrl, filename, fileUrl);
     
     res.status(200).json(result);
 

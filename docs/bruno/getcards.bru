@@ -5,13 +5,13 @@ meta {
 }
 
 get {
-  url: {{base_url}}/api/getcards?getcards=http://example.com/course1
+  url: {{base_url}}/api/getcards?courseId=http://example.com/course1
   body: json
   auth: inherit
 }
 
 params:query {
-  getcards: http://example.com/course1
+  courseId: http://example.com/course1
 }
 
 settings {

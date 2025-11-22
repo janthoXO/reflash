@@ -9,9 +9,8 @@ export function startLLMSession() {
     ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY || '' });
 }
 
-export async function callLLMApi(fileData: { filename: string; content: string; contentType: string }): Promise<Flashcard[]> {
+export async function callLLMApi(fileData: { content: string; contentType: string }): Promise<Flashcard[]> {
 
-    console.log('Calling LLM API for file:', fileData.filename);
 
     const flashcardSchema = z.object({
       question: z.string().describe("The question part of the flashcard"),

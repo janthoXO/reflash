@@ -13,8 +13,14 @@ export async function checkFilesInDB(filenames: string[]): Promise<Map<string, b
     return new Map(filenames.map(name => [name, fileSet.has(name)]));
 }
 
-export async function getFlashcardsByCourseIds(courseIds: string[]): Promise<Flashcard[]> {
-    const results = await DBflashcard.find({ courseId: { $in: courseIds } });
+export async function getFlashcardsByCourseId(courseIds: string, userId: string): Promise<Flashcard[]> {
+    const currentTime = new Date().getTime();
+    let results = await DBflashcard.find({ courseId: { $in: courseIds } });
+    results = results.filter(async (card) => {
+        const timer = await Timer.findOne({ userId: userId, flashcardId: card._id });
+        return (timer && timer.time < currentTime);
+    });
+
     return results;
 }
 
@@ -37,7 +43,31 @@ export async function getTimer(userId: string, cardId: string): Promise<number |
     return timer ? timer.time : null;
 }
 
-export async function createCards(files: FileData[], url: string, fileName: string): Promise<any> {
+export async function updateCard(userId: string, cardId: string, solved: boolean): Promise<string> {
+
+    if (solved) {
+        // If solved, update timer to 24h from now
+        const twentyFourHoursLater = new Date().getTime() + 24 * 60 * 60 * 1000;
+        await Timer.findOneAndUpdate
+            ({ userId: userId, flashcardId: cardId },
+             { time: twentyFourHoursLater },
+             { upsert: true, new: true }
+        );
+        // log the updated time as date and time
+        return `Timer updated to ${new Date(twentyFourHoursLater).toLocaleString()}`;
+    } else {
+        // If not solved, update timer to 5 minutes from now
+        const fiveMinutesLater = new Date().getTime() + 5 * 60 * 1000;
+        await Timer.findOneAndUpdate(
+            { userId: userId, flashcardId: cardId },
+            { time: fiveMinutesLater },
+            { upsert: true, new: true }
+        );
+        return `Timer updated to ${new Date(fiveMinutesLater).toLocaleString()}`;
+    }
+}
+
+export async function createCards(file: string, url: string, fileName: string, fileUrl: string): Promise<any> {
 
     const courseId = await getCourseIdByUrl(url);
     
@@ -45,16 +75,16 @@ export async function createCards(files: FileData[], url: string, fileName: stri
     console.log("courseId type: " + typeof courseId);
 
     // insert new file into DB
-    const file = new File({
+    const dbfile = new File({
         filename : fileName,
         courseId: courseId,
     });
-    await file.save();
+    await dbfile.save();
 
     // create flashcards with LLM
-    const cards = await processFiles(files, file._id);
+    const cards = await processFiles(file, dbfile._id);
 
-    const result = { fileId: file._id, filename: fileName, courseId: courseId, cards: cards };
+    const result = { fileId: dbfile._id, filename: fileName, courseId: courseId, cards: cards };
 
     console.log("Created flashcards:", result);
 
@@ -67,22 +97,17 @@ interface FileData {
     buffer: Buffer;
 }
 
-async function processFiles(files: FileData[], fileId: Types.ObjectId): Promise<any> {
+async function processFiles(file: string, fileId: Types.ObjectId): Promise<any> {
 
     const cards = [];
     let llmResult;
     
-    for (const file of files) {
+
         try {
-            console.log(`Processing file: ${file.filename}`);
-            
-            // Convert PDF buffer to base64 for API transmission
-            const base64Data = file.buffer.toString('base64');
             
             // Call LLM API to process the PDF
             llmResult = await callLLMApi({
-                filename: file.filename,
-                content: base64Data,
+                content: file,
                 contentType: 'application/pdf'
             });
 
@@ -97,10 +122,10 @@ async function processFiles(files: FileData[], fileId: Types.ObjectId): Promise<
             }
             
         } catch (error) {
-            console.error(`Error processing file ${file.filename}:`, error);
+            console.error(`Error processing file: `, error);
             return Promise.reject(error);
         }
-    }
+    
     
     return cards;
 }
