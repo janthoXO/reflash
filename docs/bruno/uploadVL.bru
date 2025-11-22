@@ -1,0 +1,32 @@
+meta {
+  name: uploadVL
+  type: http
+  seq: 6
+}
+
+post {
+  url: {{base_url}}/api/courses/2/files?courseUrl=http://example.com/course1
+  body: file
+  auth: inherit
+}
+
+params:query {
+  courseUrl: http://example.com/course1
+}
+
+headers {
+  x-filename: slides
+}
+
+body:multipart-form {
+  file: @file(testing.pdf)
+}
+
+body:file {
+  file: @file(Playtesting-and-AI-Approaches.pdf) @contentType(application/pdf)
+}
+
+settings {
+  encodeUrl: true
+  timeout: 0
+}
