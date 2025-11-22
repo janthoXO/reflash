@@ -1,0 +1,8 @@
+services:
+  mongo:
+    image: mongo:8.0.15
+    ports:
+      - "27017:27017"
+    command: --replSet rs0 --bind_ip_all
+    volumes:
+      - ./init_replica.js:/docker-entrypoint-initdb.d/00init_replica.js
