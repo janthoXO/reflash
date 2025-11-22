@@ -1,0 +1,9 @@
+{
+  "version": "1",
+  "name": "Reflash",
+  "type": "collection",
+  "ignore": [
+    "node_modules",
+    ".git"
+  ]
+}

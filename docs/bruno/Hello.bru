@@ -1,0 +1,15 @@
+meta {
+  name: Hello
+  type: http
+  seq: 1
+}
+
+get {
+  url: {{base_url}}/api/controller/hello
+  body: none
+  auth: inherit
+}
+
+settings {
+  encodeUrl: true
+}
