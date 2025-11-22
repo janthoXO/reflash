@@ -57,8 +57,10 @@ export async function getFlashcardsByCourseIds(courseIds: string, userId: string
 async function getCourseIdByUrl(courseUrl: string): Promise<Schema.Types.ObjectId> {
     const course = await Course.findOne({ url: courseUrl }).lean();
     if (!course) {
-        console.log("courseUrl: ", courseUrl);
-        throw new Error(`Course with URL ${courseUrl} not found`);
+        console.log("course not found, inserting course with url: ", courseUrl);
+        const newCourse = new Course({ url: courseUrl });
+        await newCourse.save();
+        return newCourse._id;
     }
     return course._id;
 }
