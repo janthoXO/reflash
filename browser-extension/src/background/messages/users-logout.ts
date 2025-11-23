@@ -8,7 +8,7 @@ const handler: PlasmoMessaging.MessageHandler<{}, {}> = async (
 ) => {
   console.debug("Received user-logout", req.body)
 
-  storage.set("user", undefined)
+  await storage.remove("user")
 
   res.send({})
 }

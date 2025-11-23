@@ -4,10 +4,10 @@ import { fetchUserInfo } from "~api/user"
 import { storage } from "~background"
 import type { User } from "~models/user"
 
-const handler: PlasmoMessaging.MessageHandler<{ userId: string }, {}> = async (
-  req,
-  res
-) => {
+const handler: PlasmoMessaging.MessageHandler<
+  { userId: string },
+  User
+> = async (req, res) => {
   console.debug("Received user-login", req.body)
 
   const info = await fetchUserInfo(req.body.userId)
@@ -18,7 +18,7 @@ const handler: PlasmoMessaging.MessageHandler<{ userId: string }, {}> = async (
 
   storage.set("user", user)
 
-  res.send(info)
+  res.send(user)
 }
 
 export default handler

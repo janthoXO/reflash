@@ -1,12 +1,16 @@
 import "./style.css"
-import { useUser } from "~hooks/useUser"
-import Login from "~login"
-import Training from "~training"
+import { MemoryRouter } from "react-router-dom"
+import { UserProvider } from "~contexts/UserContext"
+import { Routing } from "~routes"
 
 function IndexPopup() {
-  const { user } = useUser()
-
-  return user ? <Training /> : <Login />
+  return (
+    <UserProvider>
+      <MemoryRouter>
+        <Routing />
+      </MemoryRouter>
+    </UserProvider>
+  )
 }
 
 export default IndexPopup

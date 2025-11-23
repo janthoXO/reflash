@@ -1,12 +1,15 @@
-import "./style.css"
+import "~style.css"
+
+import { Loader2 } from "lucide-react"
+import { useEffect, useState } from "react"
+import { useNavigate } from "react-router-dom"
+
 import { Button } from "~components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "~components/ui/card"
-import { useState } from "react"
-import { useUser } from "~hooks/useUser"
-import { Loader2 } from "lucide-react"
+import { useUser } from "~contexts/UserContext"
 
 function Login() {
-  const { login, loading } = useUser()
+  const { user, login, loading } = useUser()
   const [userId, setUserId] = useState("")
 
   function handleLogin() {
@@ -23,7 +26,9 @@ function Login() {
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="space-y-2">
-            <label htmlFor="userId" className="text-sm font-medium text-foreground">
+            <label
+              htmlFor="userId"
+              className="text-sm font-medium text-foreground">
               User ID
             </label>
             <input

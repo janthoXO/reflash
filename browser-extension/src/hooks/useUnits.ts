@@ -9,19 +9,21 @@ export function useUnits() {
   const [units, setUnits] = useState<Record<string, Unit>>({})
   const [loading, setLoading] = useState(false)
 
-  async function fetchUnits(userId: string, courseUrl: string) {
+  async function fetchUnits(courseUrl: string) {
     setLoading(true)
     try {
       console.debug("Send units-fetch")
 
       const units: Unit[] = await sendToBackground({
         name: "units-fetch",
-        body: { courseUrl, userId }
+        body: { courseUrl }
       })
+      console.log("Received units", units)
       const unitsMap: Record<string, Unit> = {}
       units.forEach((unit) => {
         unitsMap[unit.fileId] = unit
       })
+      setUnits(unitsMap)
     } catch (error) {
       console.error("Error in fetchCards:", error)
     } finally {
@@ -84,10 +86,15 @@ export function useUnits() {
 
       // remove from units as it will be trained later
       setUnits((prevUnits) => {
-        const updatedUnits = { ...prevUnits }
-        Object.values(updatedUnits).forEach((unit) => {
+        const updatedUnits: Record<string, Unit> = {}
+        Object.entries(prevUnits).forEach(([fileId, unit]) => {
           if (unit.cards) {
-            unit.cards = unit.cards.filter((card) => card._id !== cardId)
+            updatedUnits[fileId] = {
+              ...unit,
+              cards: unit.cards.filter((card) => card._id !== cardId)
+            }
+          } else {
+            updatedUnits[fileId] = unit
           }
         })
         return updatedUnits

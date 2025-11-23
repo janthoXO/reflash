@@ -1,4 +1,4 @@
-import "./style.css"
+import "~style.css"
 
 import {
   Check,
@@ -16,7 +16,8 @@ import { Card, CardContent } from "~components/ui/card"
 import { useCourses } from "~hooks/useCourses"
 import { useNotifications } from "~hooks/useNotifications"
 import { useUnits } from "~hooks/useUnits"
-import { useUser } from "~hooks/useUser"
+import { useUser } from "~contexts/UserContext"
+import { useNavigate } from "react-router-dom"
 
 function Training() {
   const { units, loading, generateCards, answerCard, fetchUnits } = useUnits()
@@ -28,13 +29,10 @@ function Training() {
   const [flashcards, setFlashcards] = useState([])
 
   useEffect(() => {
-    if (!user) {
-      return
-    }
     courses.forEach((course) => {
-      fetchUnits(user.id, course.url)
+      fetchUnits(course.url)
     })
-  }, [user, courses])
+  }, [courses])
 
   useEffect(() => {
     console.debug("Units updated in training", units)
@@ -163,7 +161,7 @@ function Training() {
               <div className="flex gap-2">
                 <Button
                   onClick={() => onAnswerCard(false)}
-                  variant="destructive"
+                  variant="default"
                   className="flex-1 gap-2">
                   <XCircle className="h-4 w-4" />
                   Wrong
