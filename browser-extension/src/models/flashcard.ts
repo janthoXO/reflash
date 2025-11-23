@@ -1,5 +1,5 @@
 export interface Flashcard {
-  id: string
-  front: string
-  back: string
+  _id: string
+  question: string
+  answer: string
 }
