@@ -92,7 +92,7 @@ function Training() {
               ) : (
                 <>
                   <Upload />
-                  Upload PDFs
+                  Update Cards
                 </>
               )}
             </Button>
