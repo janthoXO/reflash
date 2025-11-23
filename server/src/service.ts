@@ -7,26 +7,17 @@ import { Schema, Types } from "mongoose";
 import Flashcard from "./flashcard";
 import { callLLMApi } from "./llmservice";
 
-export async function checkFilesInDB(filenames: string[]): Promise<Map<string, boolean>>  {
-    const results = await File.find({ filename: { $in: filenames } });
-    const fileSet = new Set(results?.map(file => file.filename));
-    console.log("files array size: " + filenames.length);
-    return new Map(filenames.map(name => [name, fileSet.has(name)]));
+export async function checkFilesInDB(fileUrls: string[]): Promise<Map<string, boolean>>  {
+    const results = await File.find({ fileUrl: { $in: fileUrls } });
+    const fileSet = new Set(results?.map(file => file.fileUrl));
+    return new Map(fileUrls.map(name => [name, fileSet.has(name)]));
 }
 
-export async function getFlashcardsByCourseIds(courseIds: string, userId: string): Promise<Flashcard[]> {
+export async function getFlashcardsByCourseIds(courseUrl: string, userId: string): Promise<Flashcard[]> {
     const currentTime = new Date().getTime();
 
-    // Ensure it's a string and sanitize
-    const sanitizedCourseIds = String(courseIds).trim();
 
-    // Validate ObjectId format BEFORE creating ObjectId
-    if (!Types.ObjectId.isValid(sanitizedCourseIds)) {
-        console.error(`Invalid ObjectId format: "${sanitizedCourseIds}"`);
-        throw new Error(`Invalid course ID format: ${sanitizedCourseIds}`);
-    }
-
-    const id = new Types.ObjectId(sanitizedCourseIds);
+    const id = await getCourseIdByUrl(courseUrl);
     let files = await File.find({ courseId: id }).lean();
     console.log(`Found ${files.length} files for course: ${id}`);
 
@@ -146,17 +137,16 @@ export async function createCards(file: string, url: string, fileName: string, f
     await dbfile.save();
 
     // create flashcards with LLM
-    const cards = await processFiles(file, dbfile._id);
+    const {courseName, cards} = await processFiles(file, dbfile._id);
 
-    const result = { fileId: dbfile._id, filename: fileName, courseId: courseId, cards: cards };
+    const result = { fileId: dbfile._id, filename: fileName, courseId: courseId, courseName: courseName, cards: cards };
 
-    console.log("Created flashcards:", result);
-
+    console.log("Created flashcards.");
 
     return result;
 }
 
-async function processFiles(file: string, fileId: Types.ObjectId): Promise<any> {
+async function processFiles(file: string, fileId: Types.ObjectId): Promise<{courseName: string, cards: Flashcard[]}> {
 
     const cards = [];
     let llmResult;
@@ -169,7 +159,9 @@ async function processFiles(file: string, fileId: Types.ObjectId): Promise<any> 
                 contentType: 'application/pdf'
             });
 
-            for (const card of llmResult) {
+            console.log(`LLM returned ${llmResult.cards.length} flashcards for course: ${llmResult.courseName}`);
+
+            for (const card of llmResult.cards) {
                 const flashcard = new DBflashcard({
                     fileId: fileId,
                     question: card.question,
@@ -183,8 +175,10 @@ async function processFiles(file: string, fileId: Types.ObjectId): Promise<any> 
             console.error(`Error processing file: `, error);
             return Promise.reject(error);
         }
+
+    const courseName = llmResult.courseName;
     
     
-    return cards;
+    return {courseName, cards};
 }
 

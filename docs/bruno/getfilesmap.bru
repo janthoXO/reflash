@@ -1,0 +1,21 @@
+meta {
+  name: getfilesmap
+  type: http
+  seq: 3
+}
+
+get {
+  url: {{base_url}}/api/courses/1/files?fileUrls=http://example.com/course1/file1.pdf&fileUrls=test2
+  body: json
+  auth: inherit
+}
+
+params:query {
+  fileUrls: http://example.com/course1/file1.pdf
+  fileUrls: test2
+}
+
+settings {
+  encodeUrl: true
+  timeout: 0
+}

@@ -11,6 +11,34 @@ async function run() {
   // Initialize database with sample data only if it doesn't exist
   try {
 
+    const existingCourse = await Course.findOne({ url: 'http://example.com/course1' });
+    
+    if (!existingCourse) {
+      const session = await File.db.startSession();
+      await session.withTransaction(async () => {
+        const course = new Course({
+          url: 'http://example.com/course1',
+          name: 'Sample Course'
+        });
+
+        await course.save({ session });
+
+        const courseId = course._id;
+
+        const file = new File({
+          filename: 'test2',
+          courseId: courseId,
+          fileUrl: 'http://example.com/course1/file1.pdf'
+        });
+
+        await file.save({ session });
+      });
+      session.endSession();
+      console.log('Database initialized with sample data');
+    } else {
+      console.log('Database already initialized, skipping sample data creation');
+    }
+
     const existingUserStat = await UserStats.findOne({ userId: 'sampleUser' });
     if (!existingUserStat) {
 
@@ -43,33 +71,10 @@ async function run() {
       console.log('Timer already exists, skipping sample timer creation');
     }
 
-    const existingCourse = await Course.findOne({ url: 'http://example.com/course1' });
     
-    if (!existingCourse) {
-      const session = await File.db.startSession();
-      await session.withTransaction(async () => {
-        const course = new Course({
-          url: 'http://example.com/course1'
-        });
-
-        await course.save({ session });
-
-        const courseId = course._id;
-
-        const file = new File({
-          filename: 'test2',
-          courseId: courseId,
-        });
-
-        await file.save({ session });
-      });
-      session.endSession();
-      console.log('Database initialized with sample data');
-    } else {
-      console.log('Database already initialized, skipping sample data creation');
-    }
   } catch (error) {
     console.log('Database initialization completed (some entries may already exist)');
+    console.error(error);
   }
 }
 

@@ -14,13 +14,13 @@ router.use((req, res, next) => {
 router.get("/courses/:courseId/files", async (req, res) => {
   /* #swagger.description = 'Check if files are in the databse.' */
   
-  const fileNames = req.query.filenames as string[];
-  console.log("Received file names:", fileNames);
+  const fileUrls = req.query.fileUrls as string[];
+  console.log("Received file urls:", fileUrls);
 
   let map: Map<string, boolean>;
   try {
-    const namesArray = Array.isArray(fileNames) ? fileNames : [fileNames];
-    map = await checkFilesInDB(namesArray);
+    const urlArray = Array.isArray(fileUrls) ? fileUrls : [fileUrls];
+    map = await checkFilesInDB(urlArray);
   } catch (error) {
     console.error("Error checking files in DB:", error);
     return res.status(500).json({ message: error instanceof Error ? error.message : String(error) });
@@ -35,14 +35,13 @@ router.get("/courses/:courseId/files", async (req, res) => {
 router.get("/cards", async (req, res) => {
   /* #swagger.description = 'Endpoint to get all due flashcards.' */  
 
-  const {courseId, userId} = req.query;
+  const {courseUrl, userId} = req.query;
 
-  console.log("Received file names:", courseId);
 
   let flashcards: Flashcard[];
   try {
-    const idArray = Array.isArray(courseId) ? courseId : [courseId];
-    flashcards = await getFlashcardsByCourseIds(idArray as string, userId as string);
+    const urlArray = Array.isArray(courseUrl) ? courseUrl : [courseUrl];
+    flashcards = await getFlashcardsByCourseIds(urlArray as string, userId as string);
   } catch (error) {
     console.error("Error checking files in DB:", error);
     return res.status(500).json({ message: error instanceof Error ? error.message : String(error) });
