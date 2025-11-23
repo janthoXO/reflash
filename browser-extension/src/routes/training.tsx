@@ -13,6 +13,7 @@ import { useEffect, useState } from "react"
 
 import { Button } from "~components/ui/button"
 import { Card, CardContent } from "~components/ui/card"
+import { FlowerField } from "~components/flowerfield"
 import { useCourses } from "~hooks/useCourses"
 import { useNotifications } from "~hooks/useNotifications"
 import { useUnits } from "~hooks/useUnits"
@@ -65,8 +66,8 @@ function Training() {
   return (
     <div className="w-96 min-h-[400px] bg-background text-foreground">
       {/* Header */}
-      <header className="border-b border-border bg-card p-4">
-        <div className="flex items-center justify-between">
+      <header className="border-b border-border bg-card">
+        <div className="flex items-center justify-between p-4 pb-2">
           <div>
             <h1 className="text-lg font-semibold text-card-foreground">
               Reflash
@@ -100,6 +101,11 @@ function Training() {
             </Button>
           </div>
         </div>
+        {user && user.streak > 0 && (
+          <div className="px-4 pb-2">
+            <FlowerField count={user.streak} />
+          </div>
+        )}
       </header>
 
       {/* Content */}
