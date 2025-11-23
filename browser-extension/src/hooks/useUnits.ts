@@ -1,6 +1,7 @@
 import { useState } from "react"
 
 import { sendToBackground, sendToContentScript } from "@plasmohq/messaging"
+import { Storage } from "@plasmohq/storage"
 import { useStorage } from "@plasmohq/storage/hook"
 
 import type { File } from "~models/file"
@@ -12,7 +13,7 @@ import type { Unit } from "~models/unit"
  * Publishes: UNITS_UPDATE
  */
 export function useUnits() {
-  const [units] = useStorage<Map<string, Unit>>("units", new Map())
+  const [units] = useStorage<Record<string, Unit>[]>("units", [])
   const [loading, setLoading] = useState(false)
 
   async function fetchUnits(userId: string, courseUrl: string) {
@@ -48,11 +49,11 @@ export function useUnits() {
       // TODO send request to check what is already existing on server
       const existMap = await sendToBackground({
         name: "units-exists",
-        body: { fileUrls: files.map((f) => f.url) }
+        body: { courseUrl: courseUrl, fileUrls: files.map((f) => f.url) }
       })
 
       files = files.filter(
-        (file) => !existMap.has(file.url) || existMap.get(file.url) === false
+        (file) => !existMap[file.url] || existMap[file.url] === false
       )
 
       await Promise.all(

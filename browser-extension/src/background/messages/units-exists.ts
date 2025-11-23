@@ -1,13 +1,21 @@
 import type { PlasmoMessaging } from "@plasmohq/messaging"
-import { unitsAlreadyUploaded } from "~api/units";
+
+import { unitsAlreadyUploaded } from "~api/units"
+import { storage } from "~background"
+import type { User } from "~models/user"
 
 const handler: PlasmoMessaging.MessageHandler<
-  { fileUrls: string[] },
+  { courseUrl: string; fileUrls: string[] },
   { fileUrl: string; exists: boolean }[]
 > = async (req, res) => {
   console.debug("Received units-exists", req.body)
 
-  const existsMap = await unitsAlreadyUploaded(req.body.fileUrls)
+  const user = await storage.get<User>("user")
+  const existsMap = await unitsAlreadyUploaded(
+    user.id,
+    req.body.courseUrl,
+    req.body.fileUrls
+  )
 
   res.send(existsMap)
 }

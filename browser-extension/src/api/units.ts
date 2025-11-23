@@ -10,7 +10,7 @@ export async function fetchUnits(
   userId: string,
   courseUrl: string,
 ): Promise<Unit[]> {
-  const response = await axios.get(`${API_URL}/api/courses/1/files?courseUrl=${courseUrl}&userId=${userId}`)
+  const response = await axios.get(`${API_URL}/api/cards/?courseUrl=${courseUrl}&userId=${userId}`)
 
   if (response.status !== 200) {
     throw new Error(`Fetch failed: ${response.status} ${response.statusText}`)
@@ -20,9 +20,11 @@ export async function fetchUnits(
 }
 
 export async function unitsAlreadyUploaded(
+  userId: string,
+  courseUrl: string,
   fileUrls: string[],
 ): Promise<{fileUrl: string, exists: boolean}[]> {
-  const response = await axios.get(`${API_URL}/api/courses/1/files?courseUrl=${courseUrl}&userId=${userId}`)
+  const response = await axios.get(`${API_URL}/api/courses/1/files?fileUrls=${fileUrls}&courseUrl=${courseUrl}&userId=${userId}`)
 
   if (response.status !== 200) {
     throw new Error(`Fetch failed: ${response.status} ${response.statusText}`)
@@ -36,6 +38,7 @@ export async function unitsAlreadyUploaded(
  * Pure function with no side effects
  */
 export async function uploadPDFsAndGenerateFlashcards(
+  userId: string,
   courseUrl: string,
   file: File
 ): Promise<Unit> {
@@ -43,11 +46,11 @@ export async function uploadPDFsAndGenerateFlashcards(
     filename: file.name,
     mime: "application/pdf",
     data: file.base64,
-    fileUrl: file.url ?? null,
+    fileUrl: file.url,
     courseUrl: courseUrl
   }
 
-  const response = await axios.post(`${API_URL}/api/courses/1/files`, payload)
+  const response = await axios.post(`${API_URL}/api/courses/1/files?userId=${userId}`, payload)
 
   if (response.status !== 200) {
     throw new Error(`Upload failed: ${response.status} ${response.statusText}`)
@@ -61,7 +64,7 @@ export async function answerCard(
   cardId: string,
   correct: boolean
 ): Promise<Flashcard | null> {
-  const response = await axios.post(`${API_URL}/api/courses/1/files`, {
+  const response = await axios.post(`${API_URL}/api/flashcard?userId=${userId}`, {
     userId,
     cardId,
     solved: correct

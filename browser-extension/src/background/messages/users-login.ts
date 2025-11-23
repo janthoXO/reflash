@@ -19,6 +19,7 @@ const handler: PlasmoMessaging.MessageHandler<{ userId: string }, {}> = async (
   storage.set("user", user)
   info.courses.forEach((course) => {
     storage.set(`courses-${course._id}`, course)
+    console.debug("Updated courses in storage after user login", course)
   })
 
   res.send(info)

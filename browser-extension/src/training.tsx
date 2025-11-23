@@ -38,12 +38,7 @@ function Training() {
 
   useEffect(() => {
     console.debug("Units updated in training", units)
-    if (units && typeof units === "object") {
-      const unitsArray = Array.isArray(units)
-        ? units
-        : Array.from(Object.values(units))
-      setFlashcards(unitsArray.flatMap((unit) => unit.cards || []))
-    }
+    setFlashcards(units.flatMap((unit) => unit.cards || []))
   }, [units])
 
   const currentCard = flashcards[currentCardIndex]

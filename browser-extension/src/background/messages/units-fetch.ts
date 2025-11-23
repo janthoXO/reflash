@@ -13,11 +13,12 @@ const handler: PlasmoMessaging.MessageHandler<
   const { userId, courseUrl } = req.body
 
   const units = await fetchUnits(userId, courseUrl)
-  const unitsMap = new Map<string, Unit>()
+  const unitsMap: Record<string, Unit>[] = []
   units.forEach((unit) => {
-    unitsMap.set(unit.fileId, unit)
+    unitsMap[ unit.fileId] = unit
   })
   storage.set("units", unitsMap)
+  console.debug("Updated units in storage after fetching units", unitsMap)
 
   res.send(units)
 }

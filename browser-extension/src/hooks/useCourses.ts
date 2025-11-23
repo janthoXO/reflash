@@ -1,11 +1,5 @@
-import { useState } from "react"
-
-import { sendToBackground, sendToContentScript } from "@plasmohq/messaging"
 import { useStorage } from "@plasmohq/storage/hook"
-
-import type { File } from "~models/file"
-import type { Unit } from "~models/unit"
-import type { User } from "~models/user"
+import { Storage } from "@plasmohq/storage"
 
 /**
  * Hook for units state management

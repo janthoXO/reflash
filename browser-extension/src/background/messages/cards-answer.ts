@@ -17,6 +17,9 @@ const handler: PlasmoMessaging.MessageHandler<
   const updatedCard = await answerCard(userId, cardId, correct)
 
   storage.get<Map<string, Unit>>("units").then((unitMap) => {
+    if (!unitMap) {
+      return
+    }
     // remove card from storage as it will be trained later
     const updatedUnit = unitMap.get(req.body.fileId)
 
@@ -25,6 +28,7 @@ const handler: PlasmoMessaging.MessageHandler<
     unitMap.set(req.body.fileId, updatedUnit)
 
     storage.set(`units`, unitMap)
+    console.debug("Updated units in storage after answering card", unitMap)
   })
 
   res.send(updatedCard)

@@ -8,7 +8,9 @@ import { Storage } from "@plasmohq/storage"
 
 import { fetchUserInfo } from "~api/user"
 
-export const storage = new Storage()
+export const storage = new Storage({
+  area: "local"
+})
 
 storage.get("userId").then((userId) => {
   if (!userId) {
@@ -21,7 +23,7 @@ storage.get("userId").then((userId) => {
       console.log("Fetched user info on startup", info)
       const user = {
         id: userId,
-        streak: info.streak,
+        streak: info.streak
       }
       storage.set("user", user)
       info.courses.forEach((course) => {
