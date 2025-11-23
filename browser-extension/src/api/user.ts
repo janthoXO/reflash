@@ -1,6 +1,7 @@
 import axios from "axios"
+import type { Course } from "~models/course"
 
-const API_URL = process.env.PLASMO_PUBLIC_API_URL || "http://localhost:3000"
+const API_URL = process.env.PLASMO_PUBLIC_API_URL || "http://localhost:8080"
 
 export async function fetchUserInfo(
   userId: string,

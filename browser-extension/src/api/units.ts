@@ -4,7 +4,7 @@ import type { File } from "~models/file"
 import type { Flashcard } from "~models/flashcard"
 import type { Unit } from "~models/unit"
 
-const API_URL = process.env.PLASMO_PUBLIC_API_URL || "http://localhost:3000"
+const API_URL = process.env.PLASMO_PUBLIC_API_URL || "http://localhost:8080"
 
 export async function fetchUnits(
   userId: string,

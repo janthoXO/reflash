@@ -2,6 +2,7 @@ import type { PlasmoMessaging } from "@plasmohq/messaging"
 import { fetchUserInfo } from "~api/user";
 
 import { storage } from "~background";
+import type { Course } from "~models/course";
 import type { User } from "~models/user";
 
 const handler: PlasmoMessaging.MessageHandler<

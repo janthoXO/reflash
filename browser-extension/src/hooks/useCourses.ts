@@ -4,6 +4,7 @@ import { useStorage } from "@plasmohq/storage/hook"
 
 import type { User } from "~models/user"
 import { storage } from "~background"
+import type { Course } from "~models/course"
 
 export function useCourses() {
   const [user] = useStorage<User>({
