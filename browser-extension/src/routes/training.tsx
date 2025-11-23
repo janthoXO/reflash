@@ -5,6 +5,7 @@ import {
   Loader2,
   LogOut,
   RotateCcw,
+  CircleArrowOutDownLeft,
   Upload,
   X,
   XCircle
@@ -91,7 +92,7 @@ function Training() {
                 </>
               ) : (
                 <>
-                  <Upload />
+                  <CircleArrowOutDownLeft />
                   Update Cards
                 </>
               )}
