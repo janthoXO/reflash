@@ -81,7 +81,7 @@ router.get("/user", async (req, res) => {
   }
   try {    
     const {streak, lastStudied, courses} = await getUserStats(userId);
-    return res.status(200).json({streak, lastStudied, courses});
+    return res.status(200).json({userId, streak, lastStudied, courses});
   } catch (error) {
     console.error("Error getting user stats from DB:", error);
     return res.status(500).json({ message: error instanceof Error ? error.message : String(error) });

@@ -64,9 +64,21 @@ export async function getTimer(userId: string, cardId: string): Promise<number |
     return timer ? timer.time : null;
 }
 
-export async function getUserStats(userId: string): Promise<{streak: number, lastStudied: number, courses: any} | null> {
+export async function getUserStats(userId: string): Promise<any> {
+    // find user stats and populate courses or create new if not exist
     const stats = await UserStats.findOne({ userId: userId }).populate('courses');
-    return stats ? { streak: stats.streak, lastStudied: stats.lastStudied, courses: stats.courses } : null;
+    if (!stats) {
+        const newUserStats = new UserStats({
+            userId: userId,
+            streak: 0,
+            lastStudied: 0,
+            courses: []
+        });
+        await newUserStats.save();
+        return newUserStats;
+    }
+
+    return stats;
 }
 
 export async function associateCourseWithUser(courseUrl: string, userId: string): Promise<void> {
