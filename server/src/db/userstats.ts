@@ -2,8 +2,9 @@ import { Schema, model} from 'mongoose';
 
 const userStatsSchema = new Schema({
     userId : { type: String, required: true, unique: true },
-    flashcardId: { type: Schema.Types.ObjectId, ref: 'DBflashcard', required: true },
-    time: { type: Number, required: true },
+    streak: { type: Number, required: true },
+    lastStudied: { type: Number, required: true },
+    courses: { type: [Schema.Types.ObjectId], ref: 'Course', default: [] },
 });
 
 const UserStats = model('UserStats', userStatsSchema);

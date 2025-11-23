@@ -9,7 +9,7 @@ export function startLLMSession() {
     ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY || '' });
 }
 
-export async function callLLMApi(fileData: { content: string; contentType: string }): Promise<Flashcard[]> {
+export async function callLLMApi(fileData: { content: string; contentType: string }): Promise<{courseName: string, cards: Flashcard[]}> {
 
 
     const flashcardSchema = z.object({
@@ -42,15 +42,9 @@ export async function callLLMApi(fileData: { content: string; contentType: strin
       ],
       config: {
         responseMimeType: "application/json",
-        responseJsonSchema: zodToJsonSchema(z.array(flashcardSchema)),
+        responseJsonSchema: zodToJsonSchema(z.object({courseName: z.string().describe("The name of course from the slides."), cards:z.array(flashcardSchema)})),
       },
     });
-
-    //console.log("Gemini response: ", response.text);
-
-    let cards: Flashcard[] = response.text ? JSON.parse(response.text) : [];
-
-    console.log(`Generated ${cards.length} flashcards`);
     
-    return cards;
+    return JSON.parse(response.text);
 }

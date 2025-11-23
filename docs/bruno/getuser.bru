@@ -1,17 +1,17 @@
 meta {
-  name: Hello copy
+  name: getuser
   type: http
-  seq: 3
+  seq: 10
 }
 
 get {
-  url: {{base_url}}/api/files?filenames=["test"]
+  url: {{base_url}}/api/user?userId=sampleUser
   body: json
   auth: inherit
 }
 
 params:query {
-  filenames: ["test"]
+  userId: sampleUser
 }
 
 settings {
