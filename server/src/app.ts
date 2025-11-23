@@ -3,6 +3,7 @@ import express, { NextFunction, Request, Response } from "express";
 import controller from "./controller.js";
 import { run } from "./db/db.js";
 import { startLLMSession } from "./llmservice.js";
+import { connect, Schema } from 'mongoose';
 
 dotenv.config();
 
@@ -46,13 +47,7 @@ app.use((err: any, req: Request, res: Response, next: NextFunction) => {
 app.listen(PORT, () => {
   // eslint-disable-next-line no-console
   console.log(`Server listening on http://localhost:${PORT}`);
-  run().then
-  (() => {
-    console.log("Connected to the database.");
-  })
-  .catch((err) => {
-    console.error("Failed to connect to the database:", err);
-  }); 
+  connect(process.env.MONGO_URI || 'mongodb://localhost:27017/reflash');
 
   try {
     startLLMSession();

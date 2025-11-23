@@ -17,15 +17,6 @@ const handler: PlasmoMessaging.MessageHandler<
   // Call API for each file
   const user = await storage.get<User>("user")
   const unit = await uploadPDFsAndGenerateFlashcards(user.id, courseUrl, file)
-  storage.get<Record<string, Unit>[]>("units").then((unitMap) => {
-    if (!unitMap) {
-      unitMap = []
-    }
-    // remove card from storage as it will be trained later
-    unitMap[unit.fileId] = unit
-    storage.set(`units`, unitMap)
-    console.debug("Updated units in storage after generating unit", unitMap)
-  })
 
   res.send(unit)
 }

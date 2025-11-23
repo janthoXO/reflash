@@ -38,7 +38,7 @@ function Training() {
 
   useEffect(() => {
     console.debug("Units updated in training", units)
-    setFlashcards(units.flatMap((unit) => unit.cards || []))
+    setFlashcards(Object.values(units).flatMap((unit) => unit.cards || []))
   }, [units])
 
   const currentCard = flashcards[currentCardIndex]

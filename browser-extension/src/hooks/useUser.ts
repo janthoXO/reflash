@@ -1,19 +1,16 @@
 import { useState } from "react"
 
-import { sendToBackground, sendToContentScript } from "@plasmohq/messaging"
+import { sendToBackground } from "@plasmohq/messaging"
 import { useStorage } from "@plasmohq/storage/hook"
+import { Storage } from "@plasmohq/storage"
 
-import type { File } from "~models/file"
-import type { Unit } from "~models/unit"
 import type { User } from "~models/user"
 
-/**
- * Hook for units state management
- * Listens to: UNITS_UPDATED
- * Publishes: UNITS_UPDATE
- */
 export function useUser() {
-  const [user] = useStorage<User>("user", undefined)
+  const [user, setUser] = useStorage<User>({
+    key: "user",
+    instance: new Storage({ area: "local" })
+  })
   const [loading, setLoading] = useState(false)
 
   async function fetchUser() {
@@ -52,6 +49,8 @@ export function useUser() {
     setLoading(true)
     try {
       console.debug("Send users-logout")
+
+      setUser(undefined)
 
       await sendToBackground({
         name: "users-logout",

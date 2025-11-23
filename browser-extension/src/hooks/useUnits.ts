@@ -1,19 +1,12 @@
 import { useState } from "react"
 
 import { sendToBackground, sendToContentScript } from "@plasmohq/messaging"
-import { Storage } from "@plasmohq/storage"
-import { useStorage } from "@plasmohq/storage/hook"
 
 import type { File } from "~models/file"
 import type { Unit } from "~models/unit"
 
-/**
- * Hook for units state management
- * Listens to: UNITS_UPDATED
- * Publishes: UNITS_UPDATE
- */
 export function useUnits() {
-  const [units] = useStorage<Record<string, Unit>[]>("units", [])
+  const [units, setUnits] = useState<Record<string, Unit>>({})
   const [loading, setLoading] = useState(false)
 
   async function fetchUnits(userId: string, courseUrl: string) {
@@ -21,9 +14,13 @@ export function useUnits() {
     try {
       console.debug("Send units-fetch")
 
-      await sendToBackground({
+      const units: Unit[] = await sendToBackground({
         name: "units-fetch",
         body: { courseUrl, userId }
+      })
+      const unitsMap: Record<string, Unit> = {}
+      units.forEach((unit) => {
+        unitsMap[unit.fileId] = unit
       })
     } catch (error) {
       console.error("Error in fetchCards:", error)
@@ -58,11 +55,15 @@ export function useUnits() {
 
       await Promise.all(
         files.map(async (file) => {
-          const unit = await sendToBackground({
+          const unit: Unit = await sendToBackground({
             name: "units-generate",
             body: { courseUrl, file }
           })
           console.debug("Received generated units", unit)
+          setUnits((prevUnits) => ({
+            ...prevUnits,
+            [unit.fileId]: unit
+          }))
         })
       )
     } catch (error) {
@@ -79,6 +80,17 @@ export function useUnits() {
       await sendToBackground({
         name: "cards-answer",
         body: { cardId, correct }
+      })
+
+      // remove from units as it will be trained later
+      setUnits((prevUnits) => {
+        const updatedUnits = { ...prevUnits }
+        Object.values(updatedUnits).forEach((unit) => {
+          if (unit.cards) {
+            unit.cards = unit.cards.filter((card) => card._id !== cardId)
+          }
+        })
+        return updatedUnits
       })
     } catch (error) {
       console.error("Error in cardsAnswer:", error)

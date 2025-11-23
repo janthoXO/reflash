@@ -13,12 +13,9 @@ const handler: PlasmoMessaging.MessageHandler<
   let user = await storage.get<User>("user")
   const info = await fetchUserInfo(user.id)
 
-  user = {id: user.id, streak: info.streak}
-  storage.set("user", user)
-
-  info.courses.forEach((course) => {
-    storage.set(`courses-${course._id}`, course)
-    console.debug("Updated courses in storage after fetching user info", course)
+  storage.set("user", {
+    ...info,
+    id: user.id
   })
 
   res.send(info)

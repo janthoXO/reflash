@@ -1,13 +1,24 @@
+import { useEffect, useState } from "react"
+
 import { useStorage } from "@plasmohq/storage/hook"
 import { Storage } from "@plasmohq/storage"
 
-/**
- * Hook for units state management
- * Listens to: UNITS_UPDATED
- * Publishes: UNITS_UPDATE
- */
+import type { User } from "~models/user"
+
 export function useCourses() {
-  const [courses] = useStorage<Course[]>("courses", [])
+  const [user] = useStorage<User>({
+    key: "user",
+    instance: new Storage({ area: "local" })
+  })
+  const [courses, setCourses] = useState<Course[]>([])
+
+  useEffect(() => {
+    if (!user) {
+      return
+    }
+
+    setCourses(user.courses || [])
+  }, [user])
 
   return {
     courses
