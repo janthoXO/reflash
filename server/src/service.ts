@@ -13,7 +13,7 @@ export async function checkFilesInDB(fileUrls: string[]): Promise<Map<string, bo
     return new Map(fileUrls.map(name => [name, fileSet.has(name)]));
 }
 
-export async function getFlashcardsByCourseIds(courseUrl: string, userId: string): Promise<Flashcard[]> {
+export async function getFlashcardsByCourseIds(courseUrl: string, userId: string): Promise<any> {
     const currentTime = new Date().getTime();
 
 
@@ -21,11 +21,11 @@ export async function getFlashcardsByCourseIds(courseUrl: string, userId: string
     let files = await File.find({ courseId: id }).lean();
     console.log(`Found ${files.length} files for course: ${id}`);
 
-    let results: Flashcard[] = [];
+    let results = [];
 
         for (const file of files) {
             const fileCards = await DBflashcard.find({ fileId: file._id }).lean();
-            results = results.concat(fileCards);
+            results.push({...file, cards: fileCards});
         }
 
 
