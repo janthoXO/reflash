@@ -143,6 +143,7 @@ export async function updateCard(userId: string, cardId: string, solved: boolean
                 userStats.lastStudied = now.getTime();
                 await userStats.save();
             }
+            return userStats.streak;
         } else {
             const newUserStats = new UserStats({
                 userId: userId,  // This was missing in the original code
@@ -151,10 +152,11 @@ export async function updateCard(userId: string, cardId: string, solved: boolean
                 courses: []  // Initialize empty courses array
             });
             await newUserStats.save();  
+            return newUserStats.streak;
         }
 
         // log the updated time as date and time
-        return `Timer updated to ${new Date(twentyFourHoursLater).toLocaleString()}`;
+        
     } else {
         // If not solved, update timer to 5 minutes from now
         const fiveMinutesLater = new Date().getTime() + 5 * 60 * 1000;
@@ -163,7 +165,7 @@ export async function updateCard(userId: string, cardId: string, solved: boolean
             { time: fiveMinutesLater },
             { upsert: true, new: true }
         );
-        return `Timer updated to ${new Date(fiveMinutesLater).toLocaleString()}`;
+        return "no streak update";
     }
 }
 

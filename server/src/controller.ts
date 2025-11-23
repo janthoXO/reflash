@@ -63,8 +63,8 @@ router.put("/flashcard", async (req, res) => {
   const {userId, cardId, solved}: {userId: string, cardId: string, solved: boolean} = req.body;
 
   try {    
-    const msg = await updateCard(userId, cardId, solved);
-    return res.status(200).json({ message: 'Flashcard result updated successfully. ' + msg });
+    const streak = await updateCard(userId, cardId, solved);
+    return res.status(200).json({ streak });
   } catch (error) {
     console.error("Error updating flashcard result in DB:", error);
     return res.status(500).json({ message: error instanceof Error ? error.message : String(error) });
@@ -101,12 +101,9 @@ router.post("/courses/:courseId/files", async (req, res) => {
       return res.status(400).json({ message: 'courseUrl query parameter is required' });
     }
     
-    
     if (!data || data.length === 0) {
       return res.status(400).json({ message: 'No file data received' });
     }
-
-    //const filename = req.headers['x-filename'] as string;
 
     const result = await createCards(data, courseUrl, filename, fileUrl, userId);
     
