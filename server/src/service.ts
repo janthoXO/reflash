@@ -45,13 +45,11 @@ export async function getFlashcardsByCourseIds(courseUrl: string, userId: string
     return filteredResults;
 }
 
-async function getCourseIdByUrl(courseUrl: string): Promise<Schema.Types.ObjectId> {
+async function getCourseIdByUrl(courseUrl: string): Promise<Schema.Types.ObjectId | null> {
     const course = await Course.findOne({ url: courseUrl }).lean();
     if (!course) {
         console.log("course not found, inserting course with url: ", courseUrl);
-        const newCourse = new Course({ url: courseUrl });
-        await newCourse.save();
-        return newCourse._id;
+        return null;
     }
     return course._id;
 }
@@ -66,9 +64,43 @@ export async function getTimer(userId: string, cardId: string): Promise<number |
     return timer ? timer.time : null;
 }
 
-export async function getUserStats(userId: string): Promise<{number, number} | null> {
-    const stats = await UserStats.findOne({ userId: userId });
-    return stats ? { streak: stats.streak, lastStudied: stats.lastStudied } : null;
+export async function getUserStats(userId: string): Promise<{streak: number, lastStudied: number, courses: any} | null> {
+    const stats = await UserStats.findOne({ userId: userId }).populate('courses');
+    return stats ? { streak: stats.streak, lastStudied: stats.lastStudied, courses: stats.courses } : null;
+}
+
+export async function associateCourseWithUser(courseUrl: string, userId: string): Promise<void> {
+
+    // Validate userId is provided
+    if (!userId) {
+        console.error("userId is required but not provided");
+        throw new Error("userId is required");
+    }
+
+    const courseId = await getCourseIdByUrl(courseUrl);
+
+    if (!courseId) {
+        console.log("Course does not yet exist, skip");
+        return;
+    }
+
+    const userStats = await UserStats.findOne({ userId: userId });
+
+    if (!userStats) {
+        const newUserStats = new UserStats({
+            userId: userId,
+            streak: 0,
+            lastStudied: new Date().getTime(),
+            courses: [courseId],
+        });
+        await newUserStats.save();
+        return;
+    }
+    if (userStats.courses.includes(courseId)) {
+        return;
+    }
+    userStats.courses.push(courseId);
+    await userStats.save();
 }
 
 export async function updateCard(userId: string, cardId: string, solved: boolean): Promise<string> {
@@ -101,9 +133,10 @@ export async function updateCard(userId: string, cardId: string, solved: boolean
             }
         } else {
             const newUserStats = new UserStats({
-                userId: userId,
+                userId: userId,  // This was missing in the original code
                 streak: 1,
                 lastStudied: new Date().getTime(),
+                courses: []  // Initialize empty courses array
             });
             await newUserStats.save();  
         }
@@ -122,34 +155,22 @@ export async function updateCard(userId: string, cardId: string, solved: boolean
     }
 }
 
-export async function createCards(file: string, url: string, fileName: string, fileUrl: string): Promise<any> {
+export async function createCards(file: string, url: string, fileName: string, fileUrl: string, userId: string): Promise<any> {
 
-    const courseId = await getCourseIdByUrl(url);
-    
-    // check courseId type
-    console.log("courseId type: " + typeof courseId);
 
-    // insert new file into DB
-    const dbfile = new File({
-        filename : fileName,
-        courseId: courseId,
-    });
-    await dbfile.save();
-
-    // create flashcards with LLM
-    const {courseName, cards} = await processFiles(file, dbfile._id);
-
-    const result = { fileId: dbfile._id, filename: fileName, courseId: courseId, courseName: courseName, cards: cards };
-
-    console.log("Created flashcards.");
-
-    return result;
-}
-
-async function processFiles(file: string, fileId: Types.ObjectId): Promise<{courseName: string, cards: Flashcard[]}> {
+    // Validate userId is provided
+    if (!userId) {
+        console.error("userId is required but not provided");
+        throw new Error("userId is required");
+    } else {
+        console.log("createCards called with userId: ", userId);
+    }
 
     const cards = [];
     let llmResult;
+    let courseId;
+    let dbfileId;
+    let courseName;
     
         try {
             
@@ -161,9 +182,38 @@ async function processFiles(file: string, fileId: Types.ObjectId): Promise<{cour
 
             console.log(`LLM returned ${llmResult.cards.length} flashcards for course: ${llmResult.courseName}`);
 
+            courseName = llmResult.courseName;
+            courseId = await getCourseIdByUrl(url);
+            if (!courseId) {
+                const course = new Course({
+                    url: url,
+                    name: courseName
+                });
+                await course.save();
+                courseId = course._id;
+            }
+
+            associateCourseWithUser(url, userId);
+
+            // Check if file already exists
+            let dbfile = await File.findOne({ fileUrl: fileUrl });
+            if (!dbfile) {
+                // insert new file into DB only if it doesn't exist
+                dbfile = new File({
+                    filename : fileName,
+                    courseId: courseId,
+                    fileUrl: fileUrl
+                });
+                await dbfile.save();
+                console.log(`Created new file: ${fileName}`);
+            } else {
+                console.log(`File already exists: ${fileName}`);
+            }
+            dbfileId = dbfile._id.toString();
+
             for (const card of llmResult.cards) {
                 const flashcard = new DBflashcard({
-                    fileId: fileId,
+                    fileId: dbfile._id,
                     question: card.question,
                     answer: card.answer,
                 });
@@ -176,9 +226,11 @@ async function processFiles(file: string, fileId: Types.ObjectId): Promise<{cour
             return Promise.reject(error);
         }
 
-    const courseName = llmResult.courseName;
-    
-    
-    return {courseName, cards};
+
+    const result = { fileId: dbfileId, filename: fileName, courseId: courseId, courseName: courseName, cards: cards };
+
+    console.log("Created flashcards.");
+
+    return result;
 }
 

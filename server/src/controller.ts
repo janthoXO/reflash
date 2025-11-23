@@ -1,5 +1,5 @@
 import express from "express";
-import { checkFilesInDB, getFlashcardsByCourseIds, createCards, getTimer, updateCard, getUserStats } from "./service";
+import { checkFilesInDB, getFlashcardsByCourseIds, createCards, getTimer, updateCard, getUserStats, associateCourseWithUser } from "./service";
 import Flashcard from "./flashcard";
 
 const router = express.Router();
@@ -10,17 +10,22 @@ router.use((req, res, next) => {
 });
 
 
-
 router.get("/courses/:courseId/files", async (req, res) => {
   /* #swagger.description = 'Check if files are in the databse.' */
   
   const fileUrls = req.query.fileUrls as string[];
+  const courseUrl = req.query.courseUrl as string;
+  const userId = req.query.userId as string;
+
   console.log("Received file urls:", fileUrls);
+  console.log("Received course url:", courseUrl);
+  console.log("Received user id:", userId);
 
   let map: Map<string, boolean>;
   try {
     const urlArray = Array.isArray(fileUrls) ? fileUrls : [fileUrls];
     map = await checkFilesInDB(urlArray);
+    await associateCourseWithUser(courseUrl, userId);
   } catch (error) {
     console.error("Error checking files in DB:", error);
     return res.status(500).json({ message: error instanceof Error ? error.message : String(error) });
@@ -52,23 +57,6 @@ router.get("/cards", async (req, res) => {
   return res.status(200).json(flashcards);
 });
 
-router.get("/flashcard/gettime", async (req, res) => {
-  /* #swagger.description = 'Endpoint to get a flashcards repitition timer.' */
-  const {userId, cardId} = req.query;
-
-  if (!userId || typeof userId !== 'string' || !cardId || typeof cardId !== 'string') {
-    return res.status(400).json({ message: 'userId and cardId query parameters are required' });
-  }
-
-  try {
-    const time = await getTimer(userId, cardId);
-    return res.status(200).json(time);
-  } catch (error) {
-    console.error("Error getting timer from DB:", error);
-    return res.status(500).json({ message: error instanceof Error ? error.message : String(error) });
-  }
-  
-});
 
 router.put("/flashcard", async (req, res) => {
   /* #swagger.description = 'Endpoint to send flashcard result.' */
@@ -84,7 +72,6 @@ router.put("/flashcard", async (req, res) => {
 
 });
 
-
 router.get("/user", async (req, res) => {
   /* #swagger.description = 'Endpoint to get user data.' */
 
@@ -93,8 +80,8 @@ router.get("/user", async (req, res) => {
     return res.status(400).json({ message: 'userId query parameter is required' });
   }
   try {    
-    const {streak, lastStudied} = await getUserStats(userId);
-    return res.status(200).json({streak, lastStudied});
+    const {streak, lastStudied, courses} = await getUserStats(userId);
+    return res.status(200).json({streak, lastStudied, courses});
   } catch (error) {
     console.error("Error getting user stats from DB:", error);
     return res.status(500).json({ message: error instanceof Error ? error.message : String(error) });
@@ -102,12 +89,12 @@ router.get("/user", async (req, res) => {
 });
 
 
-
 router.post("/courses/:courseId/files", async (req, res) => {
   /* #swagger.description = 'Endpoint to upload files and process them into flashcards.' */
   
   try {
 
+    const userId = req.query.userId as string;
     const {courseUrl, fileUrl, filename, data} = req.body;
 
     if (!courseUrl || typeof courseUrl !== 'string') {
@@ -121,7 +108,7 @@ router.post("/courses/:courseId/files", async (req, res) => {
 
     //const filename = req.headers['x-filename'] as string;
 
-    const result = await createCards(data, courseUrl, filename, fileUrl);
+    const result = await createCards(data, courseUrl, filename, fileUrl, userId);
     
     res.status(200).json(result);
 

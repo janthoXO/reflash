@@ -5,7 +5,7 @@ meta {
 }
 
 get {
-  url: {{base_url}}/api/courses/1/files?fileUrls=http://example.com/course1/file1.pdf&fileUrls=test2
+  url: {{base_url}}/api/courses/1/files?fileUrls=http://example.com/course1/file1.pdf&fileUrls=test2&courseUrl=samplecourse&userId=sampleUser
   body: json
   auth: inherit
 }
@@ -13,6 +13,8 @@ get {
 params:query {
   fileUrls: http://example.com/course1/file1.pdf
   fileUrls: test2
+  courseUrl: samplecourse
+  userId: sampleUser
 }
 
 settings {
