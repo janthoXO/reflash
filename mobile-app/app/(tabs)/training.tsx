@@ -5,13 +5,10 @@ import { useRouter } from "expo-router"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { Text } from "@/components/ui/text"
-import { useUser } from "@/contexts/UserContext"
 import { fetchUnits, answerCard } from "@/api/units"
-import type { Unit } from "@/models/unit"
-import type { Flashcard } from "@/models/flashcard"
+import { Flashcard, Unit } from "@reflash/shared"
 
 export default function TrainingScreen() {
-  const { user, logout, updateStreak } = useUser()
   const router = useRouter()
   const [units, setUnits] = useState<Unit[]>([])
   const [loading, setLoading] = useState(false)
@@ -20,39 +17,9 @@ export default function TrainingScreen() {
   const [flashcards, setFlashcards] = useState<Flashcard[]>([])
 
   useEffect(() => {
-    if (!user) {
-      router.replace("/login")
-      return
-    }
-    loadUnits()
-  }, [user])
-
-  useEffect(() => {
     const cards = units.flatMap((unit) => unit.cards || [])
     setFlashcards(cards)
   }, [units])
-
-  const loadUnits = useCallback(async () => {
-    if (!user?.courses || user.courses.length === 0) {
-      setLoading(false)
-      return
-    }
-
-    setLoading(true)
-    try {
-      const allUnits: Unit[] = []
-      for (const course of user.courses) {
-        const courseUnits = await fetchUnits(user.id, course.url)
-        allUnits.push(...courseUnits)
-      }
-      setUnits(allUnits)
-    } catch (error) {
-      console.error("Error loading units:", error)
-      Alert.alert("Error", "Failed to load flashcards. Please try again.")
-    } finally {
-      setLoading(false)
-    }
-  }, [user])
 
   const currentCard = flashcards[currentCardIndex]
 
@@ -61,16 +28,11 @@ export default function TrainingScreen() {
   }, [isFlipped])
 
   const onAnswerCard = useCallback(async (correct: boolean) => {
-    if (!currentCard || !user) return
+    if (!currentCard) return
 
     try {
-      const response = await answerCard(user.id, currentCard._id, correct)
-      if (response.streak !== undefined) {
-        updateStreak(response.streak)
-      }
-
       // Remove answered card and move to next
-      const updatedFlashcards = flashcards.filter((c) => c._id !== currentCard._id)
+      const updatedFlashcards = flashcards.filter((c) => c.id !== currentCard.id)
       setFlashcards(updatedFlashcards)
 
       if (updatedFlashcards.length > 0) {
@@ -86,45 +48,13 @@ export default function TrainingScreen() {
       console.error("Error answering card:", error)
       Alert.alert("Error", "Failed to submit answer. Please try again.")
     }
-  }, [currentCard, user, flashcards, currentCardIndex, updateStreak])
-
-  const handleLogout = useCallback(() => {
-    Alert.alert(
-      "Logout",
-      "Are you sure you want to logout?",
-      [
-        { text: "Cancel", style: "cancel" },
-        {
-          text: "Logout",
-          style: "destructive",
-          onPress: () => {
-            logout()
-            router.replace("/login")
-          }
-        }
-      ]
-    )
-  }, [logout, router])
-
-  if (!user) {
-    return null
-  }
+  }, [currentCard, flashcards, currentCardIndex])
 
   return (
     <SafeAreaView className="flex-1 bg-background" edges={["top"]}>
       {/* Header */}
-      <View className="border-b border-border bg-card p-4">
-        <View className="flex-row items-center justify-between">
-          <View>
+      <View className="flex-row items-center border-b border-border bg-card p-4">
             <Text className="text-lg font-semibold">Reflash</Text>
-            <Text className="text-xs text-muted-foreground mt-1">
-              Streak: {user.streak} days
-            </Text>
-          </View>
-          <Button onPress={handleLogout} variant="outline" size="sm">
-            <Text>Logout</Text>
-          </Button>
-        </View>
       </View>
 
       {/* Content */}

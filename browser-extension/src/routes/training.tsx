@@ -1,203 +1,61 @@
 import "~style.css"
 
-import {
-  Check,
-  Loader2,
-  LogOut,
-  RotateCcw,
-  CircleArrowOutDownLeft,
-  Upload,
-  X,
-  XCircle
-} from "lucide-react"
-import { useEffect, useState } from "react"
+import type { Flashcard } from "@reflash/shared"
+import { useLiveQuery } from "dexie-react-hooks"
 
-import { Button } from "~components/ui/button"
-import { Card, CardContent } from "~components/ui/card"
-import { FlowerField } from "~components/flowerfield"
-import { useCourses } from "~hooks/useCourses"
-import { useNotifications } from "~hooks/useNotifications"
-import { useUnits } from "~hooks/useUnits"
-import { useUser } from "~contexts/UserContext"
-import { useNavigate } from "react-router-dom"
+import TrainFlashcard from "~components/train-flashcard"
+import { useSelected } from "~contexts/SelectedContext"
+import { db } from "~db/db"
 
-function Training() {
-  const { units, loading, generateCards, answerCard, fetchUnits } = useUnits()
-  const { user, logout } = useUser()
-  const { courses } = useCourses()
-  const { notifications, dismissNotification } = useNotifications()
-  const [currentCardIndex, setCurrentCardIndex] = useState(0)
-  const [isFlipped, setIsFlipped] = useState(false)
-  const [flashcards, setFlashcards] = useState([])
+export default function TrainingPage() {
+  const { selectedMap, isLoading } = useSelected()
 
-  useEffect(() => {
-    courses.forEach((course) => {
-      fetchUnits(course.url)
-    })
-  }, [courses])
+  // Fetch due cards
+  const dueCards = useLiveQuery(async () => {
+    const selectedUnitIds = Object.values(selectedMap).flat()
+    if (selectedUnitIds.length === 0) return []
 
-  useEffect(() => {
-    console.debug("Units updated in training", units)
-    setFlashcards(Object.values(units).flatMap((unit) => unit.cards || []))
-  }, [units])
+    return await db.flashcards
+      .where("unitId")
+      .anyOf(selectedUnitIds)
+      .filter((fc) => fc.dueAt < Date.now())
+      .toArray()
+  }, [selectedMap])
 
-  const currentCard = flashcards[currentCardIndex]
-
-  function onFlipCard() {
-    setIsFlipped(!isFlipped)
+  if (isLoading || !dueCards) {
+    return <div className="p-4">Loading...</div>
   }
 
-  function onAnswerCard(correct: boolean) {
-    if (currentCard) {
-      answerCard(currentCard._id, correct)
-      // Move to next card
-      if (currentCardIndex < flashcards.length - 1) {
-        setCurrentCardIndex(currentCardIndex + 1)
-      } else {
-        setCurrentCardIndex(0)
-      }
-      setIsFlipped(false)
-    }
-  }
+  const handleAnswer = async (flashcard: Flashcard, correct: boolean) => {
+    // Update dueAt based on answer
+    // Simple SRS: Correct -> 1 day, Wrong -> 1 minute
+    const newDueAt = correct
+      ? Date.now() + 24 * 60 * 60 * 1000
+      : Date.now() + 60 * 1000
 
-  function handleLogout() {
-    logout()
+    await db.flashcards.update(flashcard.id, { dueAt: newDueAt })
   }
 
   return (
-    <div className="w-96 min-h-[400px] bg-background text-foreground">
-      {/* Header */}
-      <header className="border-b border-border bg-card">
-        <div className="flex items-center justify-between p-4 pb-2">
-          <div>
-            <h1 className="text-lg font-semibold text-card-foreground">
-              Reflash
-            </h1>
-            {user && (
-              <p className="text-xs text-muted-foreground mt-0.5">
-                Streak: {user.streak} days
-              </p>
-            )}
+    <div className="p-4 h-full flex flex-col">
+      <h1 className="text-2xl font-bold mb-4">Training</h1>
+      {dueCards.length === 0 ? (
+        <p className="text-muted-foreground">
+          No cards due for selected units.
+        </p>
+      ) : (
+        <div>
+          <div className="flex-1">
+            <TrainFlashcard
+              flashcard={dueCards[0]!}
+              onAnswer={(correct) => handleAnswer(dueCards[0]!, correct)}
+            />
           </div>
-          <div className="flex gap-2">
-            <Button
-              onClick={generateCards}
-              disabled={loading}
-              size="sm"
-              className="gap-2">
-              {loading ? (
-                <>
-                  <Loader2 className="animate-spin" />
-                  Processing...
-                </>
-              ) : (
-                <>
-                  <CircleArrowOutDownLeft />
-                  Update Cards
-                </>
-              )}
-            </Button>
-            <Button onClick={handleLogout} variant="outline" size="icon-sm">
-              <LogOut className="h-4 w-4" />
-            </Button>
+          <div className="mt-4 text-center text-sm text-muted-foreground">
+            {dueCards.length} cards due
           </div>
         </div>
-        {user && user.streak > 0 && (
-          <div className="px-4 pb-2">
-            <FlowerField count={user.streak} />
-          </div>
-        )}
-      </header>
-
-      {/* Content */}
-      <main className="p-4">
-        {/* Notifications */}
-        {notifications.length > 0 && (
-          <div className="space-y-2 mb-4">
-            {notifications.map((notification) => (
-              <div
-                key={notification.id}
-                className={`rounded-md border p-3 text-sm flex items-start justify-between ${
-                  notification.type === "error"
-                    ? "bg-destructive/10 border-destructive/20 text-destructive"
-                    : "bg-primary/10 border-primary/20 text-foreground"
-                }`}>
-                <span>{notification.message}</span>
-                <button
-                  onClick={() => dismissNotification(notification.id)}
-                  className="ml-2 hover:opacity-70">
-                  <X className="h-4 w-4" />
-                </button>
-              </div>
-            ))}
-          </div>
-        )}
-
-        {flashcards.length > 0 ? (
-          <div className="space-y-4">
-            <div className="flex items-center justify-between">
-              <h2 className="text-sm font-medium text-muted-foreground">
-                Card {currentCardIndex + 1} of {flashcards.length}
-              </h2>
-            </div>
-
-            {currentCard && (
-              <Card className="min-h-[200px] flex flex-col">
-                <CardContent className="flex-1 flex items-center justify-center p-6">
-                  <div className="text-center w-full">
-                    <p className="text-xs font-medium text-muted-foreground mb-3">
-                      {isFlipped ? "Answer" : "Question"}
-                    </p>
-                    <p className="text-base text-card-foreground">
-                      {isFlipped ? currentCard.answer : currentCard.question}
-                    </p>
-                  </div>
-                </CardContent>
-              </Card>
-            )}
-
-            {!isFlipped ? (
-              <Button
-                onClick={onFlipCard}
-                variant="outline"
-                className="w-full gap-2">
-                <RotateCcw className="h-4 w-4" />
-                Flip Card
-              </Button>
-            ) : (
-              <div className="flex gap-2">
-                <Button
-                  onClick={() => onAnswerCard(false)}
-                  variant="default"
-                  className="flex-1 gap-2">
-                  <XCircle className="h-4 w-4" />
-                  Wrong
-                </Button>
-                <Button
-                  onClick={() => onAnswerCard(true)}
-                  variant="default"
-                  className="flex-1 gap-2">
-                  <Check className="h-4 w-4" />
-                  Correct
-                </Button>
-              </div>
-            )}
-          </div>
-        ) : (
-          <div className="text-center py-12">
-            <Upload className="mx-auto h-12 w-12 text-muted-foreground/50" />
-            <h3 className="mt-4 text-sm font-medium text-foreground">
-              No flashcards yet
-            </h3>
-            <p className="mt-2 text-sm text-muted-foreground">
-              Click "Upload PDFs" to scan the current page for PDF files and
-              generate flashcards.
-            </p>
-          </div>
-        )}
-      </main>
+      )}
     </div>
   )
 }
-
-export default Training
