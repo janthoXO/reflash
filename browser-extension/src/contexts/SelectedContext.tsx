@@ -12,25 +12,25 @@ import { db } from "~db/db"
 
 interface SelectedContextType {
   // courseId -> unitIds
-  selectedMap: Record<string, string[]>
+  selectedMap: Record<number, number[]>
   isLoading: boolean
-  toggleCourse: (courseId: string, courseUnitIds: string[]) => void
-  toggleUnit: (courseId: string, unitId: string) => void
-  isCourseSelected: (courseId: string) => boolean
-  isUnitSelected: (courseId: string, unitId: string) => boolean
+  toggleCourse: (courseId: number, courseUnitIds: number[]) => void
+  toggleUnit: (courseId: number, unitId: number) => void
+  isCourseSelected: (courseId: number) => boolean
+  isUnitSelected: (courseId: number, unitId: number) => boolean
 }
 
 const SelectedContext = createContext<SelectedContextType | null>(null)
 
 export function SelectedProvider({ children }: { children: ReactNode }) {
   const [selectedMap, setSelectedMap, { isLoading }] = useStorage<
-    Record<string, string[]>
+    Record<number, number[]>
   >("selectedMap", {})
 
   const [empytyCheckDone, setEmptyCheckDone] = useState<boolean>(false)
-  async function allSelectedMap(): Promise<Record<string, string[]>> {
+  async function allSelectedMap(): Promise<Record<number, number[]>> {
     return db.units.toArray().then((units) => {
-      const newMap: Record<string, string[]> = {}
+      const newMap: Record<number, number[]> = {}
 
       if (units.length > 0) {
         units.forEach((u) => {
@@ -57,7 +57,7 @@ export function SelectedProvider({ children }: { children: ReactNode }) {
     }
   }, [selectedMap])
 
-  const toggleCourse = (courseId: string, courseUnitIds: string[]) => {
+  const toggleCourse = (courseId: number, courseUnitIds: number[]) => {
     const newMap = { ...selectedMap }
     if (newMap[courseId]) {
       // Deselect course
@@ -69,7 +69,7 @@ export function SelectedProvider({ children }: { children: ReactNode }) {
     setSelectedMap(newMap)
   }
 
-  const toggleUnit = (courseId: string, unitId: string) => {
+  const toggleUnit = (courseId: number, unitId: number) => {
     const newMap = { ...selectedMap }
     const currentUnits = newMap[courseId] || []
 
@@ -88,9 +88,9 @@ export function SelectedProvider({ children }: { children: ReactNode }) {
     setSelectedMap(newMap)
   }
 
-  const isCourseSelected = (courseId: string) => !!selectedMap?.[courseId]
+  const isCourseSelected = (courseId: number) => !!selectedMap?.[courseId]
 
-  const isUnitSelected = (courseId: string, unitId: string) => {
+  const isUnitSelected = (courseId: number, unitId: number) => {
     return selectedMap?.[courseId]?.includes(unitId) ?? false
   }
 

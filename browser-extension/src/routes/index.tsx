@@ -1,4 +1,4 @@
-import { Settings } from "lucide-react"
+import { CircleArrowOutDownLeft, Settings } from "lucide-react"
 import {
   Navigate,
   Route,
@@ -7,44 +7,55 @@ import {
   useNavigate
 } from "react-router-dom"
 
+import { Button } from "~components/ui/button"
 import { Tabs, TabsList, TabsTrigger } from "~components/ui/tabs"
 
 import LibraryPage from "./library"
 import SettingsPage from "./settings"
 import TrainingPage from "./training"
+import { useFiles } from "~hooks/useFiles"
 
 export const Routing = () => {
   const location = useLocation()
   const navigate = useNavigate()
+  const { scanFiles } = useFiles()
 
   // Determine current tab from path
   const currentTab = location.pathname.substring(1) || "training"
 
   return (
-    <div className="w-[400px] min-h-[500px] bg-background flex flex-col">
-      <div className="flex-1">
-        <Routes>
-          <Route path="/" element={<Navigate to="/training" replace />} />
-          <Route path="/training" element={<TrainingPage />} />
-          <Route path="/library" element={<LibraryPage />} />
-          <Route path="/settings" element={<SettingsPage />} />
-        </Routes>
-      </div>
+    <div className="w-[400px] min-h-[500px] bg-background flex flex-col p-4">
+      <header className="flex justify-between pb-2">
+        <h1 className="text-2xl font-bold">{currentTab.charAt(0).toUpperCase() + currentTab.slice(1)}</h1>
+        <Button variant="outline" onClick={scanFiles}>
+          <CircleArrowOutDownLeft />
+        </Button>
+      </header>
+      <main className="flex-1">
+          <Routes>
+            <Route path="/" element={<Navigate to="/training" replace />} />
+            <Route path="/training" element={<TrainingPage />} />
+            <Route path="/library" element={<LibraryPage />} />
+            <Route path="/settings" element={<SettingsPage />} />
+          </Routes>
+      </main>
 
       <footer>
         <Tabs
           value={currentTab}
           onValueChange={(value) => navigate(`/${value}`)}
           className="w-full">
-          <div className="px-4 pt-4">
-            <TabsList className="w-full flex flex-wrap">
-              <TabsTrigger value="training" className="flex-1">Training</TabsTrigger>
-              <TabsTrigger value="library" className="flex-1">Library</TabsTrigger>
-              <TabsTrigger value="settings" className="flex-1">
-                <Settings />
-              </TabsTrigger>
-            </TabsList>
-          </div>
+          <TabsList className="w-full flex flex-wrap">
+            <TabsTrigger value="training" className="flex-1">
+              Training
+            </TabsTrigger>
+            <TabsTrigger value="library" className="flex-1">
+              Library
+            </TabsTrigger>
+            <TabsTrigger value="settings" className="flex-1">
+              <Settings />
+            </TabsTrigger>
+          </TabsList>
         </Tabs>
       </footer>
     </div>

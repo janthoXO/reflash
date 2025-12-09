@@ -26,8 +26,7 @@ export default function LibraryPage() {
   }
 
   return (
-    <div className="p-4 space-y-4">
-      <h1 className="text-2xl font-bold">Library</h1>
+    <div>
       <Accordion type="multiple" className="w-full space-y-2">
         {courses.map((course) => {
           const courseUnits = units.filter((u) => u.courseId === course.id)
@@ -67,9 +66,9 @@ function CourseItem({
   course: any
   units: any[]
   isSelected: boolean
-  isUnitSelected: (courseId: string, unitId: string) => boolean
+  isUnitSelected: (courseId: number, unitId: number) => boolean
   onToggleCourse: () => void
-  onToggleUnit: (courseId: string, unitId: string) => void
+  onToggleUnit: (courseId: number, unitId: number) => void
 }) {
   return (
     <AccordionItem

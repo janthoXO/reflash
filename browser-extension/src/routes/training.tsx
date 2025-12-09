@@ -37,8 +37,7 @@ export default function TrainingPage() {
   }
 
   return (
-    <div className="p-4 h-full flex flex-col">
-      <h1 className="text-2xl font-bold mb-4">Training</h1>
+    <div className="h-full flex flex-col">
       {dueCards.length === 0 ? (
         <p className="text-muted-foreground">
           No cards due for selected units.

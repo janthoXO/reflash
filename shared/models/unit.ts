@@ -1,9 +1,9 @@
 import type { Flashcard } from './flashcard';
 
 export interface Unit {
-  id: string;
+  id: number;
   fileName: string;
   fileUrl: string;
-  courseId: string;
+  courseId: number;
   cards: Flashcard[];
 }

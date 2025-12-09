@@ -1,7 +1,7 @@
 export interface Flashcard {
-  id: string;
+  id: number;
   question: string;
   answer: string;
   dueAt: number; // Unix millisec timestamp
-  unitId: string;
+  unitId: number;
 }
