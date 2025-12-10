@@ -10,6 +10,12 @@ import {
 
 import { Button } from "~components/ui/button"
 import { Tabs, TabsList, TabsTrigger } from "~components/ui/tabs"
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger
+} from "~components/ui/tooltip"
 import { useSettings } from "~contexts/SettingsContext"
 import { useFiles } from "~hooks/useFiles"
 import { useRoute } from "~hooks/useRoute"
@@ -45,19 +51,40 @@ export const Routing = () => {
   return (
     <div className="w-[400px] min-h-[500px] bg-background flex flex-col p-4">
       <header className="flex justify-between pb-2">
-        <h1 className="text-2xl font-bold">
-          {currentTab.charAt(0).toUpperCase() + currentTab.slice(1)}
-        </h1>
-        {settings.autoScrape ? (
-          <Button variant="outline" onClick={() => scanFiles(settings.llm)}>
-            <BookMarked />
-          </Button>
-        ) : (
-          <Button variant="outline" onClick={() => scanFiles(settings.llm)}>
-            <FileSearchCorner />
-          </Button>
-        )}
+        <TooltipProvider>
+          <h1 className="text-2xl font-bold">
+            {currentTab.charAt(0).toUpperCase() + currentTab.slice(1)}
+          </h1>
+          {settings.autoScrape ? (
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button
+                  variant="outline"
+                  onClick={() => scanFiles(settings.llm)}>
+                  <BookMarked />
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent side="bottom">
+                Track this site for new files automatically.
+              </TooltipContent>
+            </Tooltip>
+          ) : (
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button
+                  variant="outline"
+                  onClick={() => scanFiles(settings.llm)}>
+                  <FileSearchCorner />
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent side="bottom">
+                Scan this site for new files.
+              </TooltipContent>
+            </Tooltip>
+          )}
+        </TooltipProvider>
       </header>
+
       <main className="flex-1">
         <Routes>
           <Route path="/" element={<Navigate to="/training" replace />} />
