@@ -1,6 +1,7 @@
 import {
   createContext,
   useContext,
+  useEffect,
   type ReactNode
 } from "react"
 
@@ -29,6 +30,14 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
     "settings",
     defaultSettings
   )
+
+  useEffect(() => {
+    if (settings?.darkMode) {
+      document.documentElement.classList.add("dark")
+    } else {
+      document.documentElement.classList.remove("dark")
+    }
+  }, [settings?.darkMode])
 
   return (
     <SettingsContext.Provider
