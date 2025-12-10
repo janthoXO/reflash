@@ -4,7 +4,9 @@ import type { PlasmoMessaging } from "@plasmohq/messaging"
 import { sendToContentScript } from "@plasmohq/messaging"
 
 import { db } from "~db/db"
+import { LLMProvider } from "~models/ai-providers"
 import type { File } from "~models/file"
+import type { LLMSettings } from "~models/settings"
 
 const OFFSCREEN_DOCUMENT_PATH = "tabs/offscreen.html"
 
@@ -30,7 +32,18 @@ async function setupOffscreenDocument() {
   })
 }
 
-const handler: PlasmoMessaging.MessageHandler<{}, {}> = async (req, res) => {
+const handler: PlasmoMessaging.MessageHandler<
+  { llmSettings: LLMSettings },
+  {}
+> = async (req, res) => {
+  if (!req.body) {
+    req.body = {
+      llmSettings: {
+        provider: LLMProvider.WASM
+      }
+    }
+  }
+
   console.debug("Background received files-scan request")
 
   // request files on site
@@ -76,11 +89,11 @@ const handler: PlasmoMessaging.MessageHandler<{}, {}> = async (req, res) => {
   //   name: "flashcards-generate",
   //   body: { files }
   // })
-    const { units, message }: { units: Unit[]; message: string } = await chrome.runtime.sendMessage({
-    name: "flashcards-generate",
-    body: { files }
-  })
-  console.debug("Offscreen document responded with message: ", message)
+  const { units }: { units: Unit[]; message: string } =
+    await chrome.runtime.sendMessage({
+      name: "flashcards-generate",
+      body: { files, llmSettings: req.body.llmSettings }
+    })
 
   console.debug("Received generated units from offscreen document", units)
   // save returned flashcards to DB

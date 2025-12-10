@@ -4,6 +4,7 @@ import { useEffect } from "react"
 import { MemoryRouter } from "react-router-dom"
 
 import { SelectedProvider } from "~contexts/SelectedContext"
+import { SettingsProvider } from "~contexts/SettingsContext"
 import { db, populateMockData } from "~db/db"
 import { Routing } from "~routes"
 
@@ -14,11 +15,13 @@ function IndexPopup() {
   }, [])
 
   return (
-    <SelectedProvider>
-      <MemoryRouter>
-        <Routing />
-      </MemoryRouter>
-    </SelectedProvider>
+    <SettingsProvider>
+      <SelectedProvider>
+        <MemoryRouter>
+          <Routing />
+        </MemoryRouter>
+      </SelectedProvider>
+    </SettingsProvider>
   )
 }
 

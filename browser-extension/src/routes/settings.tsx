@@ -1,7 +1,12 @@
+import SettingsComponent from "~components/settings"
+import { useSettings } from "~contexts/SettingsContext"
+
 export default function SettingsPage() {
+  const { settings, setSettings } = useSettings()
+
   return (
     <div>
-      <p>Settings page content goes here.</p>
+      <SettingsComponent settings={settings} setSettings={setSettings} />
     </div>
   )
 }

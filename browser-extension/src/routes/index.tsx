@@ -13,12 +13,14 @@ import { Tabs, TabsList, TabsTrigger } from "~components/ui/tabs"
 import LibraryPage from "./library"
 import SettingsPage from "./settings"
 import TrainingPage from "./training"
+import { useSettings } from "~contexts/SettingsContext"
 import { useFiles } from "~hooks/useFiles"
 
 export const Routing = () => {
   const location = useLocation()
   const navigate = useNavigate()
   const { scanFiles } = useFiles()
+  const { settings } = useSettings()
 
   // Determine current tab from path
   const currentTab = location.pathname.substring(1) || "training"
@@ -27,7 +29,7 @@ export const Routing = () => {
     <div className="w-[400px] min-h-[500px] bg-background flex flex-col p-4">
       <header className="flex justify-between pb-2">
         <h1 className="text-2xl font-bold">{currentTab.charAt(0).toUpperCase() + currentTab.slice(1)}</h1>
-        <Button variant="outline" onClick={scanFiles}>
+        <Button variant="outline" onClick={() => scanFiles(settings.llm)}>
           <CircleArrowOutDownLeft />
         </Button>
       </header>
