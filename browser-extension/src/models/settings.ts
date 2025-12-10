@@ -1,6 +1,13 @@
-interface Settings {
-    darkMode: boolean,
-    autoScrape: boolean
+import type { LLMProvider } from "./ai-providers"
 
-    // TODO add settings for own LLM key
+export interface LLMSettings {
+  provider: LLMProvider
+  apiKey?: string
+  url?: string
+}
+
+export interface Settings {
+  darkMode: boolean
+  autoScrape: boolean
+  llm: LLMSettings
 }

@@ -1,11 +1,19 @@
+import { createAnthropic } from "@ai-sdk/anthropic"
+import { createGoogleGenerativeAI } from "@ai-sdk/google"
+import { createOpenAI } from "@ai-sdk/openai"
 import { CreateMLCEngine, MLCEngine } from "@mlc-ai/web-llm"
 import type { Flashcard, Unit } from "@reflash/shared"
+import { generateText, type LanguageModel } from "ai"
+import { ollama } from "ollama-ai-provider-v2"
 import * as pdfjsLib from "pdfjs-dist"
 import { useState } from "react"
 
 import { useMessage } from "@plasmohq/messaging/hook"
 
+import { retry } from "~lib/retry"
+import { LLMProvider } from "~models/ai-providers"
 import type { File } from "~models/file"
+import type { LLMSettings } from "~models/settings"
 
 pdfjsLib.GlobalWorkerOptions.workerSrc = new URL(
   "pdfjs-dist/build/pdf.worker.min.mjs",
@@ -16,49 +24,77 @@ export default function Offscreen() {
   const [engine, setEngine] = useState<MLCEngine | null>(null)
   const [modelStatus, setModelStatus] = useState<string>("Not Loaded")
 
-  useMessage<{ files: File[] }, { units: Partial<Unit>[]; message: string }>(
-    async (req, res) => {
-      if (req.name !== "flashcards-generate" || !req.body) return
+  useMessage<
+    { files: File[]; llmSettings: LLMSettings },
+    { units: Partial<Unit>[] }
+  >(async (req, res) => {
+    if (req.name !== "flashcards-generate" || !req.body) return
 
-      console.debug("Received flashcards-generate", req)
-      try {
-        // 1. Start loading model immediately
-        const modelLoadingPromise = loadModel()
-
-        // 2. Start parsing all PDFs in parallel
-        const parsedFiles = await Promise.all(
-          req.body.files.map(async (file) => {
-            file.content = await parsePDF(file)
-            return file
-          })
-        )
-
-        // 4. Wait for model to finish loading
-        await modelLoadingPromise
-
-        // 5. Generate flashcards sequentially (or parallel if the engine supports it)
-        // Note: Most local LLM engines are single-threaded/sequential.
-        const units = await Promise.all(
-          parsedFiles.map(async (file) => {
-            const flashCards = await generateFlashcards(file.content)
-            return {
-              fileName: file.name,
-              fileUrl: file.url,
-              cards: flashCards
-            }
-          })
-        )
-
-        res.send({
-          units: units,
-          message: "Flashcards generated successfully"
-        })
-      } catch (e) {
-        console.error("Error in flashcards-generate:", e)
-        res.send({ units: [], message: `Error: ${e}` })
+    console.debug("Received flashcards-generate", req.body)
+    const units: Partial<Unit>[] = []
+    try {
+      // 1. Start loading model immediately
+      let modelLoadingPromise
+      if (req.body.llmSettings.provider === LLMProvider.WASM) {
+        modelLoadingPromise = loadModel()
       }
+
+      // 2. Start parsing all PDFs in parallel
+      const parsedFiles = await Promise.all(
+        req.body.files.map(async (file) => {
+          file.content = await parsePDF(file)
+          return file
+        })
+      )
+
+      // 4. Wait for model to finish loading
+      if (req.body.llmSettings.provider === LLMProvider.WASM) {
+        await modelLoadingPromise
+      }
+
+      // 5. Generate flashcards sequentially (or parallel if the engine supports it)
+      // Note: Most local LLM engines are single-threaded/sequential.
+      // const units = await Promise.all(
+      //   parsedFiles.map(async (file) => {
+      //     let flashCards
+      //     if (req.body?.llmSettings.provider === LLMProvider.WASM) {
+      //       flashCards = await generateFlashcards(file.content)
+      //     } else {
+      //       flashCards = await generateFlashcardsByProvider(
+      //         file.content,
+      //         req.body!.llmSettings
+      //       )
+      //     }
+      //     return {
+      //       fileName: file.name,
+      //       fileUrl: file.url,
+      //       cards: flashCards
+      //     }
+      //   })
+      // )
+      for (const file of parsedFiles) {
+        let flashCards: Flashcard[] = []
+        if (req.body?.llmSettings.provider === LLMProvider.WASM) {
+          flashCards = await generateFlashcards(file.content)
+        } else {
+          flashCards = await generateFlashcardsByProvider(
+            file.content,
+            req.body!.llmSettings
+          )
+        }
+        units.push({
+          fileName: file.name,
+          fileUrl: file.url,
+          cards: flashCards
+        })
+      }
+
+      res.send({ units: units })
+    } catch (e) {
+      console.error("Error in flashcards-generate:", e)
+      res.send({ units: units })
     }
-  )
+  })
 
   async function parsePDF(file: File): Promise<string> {
     if (!file.base64) {
@@ -144,6 +180,69 @@ export default function Offscreen() {
     return JSON.parse(
       response.choices[0]?.message.content ?? "[]"
     ) as Flashcard[]
+  }
+
+  async function generateFlashcardsByProvider(
+    fileContent: string,
+    llmSettings: LLMSettings
+  ): Promise<Flashcard[]> {
+    let model: LanguageModel
+
+    switch (llmSettings.provider) {
+      case "openai":
+        if (!llmSettings.apiKey) throw new Error("OpenAI API Key required")
+        const openai = createOpenAI({ apiKey: llmSettings.apiKey })
+        model = openai("gpt-5")
+        break
+
+      case "google":
+        if (!llmSettings.apiKey) throw new Error("Google API Key required")
+        const google = createGoogleGenerativeAI({ apiKey: llmSettings.apiKey })
+        model = google("gemini-2.5-flash")
+        break
+
+      case "anthropic":
+        if (!llmSettings.apiKey) throw new Error("Anthropic API Key required")
+        const anthropic = createAnthropic({ apiKey: llmSettings.apiKey })
+        model = anthropic("claude-sonnet-4-20250514")
+        break
+
+      case "ollama":
+        // Ollama runs locally on http://localhost:11434 by default
+        // No API Key is required for local Ollama
+        model = ollama("llama3")
+        break
+
+      default:
+        throw new Error(
+          `Provider ${llmSettings.provider} not supported in this helper`
+        )
+    }
+
+    // Unified call for all external providers
+    let { text } = await retry<{ text: string }>(() => {
+      return generateText({
+        model,
+        system:
+          "You are a teacher. Create flashcards from the user text. Output JSON format without any additional text: [{question: '...', answer: '...'}]",
+        prompt: fileContent
+      })
+    }, 3)
+
+    console.debug("LLM response:", text)
+
+    if (text.startsWith("```json")) {
+      // Clean code block markers if present
+      const match = text.match(/```json\s*([\s\S]*?)\s*```/)
+      if (match && match[1]) {
+        text = match[1]
+      }
+    }
+
+    const flashcards = JSON.parse(text) as Flashcard[]
+
+    // Step C: Reply
+    return flashcards
   }
 
   return <div>LLM Brain</div>
