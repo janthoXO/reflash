@@ -18,7 +18,7 @@ import {
 } from "~components/ui/tooltip"
 import { useSettings } from "~contexts/SettingsContext"
 import { useFiles } from "~hooks/useFiles"
-import { useRoute } from "~hooks/useRoute"
+import { useTabs } from "~hooks/useTabs"
 
 import LibraryPage from "./library"
 import SettingsPage from "./settings"
@@ -27,26 +27,23 @@ import TrainingPage from "./training"
 export const Routing = () => {
   const location = useLocation()
   const navigate = useNavigate()
-  const { currentRoute, setCurrentRoute } = useRoute()
+  const { currentTab, setCurrentTab } = useTabs()
   const { scanFiles } = useFiles()
   const { settings } = useSettings()
 
   // Sync route from storage on mount
   useEffect(() => {
-    console.debug("Navigating to stored route:", currentRoute)
-    if (location.pathname !== currentRoute) {
-      navigate(currentRoute)
+    console.debug("Navigating to stored route:", currentTab)
+    if (location.pathname !== currentTab) {
+      navigate(currentTab)
     }
   }, [])
 
   // Update storage route on location change
   useEffect(() => {
     console.debug("Updating currentRoute to:", location.pathname)
-    setCurrentRoute(location.pathname)
+    setCurrentTab(location.pathname)
   }, [location.pathname])
-
-  // Determine current tab from path
-  const currentTab = location.pathname.substring(1)
 
   return (
     <div className="w-[400px] min-h-[500px] bg-background flex flex-col p-4">
