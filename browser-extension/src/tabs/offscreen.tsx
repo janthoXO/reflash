@@ -1,55 +1,55 @@
-import { createAnthropic } from "@ai-sdk/anthropic"
-import { createGoogleGenerativeAI } from "@ai-sdk/google"
-import { createOpenAI } from "@ai-sdk/openai"
-import { CreateMLCEngine, MLCEngine } from "@mlc-ai/web-llm"
-import type { Flashcard, Unit } from "@reflash/shared"
-import { generateText, type LanguageModel } from "ai"
-import { ollama } from "ollama-ai-provider-v2"
-import * as pdfjsLib from "pdfjs-dist"
-import { useState } from "react"
+import { createAnthropic } from "@ai-sdk/anthropic";
+import { createGoogleGenerativeAI } from "@ai-sdk/google";
+import { createOpenAI } from "@ai-sdk/openai";
+import { CreateMLCEngine, MLCEngine } from "@mlc-ai/web-llm";
+import type { Flashcard, Unit } from "@reflash/shared";
+import { generateText, type LanguageModel } from "ai";
+import { ollama } from "ollama-ai-provider-v2";
+import * as pdfjsLib from "pdfjs-dist";
+import { useState } from "react";
 
-import { useMessage } from "@plasmohq/messaging/hook"
+import { useMessage } from "@plasmohq/messaging/hook";
 
-import { retry } from "~lib/retry"
-import { LLMProvider } from "~models/ai-providers"
-import type { File } from "~models/file"
-import type { LLMSettings } from "~models/settings"
+import { retry } from "~lib/retry";
+import { LLMProvider } from "~models/ai-providers";
+import type { File } from "~models/file";
+import type { LLMSettings } from "~models/settings";
 
 pdfjsLib.GlobalWorkerOptions.workerSrc = new URL(
   "pdfjs-dist/build/pdf.worker.min.mjs",
   import.meta.url
-).toString()
+).toString();
 
 export default function Offscreen() {
-  const [engine, setEngine] = useState<MLCEngine | null>(null)
-  const [modelStatus, setModelStatus] = useState<string>("Not Loaded")
+  const [engine, setEngine] = useState<MLCEngine | null>(null);
+  const [modelStatus, setModelStatus] = useState<string>("Not Loaded");
 
   useMessage<
     { files: File[]; llmSettings: LLMSettings },
     { units: Partial<Unit>[] }
   >(async (req, res) => {
-    if (req.name !== "flashcards-generate" || !req.body) return
+    if (req.name !== "flashcards-generate" || !req.body) return;
 
-    console.debug("Received flashcards-generate", req.body)
-    const units: Partial<Unit>[] = []
+    console.debug("Received flashcards-generate", req.body);
+    const units: Partial<Unit>[] = [];
     try {
       // 1. Start loading model immediately
-      let modelLoadingPromise
+      let modelLoadingPromise;
       if (req.body.llmSettings.provider === LLMProvider.WASM) {
-        modelLoadingPromise = loadModel()
+        modelLoadingPromise = loadModel();
       }
 
       // 2. Start parsing all PDFs in parallel
       const parsedFiles = await Promise.all(
         req.body.files.map(async (file) => {
-          file.content = await parsePDF(file)
-          return file
+          file.content = await parsePDF(file);
+          return file;
         })
-      )
+      );
 
       // 4. Wait for model to finish loading
       if (req.body.llmSettings.provider === LLMProvider.WASM) {
-        await modelLoadingPromise
+        await modelLoadingPromise;
       }
 
       // 5. Generate flashcards sequentially (or parallel if the engine supports it)
@@ -73,67 +73,67 @@ export default function Offscreen() {
       //   })
       // )
       for (const file of parsedFiles) {
-        let flashCards: Flashcard[] = []
+        let flashCards: Flashcard[] = [];
         if (req.body?.llmSettings.provider === LLMProvider.WASM) {
-          flashCards = await generateFlashcards(file.content)
+          flashCards = await generateFlashcards(file.content);
         } else {
           flashCards = await generateFlashcardsByProvider(
             file.content,
             req.body!.llmSettings
-          )
+          );
         }
         units.push({
           fileName: file.name,
           fileUrl: file.url,
-          cards: flashCards
-        })
+          cards: flashCards,
+        });
       }
 
-      res.send({ units: units })
+      res.send({ units: units });
     } catch (e) {
-      console.error("Error in flashcards-generate:", e)
-      res.send({ units: units })
+      console.error("Error in flashcards-generate:", e);
+      res.send({ units: units });
     }
-  })
+  });
 
   async function parsePDF(file: File): Promise<string> {
     if (!file.base64) {
-      console.warn(`File ${file.name} has no base64 data`)
-      return ""
+      console.warn(`File ${file.name} has no base64 data`);
+      return "";
     }
 
     try {
-      const binaryString = atob(file.base64)
-      const len = binaryString.length
-      const bytes = new Uint8Array(len)
+      const binaryString = atob(file.base64);
+      const len = binaryString.length;
+      const bytes = new Uint8Array(len);
       for (let i = 0; i < len; i++) {
-        bytes[i] = binaryString.charCodeAt(i)
+        bytes[i] = binaryString.charCodeAt(i);
       }
 
-      const loadingTask = pdfjsLib.getDocument({ data: bytes })
-      const pdf = await loadingTask.promise
+      const loadingTask = pdfjsLib.getDocument({ data: bytes });
+      const pdf = await loadingTask.promise;
 
-      let fullText = ""
+      let fullText = "";
       for (let i = 1; i <= pdf.numPages; i++) {
-        const page = await pdf.getPage(i)
-        const textContent = await page.getTextContent()
+        const page = await pdf.getPage(i);
+        const textContent = await page.getTextContent();
         const pageText = textContent.items
           .map((item: any) => item.str)
-          .join(" ")
-        fullText += pageText + "\n"
+          .join(" ");
+        fullText += pageText + "\n";
       }
 
-      return fullText
+      return fullText;
     } catch (e) {
-      console.error(`Error parsing PDF ${file.name}:`, e)
-      throw e
+      console.error(`Error parsing PDF ${file.name}:`, e);
+      throw e;
     }
   }
 
   async function loadModel() {
     if (engine !== null) {
-      console.debug("Model already loaded")
-      return
+      console.debug("Model already loaded");
+      return;
     }
 
     const e = await CreateMLCEngine("Qwen3-0.6B-q4f16_1-MLC", {
@@ -149,17 +149,17 @@ export default function Offscreen() {
       //     ]
       //   },
       initProgressCallback: (progress) => {
-        console.debug("Model loading progress:", progress.text)
-        setModelStatus(progress.text)
-      }
-    })
+        console.debug("Model loading progress:", progress.text);
+        setModelStatus(progress.text);
+      },
+    });
 
-    setEngine(e)
+    setEngine(e);
   }
 
   async function generateFlashcards(fileContent: string): Promise<Flashcard[]> {
     if (!engine) {
-      throw new Error("Model not loaded")
+      throw new Error("Model not loaded");
     }
 
     const response = await engine.chat.completions.create({
@@ -167,56 +167,56 @@ export default function Offscreen() {
         {
           role: "system",
           content:
-            "You are a teacher. Create flashcards from the user text. Output JSON format: [{question: '...', answer: '...'}]"
+            "You are a teacher. Create flashcards from the user text. Output JSON format: [{question: '...', answer: '...'}]",
         },
-        { role: "user", content: fileContent }
+        { role: "user", content: fileContent },
       ],
-      response_format: { type: "json_object" }
-    })
+      response_format: { type: "json_object" },
+    });
 
-    console.debug("LLM response:", response)
+    console.debug("LLM response:", response);
 
     // Step C: Reply
     return JSON.parse(
       response.choices[0]?.message.content ?? "[]"
-    ) as Flashcard[]
+    ) as Flashcard[];
   }
 
   async function generateFlashcardsByProvider(
     fileContent: string,
     llmSettings: LLMSettings
   ): Promise<Flashcard[]> {
-    let model: LanguageModel
+    let model: LanguageModel;
 
     switch (llmSettings.provider) {
-      case "openai":
-        if (!llmSettings.apiKey) throw new Error("OpenAI API Key required")
-        const openai = createOpenAI({ apiKey: llmSettings.apiKey })
-        model = openai("gpt-5")
-        break
+      case LLMProvider.OPENAI:
+        if (!llmSettings.apiKey) throw new Error("OpenAI API Key required");
+        const openai = createOpenAI({ apiKey: llmSettings.apiKey });
+        model = openai("gpt-5");
+        break;
 
-      case "google":
-        if (!llmSettings.apiKey) throw new Error("Google API Key required")
-        const google = createGoogleGenerativeAI({ apiKey: llmSettings.apiKey })
-        model = google("gemini-2.5-flash")
-        break
+      case LLMProvider.GOOGLE:
+        if (!llmSettings.apiKey) throw new Error("Google API Key required");
+        const google = createGoogleGenerativeAI({ apiKey: llmSettings.apiKey });
+        model = google("gemini-2.5-flash");
+        break;
 
-      case "anthropic":
-        if (!llmSettings.apiKey) throw new Error("Anthropic API Key required")
-        const anthropic = createAnthropic({ apiKey: llmSettings.apiKey })
-        model = anthropic("claude-sonnet-4-20250514")
-        break
+      case LLMProvider.ANTHROPIC:
+        if (!llmSettings.apiKey) throw new Error("Anthropic API Key required");
+        const anthropic = createAnthropic({ apiKey: llmSettings.apiKey });
+        model = anthropic("claude-sonnet-4-20250514");
+        break;
 
-      case "ollama":
+      case LLMProvider.OLLAMA:
         // Ollama runs locally on http://localhost:11434 by default
         // No API Key is required for local Ollama
-        model = ollama("llama3")
-        break
+        model = ollama("llama3");
+        break;
 
       default:
         throw new Error(
           `Provider ${llmSettings.provider} not supported in this helper`
-        )
+        );
     }
 
     // Unified call for all external providers
@@ -225,25 +225,25 @@ export default function Offscreen() {
         model,
         system:
           "You are a teacher. Create flashcards from the user text. Output JSON format without any additional text: [{question: '...', answer: '...'}]",
-        prompt: fileContent
-      })
-    }, 3)
+        prompt: fileContent,
+      });
+    }, 3);
 
-    console.debug("LLM response:", text)
+    console.debug("LLM response:", text);
 
     if (text.startsWith("```json")) {
       // Clean code block markers if present
-      const match = text.match(/```json\s*([\s\S]*?)\s*```/)
+      const match = text.match(/```json\s*([\s\S]*?)\s*```/);
       if (match && match[1]) {
-        text = match[1]
+        text = match[1];
       }
     }
 
-    const flashcards = JSON.parse(text) as Flashcard[]
+    const flashcards = JSON.parse(text) as Flashcard[];
 
     // Step C: Reply
-    return flashcards
+    return flashcards;
   }
 
-  return <div>LLM Brain</div>
+  return <div>LLM Brain</div>;
 }

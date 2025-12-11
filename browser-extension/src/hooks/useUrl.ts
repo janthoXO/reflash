@@ -1,20 +1,20 @@
-import { useEffect, useState } from "react"
+import { useEffect, useState } from "react";
 
 export function useUrl() {
-  const [currentUrl, setCurrentUrl] = useState<string | undefined>(undefined)
+  const [currentUrl, setCurrentUrl] = useState<string | undefined>(undefined);
 
   useEffect(() => {
     // 1. Get initial URL of the active tab
     const getUrl = async () => {
       const [tab] = await chrome.tabs.query({
         active: true,
-        currentWindow: true
-      })
+        currentWindow: true,
+      });
       if (tab?.url) {
-        setCurrentUrl(tab.url)
+        setCurrentUrl(tab.url);
       }
-    }
-    getUrl()
+    };
+    getUrl();
 
     // 2. Listen for URL changes (navigation within the tab)
     const handleUpdate = (
@@ -24,13 +24,13 @@ export function useUrl() {
     ) => {
       // Only update if the active tab's URL changed
       if (changeInfo.url && tab.active) {
-        setCurrentUrl(changeInfo.url)
+        setCurrentUrl(changeInfo.url);
       }
-    }
+    };
 
-    chrome.tabs.onUpdated.addListener(handleUpdate)
-    return () => chrome.tabs.onUpdated.removeListener(handleUpdate)
-  }, [])
+    chrome.tabs.onUpdated.addListener(handleUpdate);
+    return () => chrome.tabs.onUpdated.removeListener(handleUpdate);
+  }, []);
 
-  return { currentUrl }
+  return { currentUrl };
 }

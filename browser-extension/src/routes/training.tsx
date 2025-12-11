@@ -1,29 +1,29 @@
-import "~style.css"
+import "~style.css";
 
-import type { Flashcard } from "@reflash/shared"
-import { useLiveQuery } from "dexie-react-hooks"
+import type { Flashcard } from "@reflash/shared";
+import { useLiveQuery } from "dexie-react-hooks";
 
-import TrainFlashcard from "~components/train-flashcard"
-import { useSelected } from "~contexts/SelectedContext"
-import { db } from "~db/db"
+import TrainFlashcard from "~components/train-flashcard";
+import { useSelected } from "~contexts/SelectedContext";
+import { db } from "~db/db";
 
 export default function TrainingPage() {
-  const { selectedMap, isLoading } = useSelected()
+  const { selectedMap, isLoading } = useSelected();
 
   // Fetch due cards
   const dueCards = useLiveQuery(async () => {
-    const selectedUnitIds = Object.values(selectedMap).flat()
-    if (selectedUnitIds.length === 0) return []
+    const selectedUnitIds = Object.values(selectedMap).flat();
+    if (selectedUnitIds.length === 0) return [];
 
     return await db.flashcards
       .where("unitId")
       .anyOf(selectedUnitIds)
       .filter((fc) => fc.dueAt < Date.now())
-      .toArray()
-  }, [selectedMap])
+      .toArray();
+  }, [selectedMap]);
 
   if (isLoading || !dueCards) {
-    return <div className="p-4">Loading...</div>
+    return <div className="p-4">Loading...</div>;
   }
 
   const handleAnswer = async (flashcard: Flashcard, correct: boolean) => {
@@ -31,10 +31,10 @@ export default function TrainingPage() {
     // Simple SRS: Correct -> 1 day, Wrong -> 1 minute
     const newDueAt = correct
       ? Date.now() + 24 * 60 * 60 * 1000
-      : Date.now() + 60 * 1000
+      : Date.now() + 60 * 1000;
 
-    await db.flashcards.update(flashcard.id, { dueAt: newDueAt })
-  }
+    await db.flashcards.update(flashcard.id, { dueAt: newDueAt });
+  };
 
   return (
     <div className="h-full flex flex-col">
@@ -56,5 +56,5 @@ export default function TrainingPage() {
         </div>
       )}
     </div>
-  )
+  );
 }

@@ -1,0 +1,31 @@
+name: Release Extension
+
+on:
+  release:
+    types: [released]
+
+jobs:
+  package:
+    uses: ./.github/workflows/package.extension.yml
+    with:
+      version: ${{ github.event.release.tag_name }}
+
+  release:
+    needs: package
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+      - name: Download artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: extension-${{ github.event.release.tag_name }}.zip
+          path: .
+
+      - name: Upload Release Asset
+        uses: softprops/action-gh-release@v1
+        with:
+          files: extension-build/**/*.zip
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

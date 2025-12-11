@@ -1,18 +1,18 @@
-import "./style.css"
+import "./style.css";
 
-import { useEffect } from "react"
-import { MemoryRouter } from "react-router-dom"
+import { useEffect } from "react";
+import { MemoryRouter } from "react-router-dom";
 
-import { SelectedProvider } from "~contexts/SelectedContext"
-import { SettingsProvider } from "~contexts/SettingsContext"
-import { db, populateMockData } from "~db/db"
-import { Routing } from "~routes"
+import { SelectedProvider } from "~contexts/SelectedContext";
+import { SettingsProvider } from "~contexts/SettingsContext";
+import { db, populateMockData } from "~db/db";
+import { Routing } from "~routes";
 
 function IndexPopup() {
   useEffect(() => {
     // Uncomment to populate mock data on startup
-    populateMockData(db)
-  }, [])
+    populateMockData(db);
+  }, []);
 
   return (
     <SettingsProvider>
@@ -22,7 +22,7 @@ function IndexPopup() {
         </MemoryRouter>
       </SelectedProvider>
     </SettingsProvider>
-  )
+  );
 }
 
-export default IndexPopup
+export default IndexPopup;

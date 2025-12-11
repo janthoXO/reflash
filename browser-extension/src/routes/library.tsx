@@ -1,35 +1,36 @@
-import { useLiveQuery } from "dexie-react-hooks"
+import type { Course, Unit } from "@reflash/shared";
+import { useLiveQuery } from "dexie-react-hooks";
 
 import {
   Accordion,
   AccordionContent,
   AccordionItem,
-  AccordionTrigger
-} from "~components/ui/accordion"
-import { useSelected } from "~contexts/SelectedContext"
-import { db } from "~db/db"
+  AccordionTrigger,
+} from "~components/ui/accordion";
+import { useSelected } from "~contexts/SelectedContext";
+import { db } from "~db/db";
 
 export default function LibraryPage() {
-  const courses = useLiveQuery(() => db.courses.toArray())
-  const units = useLiveQuery(() => db.units.toArray())
+  const courses = useLiveQuery(() => db.courses.toArray());
+  const units = useLiveQuery(() => db.units.toArray());
 
   const {
     isCourseSelected,
     isUnitSelected,
     toggleCourse,
     toggleUnit,
-    isLoading: isSelectionLoading
-  } = useSelected()
+    isLoading: isSelectionLoading,
+  } = useSelected();
 
   if (!courses || !units || isSelectionLoading) {
-    return <div className="p-4">Loading...</div>
+    return <div className="p-4">Loading...</div>;
   }
 
   return (
     <div>
       <Accordion type="multiple" className="w-full space-y-2">
         {courses.map((course) => {
-          const courseUnits = units.filter((u) => u.courseId === course.id)
+          const courseUnits = units.filter((u) => u.courseId === course.id);
           return (
             <CourseItem
               key={course.id}
@@ -45,14 +46,14 @@ export default function LibraryPage() {
               }
               onToggleUnit={toggleUnit}
             />
-          )
+          );
         })}
       </Accordion>
       {courses.length === 0 && (
         <p className="text-muted-foreground">No courses found.</p>
       )}
     </div>
-  )
+  );
 }
 
 function CourseItem({
@@ -61,20 +62,21 @@ function CourseItem({
   isSelected,
   isUnitSelected,
   onToggleCourse,
-  onToggleUnit
+  onToggleUnit,
 }: {
-  course: any
-  units: any[]
-  isSelected: boolean
-  isUnitSelected: (courseId: number, unitId: number) => boolean
-  onToggleCourse: () => void
-  onToggleUnit: (courseId: number, unitId: number) => void
+  course: Course;
+  units: Unit[];
+  isSelected: boolean;
+  isUnitSelected: (courseId: number, unitId: number) => boolean;
+  onToggleCourse: () => void;
+  onToggleUnit: (courseId: number, unitId: number) => void;
 }) {
   // TODO: make course name editable
   return (
     <AccordionItem
-      value={course.id}
-      className="border rounded-lg px-4 bg-card text-card-foreground shadow-sm">
+      value={course.id.toString()}
+      className="border rounded-lg px-4 bg-card text-card-foreground shadow-sm"
+    >
       <AccordionTrigger className="hover:no-underline py-3">
         <div className="flex items-center gap-2">
           <input
@@ -106,5 +108,5 @@ function CourseItem({
         </div>
       </AccordionContent>
     </AccordionItem>
-  )
+  );
 }

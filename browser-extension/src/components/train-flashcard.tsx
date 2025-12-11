@@ -1,32 +1,32 @@
-import type { Flashcard } from "@reflash/shared"
-import { Check, RotateCcw, XCircle } from "lucide-react"
-import { useEffect, useState } from "react"
+import type { Flashcard } from "@reflash/shared";
+import { Check, RotateCcw, XCircle } from "lucide-react";
+import { useEffect, useState } from "react";
 
-import { Button } from "~components/ui/button"
-import { Card, CardAction, CardContent, CardHeader } from "~components/ui/card"
+import { Button } from "~components/ui/button";
+import { Card, CardAction, CardContent, CardHeader } from "~components/ui/card";
 
 interface TrainFlashcardProps {
-  flashcard: Flashcard
-  onAnswer: (correct: boolean) => void
+  flashcard: Flashcard;
+  onAnswer: (correct: boolean) => void;
 }
 
 export default function TrainFlashcard({
   flashcard,
-  onAnswer
+  onAnswer,
 }: TrainFlashcardProps) {
-  const [isFlipped, setIsFlipped] = useState(false)
+  const [isFlipped, setIsFlipped] = useState(false);
 
   useEffect(() => {
-    setIsFlipped(false)
-  }, [flashcard])
+    setIsFlipped(false);
+  }, [flashcard]);
 
   function onFlipCard() {
-    setIsFlipped(!isFlipped)
+    setIsFlipped(!isFlipped);
   }
 
   function _onAnswer(correct: boolean) {
-    setIsFlipped(false)
-    onAnswer(correct)
+    setIsFlipped(false);
+    onAnswer(correct);
   }
 
   return (
@@ -63,5 +63,5 @@ export default function TrainFlashcard({
         </CardAction>
       </Card>
     </div>
-  )
+  );
 }
