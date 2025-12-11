@@ -1,73 +1,73 @@
-import { CircleQuestionMark } from "lucide-react"
-import { useState } from "react"
+import { CircleQuestionMark } from "lucide-react";
+import { useState } from "react";
 
-import { Input } from "~components/ui/input"
-import { Label } from "~components/ui/label"
+import { Input } from "~components/ui/input";
+import { Label } from "~components/ui/label";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
-  SelectValue
-} from "~components/ui/select"
-import { Switch } from "~components/ui/switch"
+  SelectValue,
+} from "~components/ui/select";
+import { Switch } from "~components/ui/switch";
 import {
   Tooltip,
   TooltipContent,
   TooltipProvider,
-  TooltipTrigger
-} from "~components/ui/tooltip"
-import { LLMProvider } from "~models/ai-providers"
-import type { Settings } from "~models/settings"
+  TooltipTrigger,
+} from "~components/ui/tooltip";
+import { LLMProvider } from "~models/ai-providers";
+import type { Settings } from "~models/settings";
 
 interface SettingsProps {
-  settings: Settings
-  setSettings: (setter: Settings) => Promise<void>
+  settings: Settings;
+  setSettings: (setter: Settings) => Promise<void>;
 }
 
 export default function SettingsComponent({
   settings,
-  setSettings
+  setSettings,
 }: SettingsProps) {
   const handleDarkModeChange = (checked: boolean) => {
-    setSettings({ ...settings, darkMode: checked })
-  }
+    setSettings({ ...settings, darkMode: checked });
+  };
 
   const handleAutoScrapeChange = (checked: boolean) => {
-    setSettings({ ...settings, autoScrape: checked })
-  }
+    setSettings({ ...settings, autoScrape: checked });
+  };
 
   const handleProviderChange = (value: LLMProvider) => {
     setSettings({
       ...settings,
       llm: {
         ...settings.llm,
-        provider: value
-      }
-    })
-  }
+        provider: value,
+      },
+    });
+  };
 
-  const [showApiKey, setShowApiKey] = useState(false)
+  const [showApiKey, setShowApiKey] = useState(false);
 
   const handleApiKeyChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setSettings({
       ...settings,
       llm: {
         ...settings.llm,
-        apiKey: e.target.value
-      }
-    })
-  }
+        apiKey: e.target.value,
+      },
+    });
+  };
 
   const handleUrlChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setSettings({
       ...settings,
       llm: {
         ...settings.llm,
-        url: e.target.value
-      }
-    })
-  }
+        url: e.target.value,
+      },
+    });
+  };
 
   return (
     <div className="space-y-6 p-4">
@@ -122,7 +122,8 @@ export default function SettingsComponent({
             <Label htmlFor="llm-provider">LLM Provider</Label>
             <Select
               value={settings.llm.provider}
-              onValueChange={handleProviderChange}>
+              onValueChange={handleProviderChange}
+            >
               <SelectTrigger id="llm-provider">
                 <SelectValue placeholder="Select a provider" />
               </SelectTrigger>
@@ -167,5 +168,5 @@ export default function SettingsComponent({
         </div>
       </TooltipProvider>
     </div>
-  )
+  );
 }

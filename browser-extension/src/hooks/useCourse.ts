@@ -1,19 +1,19 @@
-import { sendToBackground } from "@plasmohq/messaging"
+import { sendToBackground } from "@plasmohq/messaging";
 
-import type { LLMSettings } from "~models/settings"
+import type { LLMSettings } from "~models/settings";
 
 export function useCourse() {
   async function scanFiles(llmSettings: LLMSettings) {
-    console.debug("useFiles: scanFiles called with LLM settings", llmSettings)
+    console.debug("useFiles: scanFiles called with LLM settings", llmSettings);
     await sendToBackground({
       name: "files-scan",
-      body: { llmSettings: llmSettings }
-    })
+      body: { llmSettings: llmSettings },
+    });
   }
 
   async function trackCourse(llmSettings: LLMSettings) {
-    scanFiles(llmSettings)
+    scanFiles(llmSettings);
   }
 
-  return { scanFiles, trackCourse }
+  return { scanFiles, trackCourse };
 }

@@ -1,65 +1,65 @@
-import { useLiveQuery } from "dexie-react-hooks"
-import { BookMarked, FileSearchCorner, Settings } from "lucide-react"
-import { useEffect } from "react"
+import { useLiveQuery } from "dexie-react-hooks";
+import { BookMarked, FileSearchCorner, Settings } from "lucide-react";
+import { useEffect } from "react";
 import {
   Navigate,
   Route,
   Routes,
   useLocation,
-  useNavigate
-} from "react-router-dom"
+  useNavigate,
+} from "react-router-dom";
 
-import { Button } from "~components/ui/button"
-import { Tabs, TabsList, TabsTrigger } from "~components/ui/tabs"
+import { Button } from "~components/ui/button";
+import { Tabs, TabsList, TabsTrigger } from "~components/ui/tabs";
 import {
   Tooltip,
   TooltipContent,
   TooltipProvider,
-  TooltipTrigger
-} from "~components/ui/tooltip"
-import { useSettings } from "~contexts/SettingsContext"
-import { db } from "~db/db"
-import { useCourse } from "~hooks/useCourse"
-import { useTabs } from "~hooks/useTabs"
-import { useUrl } from "~hooks/useUrl"
+  TooltipTrigger,
+} from "~components/ui/tooltip";
+import { useSettings } from "~contexts/SettingsContext";
+import { db } from "~db/db";
+import { useCourse } from "~hooks/useCourse";
+import { useTabs } from "~hooks/useTabs";
+import { useUrl } from "~hooks/useUrl";
 
-import LibraryPage from "./library"
-import SettingsPage from "./settings"
-import TrainingPage from "./training"
+import LibraryPage from "./library";
+import SettingsPage from "./settings";
+import TrainingPage from "./training";
 
 export const Routing = () => {
-  const location = useLocation()
-  const navigate = useNavigate()
-  const { currentTab, setCurrentTab } = useTabs()
-  const { scanFiles, trackCourse } = useCourse()
-  const { settings } = useSettings()
-  const { currentUrl } = useUrl()
+  const location = useLocation();
+  const navigate = useNavigate();
+  const { currentTab, setCurrentTab } = useTabs();
+  const { scanFiles, trackCourse } = useCourse();
+  const { settings } = useSettings();
+  const { currentUrl } = useUrl();
 
   // Sync route from storage on mount
   useEffect(() => {
-    console.debug("Navigating to stored route:", currentTab)
+    console.debug("Navigating to stored route:", currentTab);
     if (location.pathname !== currentTab) {
-      navigate(currentTab)
+      navigate(currentTab);
     }
-  }, [])
+  }, []);
 
   // Update storage route on location change
   useEffect(() => {
-    console.debug("Updating currentRoute to:", location.pathname)
-    setCurrentTab(location.pathname)
-  }, [location.pathname])
+    console.debug("Updating currentRoute to:", location.pathname);
+    setCurrentTab(location.pathname);
+  }, [location.pathname]);
 
   // Fetch due cards
   const currentUrlCourse = useLiveQuery(async () => {
-    return await db.courses.get({ url: currentUrl })
-  }, [currentUrl])
+    return await db.courses.get({ url: currentUrl });
+  }, [currentUrl]);
 
   // if autoscrape is enabled, scan files when URL changes to an already tracked course
   useEffect(() => {
-    if (!settings.autoScrape || !currentUrlCourse) return
+    if (!settings.autoScrape || !currentUrlCourse) return;
 
-    scanFiles(settings.llm)
-  }, [currentUrlCourse, settings.autoScrape])
+    scanFiles(settings.llm);
+  }, [currentUrlCourse, settings.autoScrape]);
 
   return (
     <div className="w-[400px] min-h-[500px] bg-background flex flex-col p-4">
@@ -73,7 +73,8 @@ export const Routing = () => {
               <TooltipTrigger asChild>
                 <Button
                   variant="outline"
-                  onClick={() => scanFiles(settings.llm)}>
+                  onClick={() => scanFiles(settings.llm)}
+                >
                   <FileSearchCorner />
                 </Button>
               </TooltipTrigger>
@@ -86,7 +87,8 @@ export const Routing = () => {
               <TooltipTrigger asChild>
                 <Button
                   variant="outline"
-                  onClick={() => trackCourse(settings.llm)}>
+                  onClick={() => trackCourse(settings.llm)}
+                >
                   <BookMarked />
                 </Button>
               </TooltipTrigger>
@@ -111,7 +113,8 @@ export const Routing = () => {
         <Tabs
           value={currentTab.slice(1)}
           onValueChange={(value) => navigate(`/${value}`)}
-          className="w-full">
+          className="w-full"
+        >
           <TabsList className="w-full flex flex-wrap">
             <TabsTrigger value="training" className="flex-1">
               Training
@@ -126,5 +129,5 @@ export const Routing = () => {
         </Tabs>
       </footer>
     </div>
-  )
-}
+  );
+};

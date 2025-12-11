@@ -1,37 +1,37 @@
-import type { PlasmoCSConfig } from "plasmo"
+import type { PlasmoCSConfig } from "plasmo";
 
-import { useMessage } from "@plasmohq/messaging/hook"
+import { useMessage } from "@plasmohq/messaging/hook";
 
-import type { File } from "~models/file"
+import type { File } from "~models/file";
 
 export const config: PlasmoCSConfig = {
   matches: ["<all_urls>"],
-  all_frames: true
-}
+  all_frames: true,
+};
 
 export default function FilesScan() {
   /**
    * Content Script - Listens to files-scan
    */
   useMessage<{}, { courseUrl: string; files: File[] }>(async (req, res) => {
-    if (req.name !== "files-scan") return
+    if (req.name !== "files-scan") return;
 
-    console.debug("Received files-scan", req)
+    console.debug("Received files-scan", req);
 
-    const courseUrl = window.location.href
+    const courseUrl = window.location.href;
     scanForPDFLinks().then((files) => {
       // Publish FILES_SCANNED event
-      console.debug("Return scanned files ", files)
-      res.send({ courseUrl: courseUrl, files: files })
-    })
-  })
+      console.debug("Return scanned files ", files);
+      res.send({ courseUrl: courseUrl, files: files });
+    });
+  });
 
-  return null
+  return null;
 }
 
 async function scanForPDFLinks(): Promise<File[]> {
   // Find all links on the page
-  var linkToFileMap = new Map<string, File>()
+  const linkToFileMap = new Map<string, File>();
   document
     .querySelectorAll<HTMLAnchorElement>("a[href]")
     .values()
@@ -41,20 +41,20 @@ async function scanForPDFLinks(): Promise<File[]> {
         !link.href.endsWith(".pdf") && // Standard PDFs
         !link.href.includes(".pdf?")
       ) {
-        return
+        return;
       }
 
       if (linkToFileMap.has(link.href)) {
-        return
+        return;
       }
 
-      const name = link.textContent?.trim() + ".pdf"
+      const name = link.textContent?.trim() + ".pdf";
 
       linkToFileMap.set(link.href, {
         name: name,
-        url: link.href
-      })
-    })
+        url: link.href,
+      });
+    });
 
-  return Array.from(linkToFileMap.values())
+  return Array.from(linkToFileMap.values());
 }
