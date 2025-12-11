@@ -2,6 +2,8 @@ name: Package Extension
 
 on:
   pull_request:
+    branches:
+      - main
     paths:
       - "browser-extension/**"
   push:
@@ -47,6 +49,6 @@ jobs:
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
-          name: extension-${{ inputs.version }}
+          name: extension-${{ inputs.version }}.zip
           path: browser-extension/build/**/*.zip
           if-no-files-found: error
