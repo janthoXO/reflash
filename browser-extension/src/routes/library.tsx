@@ -1,5 +1,9 @@
 import type { Course, Unit } from "@reflash/shared";
 import { useLiveQuery } from "dexie-react-hooks";
+import { FolderDown, X } from "lucide-react";
+import { toast } from "sonner";
+import Header from "~components/header";
+import TrackingButton from "~components/trackingButton";
 
 import {
   Accordion,
@@ -7,6 +11,12 @@ import {
   AccordionItem,
   AccordionTrigger,
 } from "~components/ui/accordion";
+import { Button } from "~components/ui/button";
+import {
+  Tooltip,
+  TooltipTrigger,
+  TooltipContent,
+} from "~components/ui/tooltip";
 import { useSelected } from "~contexts/SelectedContext";
 import { db } from "~db/db";
 
@@ -28,29 +38,48 @@ export default function LibraryPage() {
 
   return (
     <div>
-      <Accordion type="multiple" className="w-full space-y-2">
-        {courses.map((course) => {
-          const courseUnits = units.filter((u) => u.courseId === course.id);
-          return (
-            <CourseItem
-              key={course.id}
-              course={course}
-              units={courseUnits}
-              isSelected={isCourseSelected(course.id)}
-              isUnitSelected={isUnitSelected}
-              onToggleCourse={() =>
-                toggleCourse(
-                  course.id,
-                  courseUnits.map((u) => u.id)
-                )
-              }
-              onToggleUnit={toggleUnit}
-            />
-          );
-        })}
-      </Accordion>
-      {courses.length === 0 && (
+      <Header
+        title="Library"
+        suffix={[
+          <Tooltip key="export-anki-tooltip">
+            <TooltipTrigger asChild>
+              <Button
+                onClick={() => {
+                  toast.warning("Export to Anki not implemented yet.");
+                }}
+              >
+                <FolderDown />
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent>Export Flashcards to Anki Format</TooltipContent>
+          </Tooltip>,
+          <TrackingButton key="library-tracking-button" />,
+        ]}
+      />
+      {courses.length === 0 ? (
         <p className="text-muted-foreground">No courses found.</p>
+      ) : (
+        <Accordion type="multiple" className="w-full space-y-2">
+          {courses.map((course) => {
+            const courseUnits = units.filter((u) => u.courseId === course.id);
+            return (
+              <CourseItem
+                key={course.id}
+                course={course}
+                units={courseUnits}
+                isSelected={isCourseSelected(course.id)}
+                isUnitSelected={isUnitSelected}
+                onToggleCourse={() =>
+                  toggleCourse(
+                    course.id,
+                    courseUnits.map((u) => u.id)
+                  )
+                }
+                onToggleUnit={toggleUnit}
+              />
+            );
+          })}
+        </Accordion>
       )}
     </div>
   );

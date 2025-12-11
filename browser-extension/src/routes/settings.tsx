@@ -1,4 +1,6 @@
+import Header from "~components/header";
 import SettingsComponent from "~components/settings";
+import TrackingButton from "~components/trackingButton";
 import { useSettings } from "~contexts/SettingsContext";
 
 export default function SettingsPage() {
@@ -6,6 +8,7 @@ export default function SettingsPage() {
 
   return (
     <div>
+      <Header title="Settings" suffix={[<TrackingButton key="settings-tracking-button" />]} />
       <SettingsComponent settings={settings} setSettings={setSettings} />
     </div>
   );
