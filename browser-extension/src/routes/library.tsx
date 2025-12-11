@@ -70,6 +70,7 @@ function CourseItem({
   onToggleCourse: () => void
   onToggleUnit: (courseId: number, unitId: number) => void
 }) {
+  // TODO: make course name editable
   return (
     <AccordionItem
       value={course.id}
