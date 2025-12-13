@@ -6,6 +6,8 @@ import { useLiveQuery } from "dexie-react-hooks";
 import TrainFlashcard from "~components/train-flashcard";
 import { useSelected } from "~contexts/SelectedContext";
 import { db } from "~db/db";
+import Header from "~components/header";
+import TrackingButton from "~components/trackingButton";
 
 export default function TrainingPage() {
   const { selectedMap, isLoading } = useSelected();
@@ -37,24 +39,30 @@ export default function TrainingPage() {
   };
 
   return (
-    <div className="h-full flex flex-col">
-      {dueCards.length === 0 ? (
-        <p className="text-muted-foreground">
-          No cards due for selected units.
-        </p>
-      ) : (
-        <div>
-          <div className="flex-1">
-            <TrainFlashcard
-              flashcard={dueCards[0]!}
-              onAnswer={(correct) => handleAnswer(dueCards[0]!, correct)}
-            />
+    <div>
+      <Header
+        title="Training"
+        suffix={[<TrackingButton key="training-tracking-button" />]}
+      />
+      <div className="h-full flex flex-col">
+        {dueCards.length === 0 ? (
+          <p className="text-muted-foreground">
+            No cards due for selected units.
+          </p>
+        ) : (
+          <div>
+            <div className="flex-1">
+              <TrainFlashcard
+                flashcard={dueCards[0]!}
+                onAnswer={(correct) => handleAnswer(dueCards[0]!, correct)}
+              />
+            </div>
+            <div className="mt-4 text-center text-sm text-muted-foreground">
+              {dueCards.length} cards due
+            </div>
           </div>
-          <div className="mt-4 text-center text-sm text-muted-foreground">
-            {dueCards.length} cards due
-          </div>
-        </div>
-      )}
+        )}
+      </div>
     </div>
   );
 }

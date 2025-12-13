@@ -2,8 +2,8 @@ import type { Course, Flashcard, Unit } from "@reflash/shared";
 import Dexie, { type EntityTable } from "dexie";
 
 class ReflashDB extends Dexie {
-  courses!: EntityTable<Course, "id">;
-  units!: EntityTable<Unit, "id">;
+  courses!: EntityTable<Omit<Course, "units">, "id">;
+  units!: EntityTable<Omit<Unit, "cards">, "id">;
   flashcards!: EntityTable<Flashcard, "id">;
 
   constructor() {
@@ -42,21 +42,21 @@ export async function populateMockData(db: ReflashDB) {
         [
           {
             courseId: courseIds[0]!,
+            name: "Lecture 1: Basics.pdf",
             fileName: "Lecture 1: Basics.pdf",
             fileUrl: "https://example.com/cs101/lecture1.pdf",
-            cards: [],
           },
           {
             courseId: courseIds[0]!,
+            name: "Lecture 2: Algorithms.pdf",
             fileName: "Lecture 2: Algorithms.pdf",
             fileUrl: "https://example.com/cs101/lecture2.pdf",
-            cards: [],
           },
           {
             courseId: courseIds[1]!,
+            name: "Calculus Review.pdf",
             fileName: "Calculus Review.pdf",
             fileUrl: "https://example.com/math201/calculus.pdf",
-            cards: [],
           },
         ],
         { allKeys: true }

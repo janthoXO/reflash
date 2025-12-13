@@ -9,13 +9,14 @@ import {
 import { useStorage } from "@plasmohq/storage/hook";
 
 import { db } from "~db/db";
+import type { Course, Unit } from "@reflash/shared";
 
 interface SelectedContextType {
   // courseId -> unitIds
   selectedMap: Record<number, number[]>;
   isLoading: boolean;
-  toggleCourse: (courseId: number, courseUnitIds: number[]) => void;
-  toggleUnit: (courseId: number, unitId: number) => void;
+  toggleCourse: (course: Course) => void;
+  toggleUnit: (unit: Unit) => void;
   isCourseSelected: (courseId: number) => boolean;
   isUnitSelected: (courseId: number, unitId: number) => boolean;
 }
@@ -57,33 +58,37 @@ export function SelectedProvider({ children }: { children: ReactNode }) {
     }
   }, [selectedMap]);
 
-  const toggleCourse = (courseId: number, courseUnitIds: number[]) => {
+  const toggleCourse = (course: Course) => {
     const newMap = { ...selectedMap };
-    if (newMap[courseId]) {
+    if (newMap[course.id]) {
       // Deselect course
-      delete newMap[courseId];
+      delete newMap[course.id];
     } else {
       // Select course with all units
-      newMap[courseId] = courseUnitIds;
+      if (!course.units){
+        console.warn("No units in toggleCourse")
+        return
+      }
+      newMap[course.id] = course.units.map((unit) => unit.id);
     }
     setSelectedMap(newMap);
   };
 
-  const toggleUnit = (courseId: number, unitId: number) => {
+  const toggleUnit = (unit: Unit) => {
     const newMap = { ...selectedMap };
-    const currentUnits = newMap[courseId] || [];
+    const currentUnits = newMap[unit.courseId] || [];
 
-    if (currentUnits.includes(unitId)) {
+    if (currentUnits.includes(unit.id)) {
       // Deselect unit
-      const newUnits = currentUnits.filter((id) => id !== unitId);
+      const newUnits = currentUnits.filter((id) => id !== unit.id);
       if (newUnits.length === 0) {
-        delete newMap[courseId];
+        delete newMap[unit.courseId];
       } else {
-        newMap[courseId] = newUnits;
+        newMap[unit.courseId] = newUnits;
       }
     } else {
       // Select unit
-      newMap[courseId] = [...currentUnits, unitId];
+      newMap[unit.courseId] = [...currentUnits, unit.courseId];
     }
     setSelectedMap(newMap);
   };
