@@ -10,15 +10,14 @@ import {
 } from "react-router-dom";
 
 import { Tabs, TabsList, TabsTrigger } from "~components/ui/tabs";
-import { TooltipProvider } from "~components/ui/tooltip";
 import { useTabs } from "~hooks/useTabs";
 
 import LibraryPage from "./library";
 import SettingsPage from "./settings";
 import TrainingPage from "./training";
-import TrackingButton from "~components/trackingButton";
-import Header from "~components/header";
 import { SelectedProvider } from "~contexts/SelectedContext";
+import FlashcardPage from "./flashcard";
+import UnitPage from "./unit";
 
 export const Routing = () => {
   const location = useLocation();
@@ -48,6 +47,14 @@ export const Routing = () => {
             <Route path="/training" element={<TrainingPage />} />
             <Route path="/library" element={<LibraryPage />} />
             <Route path="/settings" element={<SettingsPage />} />
+            <Route
+              path="/courses/:courseId/units/:unitId"
+              element={<UnitPage />}
+            />
+            <Route
+              path="/courses/:courseId/units/:unitId/flashcards/:flashcardId"
+              element={<FlashcardPage />}
+            />
           </Routes>
         </SelectedProvider>
       </div>

@@ -14,7 +14,6 @@ import { Switch } from "~components/ui/switch";
 import {
   Tooltip,
   TooltipContent,
-  TooltipProvider,
   TooltipTrigger,
 } from "~components/ui/tooltip";
 import { LLMProvider } from "~models/ai-providers";
@@ -22,7 +21,7 @@ import type { Settings } from "~models/settings";
 
 interface SettingsProps {
   settings: Settings;
-  setSettings: (setter: Settings) => Promise;
+  setSettings: (setter: Settings) => Promise<void>;
 }
 
 export default function SettingsComponent({

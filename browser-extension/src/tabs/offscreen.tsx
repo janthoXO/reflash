@@ -83,6 +83,7 @@ export default function Offscreen() {
           );
         }
         units.push({
+          name: file.name,
           fileName: file.name,
           fileUrl: file.url,
           cards: flashCards,
