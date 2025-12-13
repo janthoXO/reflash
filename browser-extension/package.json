@@ -17,6 +17,7 @@
     "@ai-sdk/anthropic": "^2.0.53",
     "@ai-sdk/google": "^2.0.45",
     "@ai-sdk/openai": "^2.0.80",
+    "@icons-pack/react-simple-icons": "^13.8.0",
     "@mlc-ai/web-llm": "^0.2.80",
     "@plasmohq/messaging": "^0.7.2",
     "@plasmohq/storage": "^1.15.0",

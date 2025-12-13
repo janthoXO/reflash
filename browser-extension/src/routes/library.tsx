@@ -1,6 +1,7 @@
+import { SiAnki } from "@icons-pack/react-simple-icons";
 import type { Course, Unit } from "@reflash/shared";
 import { useLiveQuery } from "dexie-react-hooks";
-import { Check, FolderDown, Trash, X } from "lucide-react";
+import { Check, Trash, X } from "lucide-react";
 import { useState } from "react";
 import { Link } from "react-router-dom";
 import { toast } from "sonner";
@@ -68,11 +69,12 @@ export default function LibraryPage() {
           <Tooltip key="export-anki-tooltip">
             <TooltipTrigger asChild>
               <Button
+                variant="secondary"
                 onClick={() => {
                   toast.warning("Export to Anki not implemented yet.");
                 }}
               >
-                <FolderDown />
+                <SiAnki />
               </Button>
             </TooltipTrigger>
             <TooltipContent>Export Flashcards to Anki Format</TooltipContent>
@@ -121,7 +123,7 @@ function CourseItem({
 
   function onSave() {
     course.name = editName;
-    db.courses.update(course.id, {name: editName})
+    db.courses.update(course.id, { name: editName });
     setIsEdit(false);
   }
 

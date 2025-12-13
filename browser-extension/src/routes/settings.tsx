@@ -7,7 +7,7 @@ export default function SettingsPage() {
   const { settings, setSettings } = useSettings();
 
   return (
-    <div>
+    <div className="flex flex-col flex-1">
       <Header title="Settings" suffix={[<TrackingButton key="settings-tracking-button" />]} />
       <SettingsComponent settings={settings} setSettings={setSettings} />
     </div>

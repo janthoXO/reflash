@@ -40,7 +40,7 @@ export const Routing = () => {
 
   return (
     <div className="w-[400px] min-h-[500px] bg-background flex flex-col p-4">
-      <div className="flex-1">
+      <div className="flex-1 flex flex-col">
         <SelectedProvider>
           <Routes>
             <Route path="/" element={<Navigate to="/training" />} />
