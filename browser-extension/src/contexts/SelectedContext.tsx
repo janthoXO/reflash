@@ -10,6 +10,7 @@ import { useStorage } from "@plasmohq/storage/hook";
 
 import { db } from "~db/db";
 import type { Course, Unit } from "@reflash/shared";
+import { Storage } from "@plasmohq/storage";
 
 interface SelectedContextType {
   // courseId -> unitIds
@@ -26,7 +27,12 @@ const SelectedContext = createContext<SelectedContextType | null>(null);
 export function SelectedProvider({ children }: { children: ReactNode }) {
   const [selectedMap, setSelectedMap, { isLoading }] = useStorage<
     Record<number, number[]>
-  >("selectedMap", {});
+  >({
+    key: "selectedMap",
+    instance: new Storage({
+      area: "local",
+    }),
+  });
 
   const [empytyCheckDone, setEmptyCheckDone] = useState<boolean>(false);
   async function allSelectedMap(): Promise<Record<number, number[]>> {
@@ -65,9 +71,9 @@ export function SelectedProvider({ children }: { children: ReactNode }) {
       delete newMap[course.id];
     } else {
       // Select course with all units
-      if (!course.units){
-        console.warn("No units in toggleCourse")
-        return
+      if (!course.units) {
+        console.warn("No units in toggleCourse");
+        return;
       }
       newMap[course.id] = course.units.map((unit) => unit.id);
     }

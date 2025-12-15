@@ -33,18 +33,16 @@ async function setupOffscreenDocument() {
 }
 
 const handler: PlasmoMessaging.MessageHandler<
-  { llmSettings: LLMSettings },
+  { llmSettings: LLMSettings, customPrompt: string },
   {}
 > = async (req, res) => {
   if (!req.body) {
-    req.body = {
-      llmSettings: {
-        provider: LLMProvider.WASM,
-      },
-    };
+    // TODO send error on error channel
+    res.send({});
+    return;
   }
 
-  console.debug("Background received files-scan request");
+  console.debug("Background received course-scan request");
 
   // request files on site
   console.debug("Requesting files-scan in content script");
@@ -52,7 +50,7 @@ const handler: PlasmoMessaging.MessageHandler<
     courseUrl,
     files: filesOnlyUrl,
   }: { courseUrl: string; files: File[] } = await sendToContentScript({
-    name: "files-scan",
+    name: "course-scan",
     body: {},
   });
 
@@ -85,14 +83,10 @@ const handler: PlasmoMessaging.MessageHandler<
   // send files to LLM
   console.debug("Requesting flashcard generation for files ", files);
   // Forward the message to the offscreen document
-  // const { units }: { units: Unit[] } = await chrome.runtime.sendMessage({
-  //   name: "flashcards-generate",
-  //   body: { files }
-  // })
   const { units }: { units: Unit[]; message: string } =
     await chrome.runtime.sendMessage({
       name: "flashcards-generate",
-      body: { files, llmSettings: req.body.llmSettings },
+      body: { files, llmSettings: req.body.llmSettings, customPrompt: req.body.customPrompt },
     });
 
   console.debug("Received generated units from offscreen document", units);

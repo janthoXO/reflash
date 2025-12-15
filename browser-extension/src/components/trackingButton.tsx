@@ -4,14 +4,14 @@ import {
   TooltipTrigger,
 } from "~components/ui/tooltip";
 import { Button } from "~components/ui/button";
-import { useSettings } from "~contexts/SettingsContext";
 import { useCourse } from "~hooks/useCourse";
 import { BookMarked, FileSearchCorner } from "lucide-react";
 import { useUrl } from "~contexts/UrlContext";
+import { useSettingsStorage } from "~local-storage/settings";
 
 export default function TrackingButton() {
-  const { settings } = useSettings();
-  const { currentUrlCourse} = useUrl();
+  const [settings] = useSettingsStorage();
+  const { currentUrlCourse } = useUrl();
   const { scanFiles, trackCourse } = useCourse();
 
   return (
@@ -19,18 +19,22 @@ export default function TrackingButton() {
       {!settings.autoScrape ? (
         <Tooltip>
           <TooltipTrigger asChild>
-            <Button variant="outline" onClick={() => scanFiles(settings.llm)}>
+            <Button
+              variant="outline"
+              onClick={() => scanFiles(currentUrlCourse?.id, settings.llm)}
+            >
               <FileSearchCorner />
             </Button>
           </TooltipTrigger>
-          <TooltipContent>
-            Scan this site for new files.
-          </TooltipContent>
+          <TooltipContent>Scan this site for new files.</TooltipContent>
         </Tooltip>
       ) : !currentUrlCourse ? (
         <Tooltip>
           <TooltipTrigger asChild>
-            <Button variant="outline" onClick={() => trackCourse(settings.llm)}>
+            <Button
+              variant="outline"
+              onClick={() => trackCourse(undefined, settings.llm)}
+            >
               <BookMarked />
             </Button>
           </TooltipTrigger>

@@ -8,8 +8,8 @@ import {
   type ReactNode,
 } from "react";
 import { db } from "~db/db";
-import { useSettings } from "./SettingsContext";
 import { useCourse } from "~hooks/useCourse";
+import { useSettingsStorage } from "~local-storage/settings";
 
 interface UrlContextType {
   currentUrl: string | undefined;
@@ -20,7 +20,7 @@ const UrlContext = createContext<UrlContextType | null>(null);
 
 export function UrlProvider({ children }: { children: ReactNode }) {
   const [currentUrl, setCurrentUrl] = useState<string | undefined>(undefined);
-  const { settings } = useSettings();
+  const [settings] = useSettingsStorage();
   const { scanFiles } = useCourse();
 
   // query already saved course for current URL
@@ -32,7 +32,7 @@ export function UrlProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     if (!settings.autoScrape || !currentUrlCourse) return;
 
-    scanFiles(settings.llm);
+    scanFiles(currentUrlCourse.id, settings.llm);
   }, [currentUrlCourse, settings.autoScrape]);
 
   // Listen for active tab URL changes

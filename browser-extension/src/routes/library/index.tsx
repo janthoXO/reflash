@@ -29,6 +29,8 @@ import {
 } from "~components/ui/tooltip";
 import { useSelected } from "~contexts/SelectedContext";
 import { db } from "~db/db";
+import PromptDialog from "./promptDialog";
+import { DropdownMenuItem } from "~components/ui/dropdown-menu";
 
 export default function LibraryPage() {
   const courses = useLiveQuery(async () => {
@@ -112,6 +114,7 @@ function CourseItem({
   const [isEdit, setIsEdit] = useState<boolean>(false);
   const [editName, setEditName] = useState<string>(course.name);
   const [showDeleteDialog, setShowDeleteDialog] = useState<boolean>(false);
+  const [showPromptDialog, setShowPromptDialog] = useState<boolean>(false);
 
   function onSave() {
     course.name = editName;
@@ -181,10 +184,28 @@ function CourseItem({
           )}
 
           {!isEdit && (
-            <EditDropdown
-              onEdit={() => setIsEdit(true)}
-              onDelete={() => setShowDeleteDialog(true)}
-            />
+            <>
+              <EditDropdown
+                onEdit={() => setIsEdit(true)}
+                onDelete={() => setShowDeleteDialog(true)}
+                menuItems={[
+                  <DropdownMenuItem
+                    key="promptDropdownButton"
+                    onSelect={() => {
+                      setShowPromptDialog(true);
+                    }}
+                    onClick={(e) => e.stopPropagation()}
+                  >
+                    Edit Prompt
+                  </DropdownMenuItem>,
+                ]}
+              />
+              <PromptDialog
+                course={course}
+                open={showPromptDialog}
+                setOpen={setShowPromptDialog}
+              />
+            </>
           )}
         </div>
       </AccordionTrigger>

@@ -20,12 +20,14 @@ pdfjsLib.GlobalWorkerOptions.workerSrc = new URL(
   import.meta.url
 ).toString();
 
+const flashCardFormatPrompt = `Output JSON format: [{question: '...', answer: '...'}]`
+
 export default function Offscreen() {
   const [engine, setEngine] = useState<MLCEngine | null>(null);
   const [modelStatus, setModelStatus] = useState<string>("Not Loaded");
 
   useMessage<
-    { files: File[]; llmSettings: LLMSettings },
+    { files: File[]; llmSettings: LLMSettings, customPrompt: string },
     { units: Partial<Unit>[] }
   >(async (req, res) => {
     if (req.name !== "flashcards-generate" || !req.body) return;
@@ -75,11 +77,12 @@ export default function Offscreen() {
       for (const file of parsedFiles) {
         let flashCards: Flashcard[] = [];
         if (req.body?.llmSettings.provider === LLMProvider.WASM) {
-          flashCards = await generateFlashcards(file.content);
+          flashCards = await generateFlashcards(file.content, req.body.customPrompt);
         } else {
           flashCards = await generateFlashcardsByProvider(
             file.content,
-            req.body!.llmSettings
+            req.body.llmSettings,
+            req.body.customPrompt
           );
         }
         units.push({
@@ -158,7 +161,7 @@ export default function Offscreen() {
     setEngine(e);
   }
 
-  async function generateFlashcards(fileContent: string): Promise<Flashcard[]> {
+  async function generateFlashcards(fileContent: string, customPrompt: string): Promise<Flashcard[]> {
     if (!engine) {
       throw new Error("Model not loaded");
     }
@@ -168,7 +171,7 @@ export default function Offscreen() {
         {
           role: "system",
           content:
-            "You are a teacher. Create flashcards from the user text. Output JSON format: [{question: '...', answer: '...'}]",
+            `${customPrompt} ${flashCardFormatPrompt}`,
         },
         { role: "user", content: fileContent },
       ],
@@ -185,7 +188,8 @@ export default function Offscreen() {
 
   async function generateFlashcardsByProvider(
     fileContent: string,
-    llmSettings: LLMSettings
+    llmSettings: LLMSettings, 
+    customPrompt: string
   ): Promise<Flashcard[]> {
     let model: LanguageModel;
 
@@ -225,7 +229,7 @@ export default function Offscreen() {
       return generateText({
         model,
         system:
-          "You are a teacher. Create flashcards from the user text. Output JSON format without any additional text: [{question: '...', answer: '...'}]",
+          `${customPrompt} ${flashCardFormatPrompt}`,
         prompt: fileContent,
       });
     }, 3);

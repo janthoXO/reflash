@@ -1,5 +1,4 @@
-import { useLiveQuery } from "dexie-react-hooks";
-import { BookMarked, FileSearchCorner, Settings } from "lucide-react";
+import { Settings } from "lucide-react";
 import { useEffect } from "react";
 import {
   Navigate,
@@ -10,32 +9,34 @@ import {
 } from "react-router-dom";
 
 import { Tabs, TabsList, TabsTrigger } from "~components/ui/tabs";
-import { useTabs } from "~hooks/useTabs";
 
 import LibraryPage from "./library";
 import SettingsPage from "./settings";
 import TrainingPage from "./training";
 import { SelectedProvider } from "~contexts/SelectedContext";
-import FlashcardPage from "./flashcard";
-import UnitPage from "./unit";
+import UnitPage from "./library/unit";
+import { getRouteFromStorage, useRouteStorage } from "~local-storage/routes";
 
 export const Routing = () => {
   const location = useLocation();
   const navigate = useNavigate();
-  const { currentTab, setCurrentTab } = useTabs();
+  const [route, setRoute] = useRouteStorage();
 
   // Sync route from storage on mount
   useEffect(() => {
-    console.debug("Navigating to stored route:", currentTab);
-    if (location.pathname !== currentTab) {
-      navigate(currentTab);
-    }
+    // do not use the hook as it may still be loading and having an empty route on mount
+    getRouteFromStorage().then((route) => {
+      console.debug("Navigating to stored route:", route);
+      navigate(route);
+    });
   }, []);
 
   // Update storage route on location change
   useEffect(() => {
+    if (location.pathname === route) return;
+
     console.debug("Updating currentRoute to:", location.pathname);
-    setCurrentTab(location.pathname);
+    setRoute(location.pathname);
   }, [location.pathname]);
 
   return (
@@ -57,7 +58,7 @@ export const Routing = () => {
 
       <footer>
         <Tabs
-          value={currentTab.slice(1)}
+          value={route.slice(1)}
           onValueChange={(value) => navigate(`/${value}`)}
           className="w-full"
         >
