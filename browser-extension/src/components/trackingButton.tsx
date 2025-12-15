@@ -20,7 +20,6 @@ export default function TrackingButton() {
         <Tooltip>
           <TooltipTrigger asChild>
             <Button
-              variant="outline"
               onClick={() => scanFiles(currentUrlCourse?.id, settings.llm)}
             >
               <FileSearchCorner />
@@ -32,7 +31,6 @@ export default function TrackingButton() {
         <Tooltip>
           <TooltipTrigger asChild>
             <Button
-              variant="outline"
               onClick={() => trackCourse(undefined, settings.llm)}
             >
               <BookMarked />

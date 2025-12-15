@@ -75,7 +75,7 @@ function PromptDialogContent({
               {"Cancel"}
             </Button>
           </DialogClose>
-          <Button variant="success" type="submit" onClick={onSubmit}>
+          <Button type="submit" onClick={onSubmit}>
             <Check />
             {"Save"}
           </Button>
