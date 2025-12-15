@@ -13,6 +13,7 @@ export default function FilesScan() {
   /**
    * Content Script - Listens to files-scan
    */
+  // eslint-disable-next-line @typescript-eslint/no-empty-object-type
   useMessage<{}, { courseUrl: string; files: File[] }>(async (req, res) => {
     if (req.name !== "files-scan") return;
 

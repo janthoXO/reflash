@@ -4,7 +4,6 @@ import type { PlasmoMessaging } from "@plasmohq/messaging";
 import { sendToContentScript } from "@plasmohq/messaging";
 
 import { db } from "~db/db";
-import { LLMProvider } from "~models/ai-providers";
 import type { File } from "~models/file";
 import type { LLMSettings } from "~models/settings";
 
@@ -12,6 +11,7 @@ const OFFSCREEN_DOCUMENT_PATH = "tabs/offscreen.html";
 
 async function hasOffscreenDocument() {
   if ("getContexts" in chrome.runtime) {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const contexts = await (chrome.runtime as any).getContexts({
       contextTypes: ["OFFSCREEN_DOCUMENT"],
       documentUrls: [chrome.runtime.getURL(OFFSCREEN_DOCUMENT_PATH)],
@@ -33,7 +33,8 @@ async function setupOffscreenDocument() {
 }
 
 const handler: PlasmoMessaging.MessageHandler<
-  { llmSettings: LLMSettings, customPrompt: string },
+  { llmSettings: LLMSettings; customPrompt: string },
+  // eslint-disable-next-line @typescript-eslint/no-empty-object-type
   {}
 > = async (req, res) => {
   if (!req.body) {
@@ -86,7 +87,11 @@ const handler: PlasmoMessaging.MessageHandler<
   const { units }: { units: Unit[]; message: string } =
     await chrome.runtime.sendMessage({
       name: "flashcards-generate",
-      body: { files, llmSettings: req.body.llmSettings, customPrompt: req.body.customPrompt },
+      body: {
+        files,
+        llmSettings: req.body.llmSettings,
+        customPrompt: req.body.customPrompt,
+      },
     });
 
   console.debug("Received generated units from offscreen document", units);

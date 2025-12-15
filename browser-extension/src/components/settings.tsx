@@ -1,4 +1,4 @@
-import { CircleQuestionMark, Github } from "lucide-react";
+import { CircleQuestionMark } from "lucide-react";
 import { useState } from "react";
 
 import { Input } from "~components/ui/input";
