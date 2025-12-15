@@ -1,10 +1,11 @@
 import { SiAnki } from "@icons-pack/react-simple-icons";
 import type { Course, Unit } from "@reflash/shared";
 import { useLiveQuery } from "dexie-react-hooks";
-import { Check, Trash, X } from "lucide-react";
+import { Check, X } from "lucide-react";
 import { useState } from "react";
 import { Link } from "react-router-dom";
 import { toast } from "sonner";
+import DeleteDialog from "~components/deleteDialog";
 import EditDropdown from "~components/editDropdown";
 import Header from "~components/header";
 import TrackingButton from "~components/trackingButton";
@@ -16,15 +17,6 @@ import {
   AccordionTrigger,
 } from "~components/ui/accordion";
 import { Button } from "~components/ui/button";
-import {
-  Dialog,
-  DialogClose,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "~components/ui/dialog";
 import {
   InputGroup,
   InputGroupButton,
@@ -226,30 +218,14 @@ function CourseItem({
           )}
         </div>
       </AccordionContent>
-      <Dialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>{`Deleting ${course.name}`}</DialogTitle>
-            <DialogDescription>
-              {`Are you sure you want to delete the course ${course.name} with all its units and flashcards?`}
-            </DialogDescription>
-          </DialogHeader>
-          <DialogFooter>
-            <div className="flex justify-end gap-2">
-              <DialogClose asChild>
-                <Button variant="outline">
-                  <X />
-                  {"Cancel"}
-                </Button>
-              </DialogClose>
-              <Button variant="destructive" type="submit" onClick={onDelete}>
-                <Trash />
-                {"Delete"}
-              </Button>
-            </div>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+
+      <DeleteDialog
+        open={showDeleteDialog}
+        setOpen={setShowDeleteDialog}
+        title={`Deleting ${course.name}`}
+        description={`Are you sure you want to delete the course ${course.name} with all its units and flashcards?`}
+        onDelete={onDelete}
+      />
     </AccordionItem>
   );
 }

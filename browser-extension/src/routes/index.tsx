@@ -51,10 +51,6 @@ export const Routing = () => {
               path="/courses/:courseId/units/:unitId"
               element={<UnitPage />}
             />
-            <Route
-              path="/courses/:courseId/units/:unitId/flashcards/:flashcardId"
-              element={<FlashcardPage />}
-            />
           </Routes>
         </SelectedProvider>
       </div>
