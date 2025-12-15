@@ -14,7 +14,10 @@ import { retry } from "~lib/retry";
 import { LLMProvider } from "~models/ai-providers";
 import type { File } from "~models/file";
 import type { LLMSettings } from "~models/settings";
-import type { TextItem, TextMarkedContent } from "pdfjs-dist/types/src/display/api";
+import type {
+  TextItem,
+  TextMarkedContent,
+} from "pdfjs-dist/types/src/display/api";
 
 pdfjsLib.GlobalWorkerOptions.workerSrc = new URL(
   "pdfjs-dist/build/pdf.worker.min.mjs",

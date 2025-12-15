@@ -18,7 +18,10 @@ export function useCourse() {
     });
   }
 
-  async function trackCourse(courseId: number | undefined, llmSettings: LLMSettings) {
+  async function trackCourse(
+    courseId: number | undefined,
+    llmSettings: LLMSettings
+  ) {
     scanFiles(courseId, llmSettings);
   }
 

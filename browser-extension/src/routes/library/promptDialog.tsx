@@ -38,7 +38,9 @@ function PromptDialogContent({
   course: Course;
   setOpen: (open: boolean) => void;
 }) {
-  const [customPrompt, setCustomPrompt, { isLoading }] = usePromptStorage(course.id);
+  const [customPrompt, setCustomPrompt, { isLoading }] = usePromptStorage(
+    course.id
+  );
   const [editPrompt, setEditPrompt] = useState<string>("");
 
   useEffect(() => {

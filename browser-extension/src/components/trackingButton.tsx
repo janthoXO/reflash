@@ -30,9 +30,7 @@ export default function TrackingButton() {
       ) : !currentUrlCourse ? (
         <Tooltip>
           <TooltipTrigger asChild>
-            <Button
-              onClick={() => trackCourse(undefined, settings.llm)}
-            >
+            <Button onClick={() => trackCourse(undefined, settings.llm)}>
               <BookMarked />
             </Button>
           </TooltipTrigger>
