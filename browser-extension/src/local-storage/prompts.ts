@@ -1,8 +1,7 @@
 import { Storage } from "@plasmohq/storage";
 import { useStorage } from "@plasmohq/storage/hook";
 
-const defaultPrompt =
-  "You are a teacher. Create flashcards from the provided file content.";
+const defaultPrompt = "";
 
 const _promptStorageKey = (courseId: number) => `courses-${courseId}-prompts`;
 
