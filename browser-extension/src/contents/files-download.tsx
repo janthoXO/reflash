@@ -21,6 +21,7 @@ export default function FilesDownload() {
       customPrompt: string;
       files: File[];
     },
+    // eslint-disable-next-line @typescript-eslint/no-empty-object-type
     {}
   >(async (req, res) => {
     if (req.name !== "files-download" || !req.body) return;

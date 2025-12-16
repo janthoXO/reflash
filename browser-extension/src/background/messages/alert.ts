@@ -11,4 +11,4 @@ const handler: PlasmoMessaging.MessageHandler<
   res.send({});
 };
 
-export default handler
+export default handler;
