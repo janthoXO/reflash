@@ -65,7 +65,7 @@ export default function UnitPage() {
       if (question.includes(query) || answer.includes(query)) return true;
 
       // Levenshtein distance check (allow some fuzziness based on length)
-      const maxDistance = Math.max(2, Math.floor(query.length * 0.3));
+      const maxDistance = Math.max(1, Math.floor(query.length * 0.2));
 
       // Check distance for question words
       const questionWords = question.split(/\s+/);
