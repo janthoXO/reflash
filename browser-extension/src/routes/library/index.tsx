@@ -142,73 +142,68 @@ function CourseItem({
       value={course.id.toString()}
       className="border rounded-lg px-4 bg-card text-card-foreground shadow-sm"
     >
-      <AccordionTrigger className="hover:no-underline py-3">
+      {/* Accordion Header */}
+      {isEdit ? (
+        <div className="flex py-2">
+          <InputGroup>
+            <InputGroupInput
+              value={editName}
+              onChange={(e) => setEditName(e.target.value)}
+            />
+            <InputGroupButton
+              variant="ghost"
+              type="reset"
+              onClick={() => onReset()}
+            >
+              <X className="text-destructive" />
+            </InputGroupButton>
+            <InputGroupButton
+              type="submit"
+              variant="ghost"
+              onClick={() => onSave()}
+            >
+              <Check className="text-success" />
+            </InputGroupButton>
+          </InputGroup>
+        </div>
+      ) : (
         <div className="flex items-center gap-2">
           <input
             type="checkbox"
             checked={isSelected}
-            onClick={(e) => e.stopPropagation()}
             onChange={onToggleCourse}
-            className="h-4 w-4 rounded border-gray-300 text-primary focus:ring-primary"
+            className="h-4 w-4 rounded border-gray-300 text-primary focus:ring-primary shrink-0"
           />
-
-          {isEdit ? (
-            <InputGroup>
-              <InputGroupInput
-                value={editName}
-                onChange={(e) => setEditName(e.target.value)}
-              />
-              <InputGroupButton
-                variant="ghost"
-                type="reset"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  onReset();
+          <div className="flex-1">
+            <AccordionTrigger className="hover:no-underline">
+              <div className="font-semibold text-left truncate">
+                {course.name}
+              </div>
+            </AccordionTrigger>
+          </div>
+          <EditDropdown
+            onEdit={() => setIsEdit(true)}
+            onDelete={() => setShowDeleteDialog(true)}
+            menuItems={[
+              <DropdownMenuItem
+                key="prompt-dropdown-button"
+                onSelect={() => {
+                  setShowPromptDialog(true);
                 }}
+                onClick={(e) => e.stopPropagation()}
               >
-                <X className="text-destructive" />
-              </InputGroupButton>
-              <InputGroupButton
-                type="submit"
-                variant="ghost"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  onSave();
-                }}
-              >
-                <Check className="text-success" />
-              </InputGroupButton>
-            </InputGroup>
-          ) : (
-            <div className="font-semibold">{course.name}</div>
-          )}
-
-          {!isEdit && (
-            <>
-              <EditDropdown
-                onEdit={() => setIsEdit(true)}
-                onDelete={() => setShowDeleteDialog(true)}
-                menuItems={[
-                  <DropdownMenuItem
-                    key="promptDropdownButton"
-                    onSelect={() => {
-                      setShowPromptDialog(true);
-                    }}
-                    onClick={(e) => e.stopPropagation()}
-                  >
-                    Edit Prompt
-                  </DropdownMenuItem>,
-                ]}
-              />
-              <PromptDialog
-                course={course}
-                open={showPromptDialog}
-                setOpen={setShowPromptDialog}
-              />
-            </>
-          )}
+                Edit Prompt
+              </DropdownMenuItem>,
+            ]}
+          />
+          <PromptDialog
+            course={course}
+            open={showPromptDialog}
+            setOpen={setShowPromptDialog}
+          />
         </div>
-      </AccordionTrigger>
+      )}
+
       <AccordionContent className="space-y-2">
         <a
           href={course.url}

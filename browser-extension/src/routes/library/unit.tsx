@@ -138,8 +138,9 @@ export default function UnitPage() {
             ? []
             : [
                 <Button
+                  key="back-button"
                   variant="ghost"
-                  size="sm"
+                  size="icon-sm"
                   onClick={() => {
                     navigate(-1);
                   }}
@@ -153,6 +154,7 @@ export default function UnitPage() {
             ? []
             : [
                 <EditDropdown
+                  key="edit-dropdown"
                   onEdit={() => setIsEdit(true)}
                   onDelete={() => setShowDeleteDialog(true)}
                 />,

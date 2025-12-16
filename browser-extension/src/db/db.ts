@@ -24,8 +24,8 @@ export async function populateMockData(db: ReflashDB) {
     async () => {
       // Clear mock data
       const toDeleteCourseIds = await Promise.all([
-        db.courses.where({ name: "Introduction to Computer Science" }).delete(),
-        db.courses.where({ name: "Advanced Mathematics" }).delete(),
+        db.courses.where({ url: "https://example.com/cs101" }).delete(),
+        db.courses.where({ url: "https://example.com/math201" }).delete(),
       ]);
       const toDeleteUnitIds = await Promise.all(
         toDeleteCourseIds.map((deleteCourseId) => {
