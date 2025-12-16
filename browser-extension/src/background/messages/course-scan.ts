@@ -1,4 +1,4 @@
-import type { Course, Unit } from "@reflash/shared";
+import type { Course } from "@reflash/shared";
 
 import type { PlasmoMessaging } from "@plasmohq/messaging";
 import { sendToContentScript } from "@plasmohq/messaging";
@@ -7,31 +7,7 @@ import { db } from "~db/db";
 import type { File } from "~models/file";
 import type { LLMSettings } from "~models/settings";
 
-const OFFSCREEN_DOCUMENT_PATH = "tabs/offscreen.html";
-
-async function hasOffscreenDocument() {
-  if ("getContexts" in chrome.runtime) {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const contexts = await (chrome.runtime as any).getContexts({
-      contextTypes: ["OFFSCREEN_DOCUMENT"],
-      documentUrls: [chrome.runtime.getURL(OFFSCREEN_DOCUMENT_PATH)],
-    });
-    return contexts.length > 0;
-  }
-
-  return false;
-}
-
-async function setupOffscreenDocument() {
-  if (await hasOffscreenDocument()) return;
-
-  await chrome.offscreen.createDocument({
-    url: OFFSCREEN_DOCUMENT_PATH,
-    reasons: [chrome.offscreen.Reason.WORKERS],
-    justification: "LLM processing",
-  });
-}
-
+// handles the event loop for scanning the course for new files
 const handler: PlasmoMessaging.MessageHandler<
   { llmSettings: LLMSettings; customPrompt: string },
   // eslint-disable-next-line @typescript-eslint/no-empty-object-type
@@ -51,7 +27,7 @@ const handler: PlasmoMessaging.MessageHandler<
     courseUrl,
     files: filesOnlyUrl,
   }: { courseUrl: string; files: File[] } = await sendToContentScript({
-    name: "course-scan",
+    name: "files-scan",
     body: {},
   });
 
@@ -74,36 +50,16 @@ const handler: PlasmoMessaging.MessageHandler<
 
   // send new file Urls for download
   console.debug("Requesting download for new files ", newFiles);
-  const { files }: { files: File[] } = await sendToContentScript({
+  await sendToContentScript({
     name: "files-download",
-    body: { courseUrl: course.url, files: newFiles },
+    body: {
+      courseId: course.id,
+      courseUrl: course.url,
+      llmSettings: req.body.llmSettings,
+      customPrompt: req.body.customPrompt,
+      files: newFiles,
+    },
   });
-
-  await setupOffscreenDocument();
-
-  // send files to LLM
-  console.debug("Requesting flashcard generation for files ", files);
-  // Forward the message to the offscreen document
-  const { units }: { units: Unit[]; message: string } =
-    await chrome.runtime.sendMessage({
-      name: "flashcards-generate",
-      body: {
-        files,
-        llmSettings: req.body.llmSettings,
-        customPrompt: req.body.customPrompt,
-      },
-    });
-
-  console.debug("Received generated units from offscreen document", units);
-  // save returned flashcards to DB
-  for (const unit of units) {
-    unit.courseId = course!.id;
-    const unitId = await db.units.add(unit);
-    for (const card of unit.cards) {
-      card.unitId = unitId;
-    }
-    await db.flashcards.bulkAdd(unit.cards);
-  }
 
   res.send({});
 };

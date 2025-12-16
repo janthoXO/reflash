@@ -40,8 +40,8 @@ export const Routing = () => {
   }, [location.pathname]);
 
   return (
-    <div className="w-[400px] min-h-[500px] bg-background flex flex-col p-4">
-      <div className="flex-1 flex flex-col">
+    <div className="w-[400px] h-[500px] bg-background flex flex-col">
+      <div className="flex-1 flex flex-col p-4 overflow-y-auto">
         <SelectedProvider>
           <Routes>
             <Route path="/" element={<Navigate to="/training" />} />
@@ -56,25 +56,23 @@ export const Routing = () => {
         </SelectedProvider>
       </div>
 
-      <footer>
-        <Tabs
-          value={route.slice(1)}
-          onValueChange={(value) => navigate(`/${value}`)}
-          className="w-full"
-        >
-          <TabsList className="w-full flex flex-wrap">
-            <TabsTrigger value="training" className="flex-1">
-              Training
-            </TabsTrigger>
-            <TabsTrigger value="library" className="flex-1">
-              Library
-            </TabsTrigger>
-            <TabsTrigger value="settings" className="flex-1">
-              <Settings />
-            </TabsTrigger>
-          </TabsList>
-        </Tabs>
-      </footer>
+      <Tabs
+        value={route.slice(1)}
+        onValueChange={(value) => navigate(`/${value}`)}
+        className="w-full p-2"
+      >
+        <TabsList className="w-full flex flex-wrap">
+          <TabsTrigger value="training" className="flex-1">
+            Training
+          </TabsTrigger>
+          <TabsTrigger value="library" className="flex-1">
+            Library
+          </TabsTrigger>
+          <TabsTrigger value="settings" className="flex-1">
+            <Settings />
+          </TabsTrigger>
+        </TabsList>
+      </Tabs>
     </div>
   );
 };

@@ -17,7 +17,7 @@ export default function Header({
   className,
 }: HeaderProps) {
   return (
-    <header className={cn(`flex justify-between items-center pb-2`, className)}>
+    <div className={cn(`flex justify-between items-center pb-2`, className)}>
       <div className="flex flex-1 items-center gap-2">
         {prefix}
         {title && typeof title === "string" ? (
@@ -28,6 +28,6 @@ export default function Header({
         {children}
       </div>
       {suffix && <div className="flex gap-2">{suffix}</div>}
-    </header>
+    </div>
   );
 }

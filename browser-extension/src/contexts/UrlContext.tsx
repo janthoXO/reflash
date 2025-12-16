@@ -25,6 +25,7 @@ export function UrlProvider({ children }: { children: ReactNode }) {
 
   // query already saved course for current URL
   const currentUrlCourse = useLiveQuery(async () => {
+    if (!currentUrl) return undefined;
     return await db.courses.get({ url: currentUrl });
   }, [currentUrl]);
 
