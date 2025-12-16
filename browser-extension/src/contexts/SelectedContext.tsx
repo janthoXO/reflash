@@ -1,4 +1,4 @@
-import { createContext, useContext, useEffect, type ReactNode } from "react";
+import { createContext, useContext, type ReactNode } from "react";
 
 import type { Course, Unit } from "@reflash/shared";
 import { useSelectedUnitsStorage } from "~local-storage/selected-units";
