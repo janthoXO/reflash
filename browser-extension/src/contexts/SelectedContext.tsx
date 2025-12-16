@@ -1,16 +1,7 @@
-import {
-  createContext,
-  useContext,
-  useEffect,
-  useState,
-  type ReactNode,
-} from "react";
+import { createContext, useContext, useEffect, type ReactNode } from "react";
 
-import { useStorage } from "@plasmohq/storage/hook";
-
-import { db } from "~db/db";
 import type { Course, Unit } from "@reflash/shared";
-import { Storage } from "@plasmohq/storage";
+import { useSelectedUnitsStorage } from "~local-storage/selected-units";
 
 interface SelectedContextType {
   // courseId -> unitIds
@@ -25,44 +16,8 @@ interface SelectedContextType {
 const SelectedContext = createContext<SelectedContextType | null>(null);
 
 export function SelectedProvider({ children }: { children: ReactNode }) {
-  const [selectedMap, setSelectedMap, { isLoading }] = useStorage<
-    Record<number, number[]>
-  >({
-    key: "selectedMap",
-    instance: new Storage({
-      area: "local",
-    }),
-  });
-
-  const [empytyCheckDone, setEmptyCheckDone] = useState<boolean>(false);
-  async function allSelectedMap(): Promise<Record<number, number[]>> {
-    return db.units.toArray().then((units) => {
-      const newMap: Record<number, number[]> = {};
-
-      if (units.length > 0) {
-        units.forEach((u) => {
-          if (!newMap[u.courseId]) {
-            newMap[u.courseId] = [];
-          }
-          newMap[u.courseId]!.push(u.id);
-        });
-      }
-
-      return newMap;
-    });
-  }
-  useEffect(() => {
-    if (empytyCheckDone) return;
-
-    if (!selectedMap || Object.keys(selectedMap).length === 0) {
-      allSelectedMap().then((newMap) => {
-        setSelectedMap(newMap);
-        setEmptyCheckDone(true);
-      });
-    } else {
-      setEmptyCheckDone(true);
-    }
-  }, [selectedMap]);
+  const [selectedMap, setSelectedMap, { isLoading }] =
+    useSelectedUnitsStorage();
 
   const toggleCourse = (course: Course) => {
     const newMap = { ...selectedMap };

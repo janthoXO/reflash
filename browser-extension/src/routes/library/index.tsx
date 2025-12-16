@@ -43,13 +43,7 @@ export default function LibraryPage() {
     return courses;
   }) as Course[] | undefined;
 
-  const {
-    isCourseSelected,
-    isUnitSelected,
-    toggleCourse,
-    toggleUnit,
-    isLoading: isSelectionLoading,
-  } = useSelected();
+  const { isLoading: isSelectionLoading } = useSelected();
 
   if (!courses || isSelectionLoading) {
     return <div className="p-4">Loading...</div>;
@@ -81,16 +75,7 @@ export default function LibraryPage() {
       ) : (
         <Accordion type="multiple" className="w-full space-y-2">
           {courses.map((course) => {
-            return (
-              <CourseItem
-                key={course.id}
-                course={course}
-                isSelected={isCourseSelected(course.id)}
-                isUnitSelected={isUnitSelected}
-                onToggleCourse={() => toggleCourse(course)}
-                onToggleUnit={toggleUnit}
-              />
-            );
+            return <CourseItem key={course.id} course={course} />;
           })}
         </Accordion>
       )}
@@ -98,19 +83,10 @@ export default function LibraryPage() {
   );
 }
 
-function CourseItem({
-  course,
-  isSelected,
-  isUnitSelected,
-  onToggleCourse,
-  onToggleUnit,
-}: {
-  course: Course;
-  isSelected: boolean;
-  isUnitSelected: (courseId: number, unitId: number) => boolean;
-  onToggleCourse: () => void;
-  onToggleUnit: (unit: Unit) => void;
-}) {
+function CourseItem({ course }: { course: Course }) {
+  const { isCourseSelected, isUnitSelected, toggleCourse, toggleUnit } =
+    useSelected();
+
   const [isEdit, setIsEdit] = useState<boolean>(false);
   const [editName, setEditName] = useState<string>(course.name);
   const [showDeleteDialog, setShowDeleteDialog] = useState<boolean>(false);
@@ -146,9 +122,9 @@ function CourseItem({
         <div className="flex items-center gap-2">
           <input
             type="checkbox"
-            checked={isSelected}
+            checked={isCourseSelected(course.id)}
             onClick={(e) => e.stopPropagation()}
-            onChange={onToggleCourse}
+            onChange={() => toggleCourse(course)}
             className="h-4 w-4 rounded border-gray-300 text-primary focus:ring-primary"
           />
 
@@ -223,7 +199,7 @@ function CourseItem({
               <input
                 type="checkbox"
                 checked={isUnitSelected(course.id, unit.id)}
-                onChange={() => onToggleUnit(unit)}
+                onChange={() => toggleUnit(unit)}
                 className="h-4 w-4 rounded border-gray-300 text-primary focus:ring-primary"
               />
               <Link
