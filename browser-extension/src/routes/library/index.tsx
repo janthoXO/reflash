@@ -84,12 +84,8 @@ export default function LibraryPage() {
 }
 
 function CourseItem({ course }: { course: Course }) {
-  const {
-    isCourseSelected,
-    isUnitSelected,
-    toggleCourse,
-    toggleUnit,
-  } = useSelected();
+  const { isCourseSelected, isUnitSelected, toggleCourse, toggleUnit } =
+    useSelected();
 
   const [isEdit, setIsEdit] = useState<boolean>(false);
   const [editName, setEditName] = useState<string>(course.name);

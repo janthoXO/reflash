@@ -1,14 +1,7 @@
-import {
-  createContext,
-  useContext,
-  useEffect,
-  type ReactNode,
-} from "react";
+import { createContext, useContext, useEffect, type ReactNode } from "react";
 
 import type { Course, Unit } from "@reflash/shared";
-import {
-  useSelectedUnitsStorage,
-} from "~local-storage/selected-units";
+import { useSelectedUnitsStorage } from "~local-storage/selected-units";
 
 interface SelectedContextType {
   // courseId -> unitIds
@@ -25,9 +18,6 @@ const SelectedContext = createContext<SelectedContextType | null>(null);
 export function SelectedProvider({ children }: { children: ReactNode }) {
   const [selectedMap, setSelectedMap, { isLoading }] =
     useSelectedUnitsStorage();
-
-  useEffect(() => {
-  }, [selectedMap]);
 
   const toggleCourse = (course: Course) => {
     const newMap = { ...selectedMap };

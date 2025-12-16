@@ -55,7 +55,7 @@ export async function populateMockData(db: ReflashDB) {
       ]);
 
       const now = Date.now();
-      const flashcard = await Promise.all([
+      await Promise.all([
         mockFlashcard({
           unitId: units[0]!.id,
           question: "What is a variable?",
