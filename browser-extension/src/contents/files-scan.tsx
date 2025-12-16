@@ -10,9 +10,7 @@ export const config: PlasmoCSConfig = {
 };
 
 export default function FilesScan() {
-  /**
-   * Content Script - Listens to files-scan
-   */
+  // TODO extract course heading as courseName and return
   // eslint-disable-next-line @typescript-eslint/no-empty-object-type
   useMessage<{}, { courseUrl: string; files: File[] }>(async (req, res) => {
     if (req.name !== "files-scan") return;
@@ -20,11 +18,10 @@ export default function FilesScan() {
     console.debug("Received files-scan", req);
 
     const courseUrl = window.location.href;
-    scanForPDFLinks().then((files) => {
-      // Publish FILES_SCANNED event
-      console.debug("Return scanned files ", files);
-      res.send({ courseUrl: courseUrl, files: files });
-    });
+    const files = await scanForPDFLinks();
+
+    console.debug("Return scanned files ", files);
+    res.send({ courseUrl: courseUrl, files: files });
   });
 
   return null;

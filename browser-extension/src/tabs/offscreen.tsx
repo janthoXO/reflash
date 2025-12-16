@@ -32,13 +32,17 @@ export default function Offscreen() {
   const [modelStatus, setModelStatus] = useState<string>("Not Loaded");
 
   useMessage<
-    { files: File[]; llmSettings: LLMSettings; customPrompt: string },
-    { units: Partial<Unit>[] }
+    {
+      courseId: number;
+      llmSettings: LLMSettings;
+      customPrompt: string;
+      file: File;
+    },
+    { unit: Partial<Unit> }
   >(async (req, res) => {
     if (req.name !== "flashcards-generate" || !req.body) return;
 
     console.debug("Received flashcards-generate", req.body);
-    const units: Partial<Unit>[] = [];
     try {
       // 1. Start loading model immediately
       let modelLoadingPromise;
@@ -46,13 +50,9 @@ export default function Offscreen() {
         modelLoadingPromise = loadModel();
       }
 
+      const file = req.body.file;
       // 2. Start parsing all PDFs in parallel
-      const parsedFiles = await Promise.all(
-        req.body.files.map(async (file) => {
-          file.content = await parsePDF(file);
-          return file;
-        })
-      );
+      file.content = await parsePDF(file);
 
       // 4. Wait for model to finish loading
       if (req.body.llmSettings.provider === LLMProvider.WASM) {
@@ -61,50 +61,31 @@ export default function Offscreen() {
 
       // 5. Generate flashcards sequentially (or parallel if the engine supports it)
       // Note: Most local LLM engines are single-threaded/sequential.
-      // const units = await Promise.all(
-      //   parsedFiles.map(async (file) => {
-      //     let flashCards
-      //     if (req.body?.llmSettings.provider === LLMProvider.WASM) {
-      //       flashCards = await generateFlashcards(file.content)
-      //     } else {
-      //       flashCards = await generateFlashcardsByProvider(
-      //         file.content,
-      //         req.body!.llmSettings
-      //       )
-      //     }
-      //     return {
-      //       fileName: file.name,
-      //       fileUrl: file.url,
-      //       cards: flashCards
-      //     }
-      //   })
-      // )
-      for (const file of parsedFiles) {
-        let flashCards: Flashcard[] = [];
-        if (req.body?.llmSettings.provider === LLMProvider.WASM) {
-          flashCards = await generateFlashcards(
-            file.content,
-            req.body.customPrompt
-          );
-        } else {
-          flashCards = await generateFlashcardsByProvider(
-            file.content,
-            req.body.llmSettings,
-            req.body.customPrompt
-          );
-        }
-        units.push({
-          name: file.name,
-          fileName: file.name,
-          fileUrl: file.url,
-          cards: flashCards,
-        });
+      let flashCards: Flashcard[] = [];
+      if (req.body?.llmSettings.provider === LLMProvider.WASM) {
+        flashCards = await generateFlashcards(
+          file.content,
+          req.body.customPrompt
+        );
+      } else {
+        flashCards = await generateFlashcardsByProvider(
+          file.content,
+          req.body.llmSettings,
+          req.body.customPrompt
+        );
       }
+      const unit: Partial<Unit> = {
+        name: file.name,
+        fileName: file.name,
+        fileUrl: file.url,
+        cards: flashCards,
+        courseId: req.body.courseId,
+      };
 
-      res.send({ units: units });
+      res.send({ unit: unit });
     } catch (e) {
       console.error("Error in flashcards-generate:", e);
-      res.send({ units: units });
+      res.send({ unit: {} });
     }
   });
 

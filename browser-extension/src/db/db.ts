@@ -22,10 +22,21 @@ export async function populateMockData(db: ReflashDB) {
     "rw",
     [db.courses, db.units, db.flashcards],
     async () => {
-      // Clear existing data
-      await db.courses.clear();
-      await db.units.clear();
-      await db.flashcards.clear();
+      // Clear mock data
+      const toDeleteCourseIds = await Promise.all([
+        db.courses.where({ name: "Introduction to Computer Science" }).delete(),
+        db.courses.where({ name: "Advanced Mathematics" }).delete(),
+      ]);
+      const toDeleteUnitIds = await Promise.all(
+        toDeleteCourseIds.map((deleteCourseId) => {
+          return db.units.where({ courseId: deleteCourseId }).delete();
+        })
+      );
+      await Promise.all(
+        toDeleteUnitIds.map((deleteUnitId) => {
+          return db.flashcards.where({ unitId: deleteUnitId }).delete();
+        })
+      );
 
       const courseIds = await db.courses.bulkAdd(
         [
