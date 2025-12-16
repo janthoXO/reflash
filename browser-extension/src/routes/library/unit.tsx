@@ -1,13 +1,20 @@
 import type { Flashcard, Unit } from "@reflash/shared";
 import { useLiveQuery } from "dexie-react-hooks";
-import { ArrowLeft, Check, X } from "lucide-react";
-import { useState } from "react";
+import { get } from "fast-levenshtein";
+import { ArrowLeft, Check, ChevronDown, ChevronUp, X } from "lucide-react";
+import { useEffect, useMemo, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import DeleteDialog from "~components/deleteDialog";
 import EditDropdown from "~components/editDropdown";
 import Header from "~components/header";
 import { Button } from "~components/ui/button";
 import { Card, CardContent } from "~components/ui/card";
+import {
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger,
+} from "~components/ui/collapsible";
+import { Input } from "~components/ui/input";
 import {
   InputGroup,
   InputGroupButton,
@@ -24,6 +31,7 @@ export default function UnitPage() {
   const [isEdit, setIsEdit] = useState<boolean>(false);
   const [editName, setEditName] = useState<string>("");
   const [showDeleteDialog, setShowDeleteDialog] = useState<boolean>(false);
+  const [searchQuery, setSearchQuery] = useState<string>("");
 
   // query already saved course for current URL
   const unit = useLiveQuery(async () => {
@@ -32,18 +40,46 @@ export default function UnitPage() {
     const unit = (await db.units.get({
       id: parseInt(unitId),
       courseId: parseInt(courseId),
-    })) as Unit;
+    })) as Unit | undefined;
 
-    if (unit) {
-      setEditName(unit.name);
-    }
+    if (!unit) return undefined;
 
-    unit.cards = (await db.flashcards
-      .where({ unitId: unit.id })
-      .toArray()) as Flashcard[];
+    setEditName(unit.name);
+
+    unit.cards = await db.flashcards.where({ unitId: unit.id }).toArray();
 
     return unit;
   }, [unitId, courseId]);
+
+  const flashcards = useMemo(() => {
+    if (!unit?.cards || !searchQuery) {
+      return unit?.cards ?? [];
+    }
+
+    const query = searchQuery.toLowerCase();
+    return unit.cards.filter((card) => {
+      const question = card.question.toLowerCase();
+      const answer = card.answer.toLowerCase();
+
+      // Exact match or substring match
+      if (question.includes(query) || answer.includes(query)) return true;
+
+      // Levenshtein distance check (allow some fuzziness based on length)
+      const maxDistance = Math.max(1, Math.floor(query.length * 0.2));
+
+      // Check distance for question words
+      const questionWords = question.split(/\s+/);
+      if (questionWords.some((word) => get(word, query) <= maxDistance))
+        return true;
+
+      // Check distance for answer words
+      const answerWords = answer.split(/\s+/);
+      if (answerWords.some((word) => get(word, query) <= maxDistance))
+        return true;
+
+      return false;
+    });
+  }, [searchQuery, unit?.cards]);
 
   function onSave() {
     unit!.name = editName;
@@ -100,7 +136,9 @@ export default function UnitPage() {
             ? []
             : [
                 <Button
+                  key="back-button"
                   variant="ghost"
+                  size="icon-sm"
                   onClick={() => {
                     navigate(-1);
                   }}
@@ -114,6 +152,7 @@ export default function UnitPage() {
             ? []
             : [
                 <EditDropdown
+                  key="edit-dropdown"
                   onEdit={() => setIsEdit(true)}
                   onDelete={() => setShowDeleteDialog(true)}
                 />,
@@ -129,24 +168,40 @@ export default function UnitPage() {
         onDelete={onDelete}
       />
 
-      <div className="space-y-2">
-        <a
-          href={unit.fileUrl}
-          target="_blank"
-          className="text-muted-foreground hover:underline"
-        >
-          {unit.fileUrl}
-        </a>
+      <a
+        href={unit.fileUrl}
+        target="_blank"
+        className="text-muted-foreground hover:underline"
+      >
+        {unit.fileUrl}
+      </a>
 
-        {unit.cards?.map((card) => (
-          <FlashcardItem flashcard={card} />
+      <Input
+        placeholder="Search flashcards..."
+        value={searchQuery}
+        onChange={(e) => setSearchQuery(e.target.value)}
+        className="my-4"
+      />
+      <div className="space-y-2">
+        {flashcards.map((card) => (
+          <FlashcardItem
+            key={card.id}
+            flashcard={card}
+            forceExpand={!!searchQuery}
+          />
         ))}
       </div>
     </div>
   );
 }
 
-function FlashcardItem({ flashcard }: { flashcard: Flashcard }) {
+function FlashcardItem({
+  flashcard,
+  forceExpand,
+}: {
+  flashcard: Flashcard;
+  forceExpand: boolean;
+}) {
   const [isHovered, setIsHovered] = useState<boolean>(false);
   const [isDropdownOpen, setIsDropdownOpen] = useState<boolean>(false);
   const [isEdit, setIsEdit] = useState<boolean>(false);
@@ -155,6 +210,15 @@ function FlashcardItem({ flashcard }: { flashcard: Flashcard }) {
     answer: string;
   }>({ question: flashcard.question, answer: flashcard.answer });
   const [showDeleteDialog, setShowDeleteDialog] = useState<boolean>(false);
+  const [isExpanded, setIsExpanded] = useState(false);
+
+  useEffect(() => {
+    if (forceExpand) {
+      setIsExpanded(true);
+    } else {
+      setIsExpanded(false);
+    }
+  }, [forceExpand]);
 
   function onSave() {
     flashcard.question = editCard.question;
@@ -217,13 +281,36 @@ function FlashcardItem({ flashcard }: { flashcard: Flashcard }) {
             </div>
           </div>
         ) : (
-          <div>
-            <p className="text-base text-card-foreground">
-              {flashcard.question}
-            </p>
-            <Separator />
-            <p className="text-base text-card-foreground">{flashcard.answer}</p>
-          </div>
+          <Collapsible
+            open={isExpanded}
+            onOpenChange={setIsExpanded}
+            className="w-full"
+          >
+            <CollapsibleTrigger asChild>
+              <div className="cursor-pointer w-full group">
+                <p className="text-base text-card-foreground mb-2">
+                  {flashcard.question}
+                </p>
+                {!isExpanded && (
+                  <div className="flex justify-center text-muted-foreground group-hover:text-primary transition-colors">
+                    <ChevronDown size={16} />
+                  </div>
+                )}
+              </div>
+            </CollapsibleTrigger>
+            <CollapsibleContent>
+              <Separator className="my-2" />
+              <p className="text-base text-card-foreground">
+                {flashcard.answer}
+              </p>
+              <div
+                className="flex justify-center text-muted-foreground hover:text-primary transition-colors mt-2 cursor-pointer"
+                onClick={() => setIsExpanded(false)}
+              >
+                <ChevronUp size={16} />
+              </div>
+            </CollapsibleContent>
+          </Collapsible>
         )}
       </CardContent>
 

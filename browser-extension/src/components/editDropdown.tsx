@@ -6,6 +6,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "~components/ui/dropdown-menu";
+import { Button } from "./ui/button";
 
 interface EditDropdownProps {
   onEdit: (e: Event) => void;
@@ -22,8 +23,10 @@ export default function EditDropdown({
 }: EditDropdownProps) {
   return (
     <DropdownMenu onOpenChange={onOpenChange}>
-      <DropdownMenuTrigger>
-        <MoreHorizontal />
+      <DropdownMenuTrigger asChild>
+        <Button variant="ghost" size="sm">
+          <MoreHorizontal />
+        </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent>
         {menuItems}

@@ -42,9 +42,11 @@ const handler: PlasmoMessaging.MessageHandler<
   }
 
   const unitId = await db.units.add(unit);
-  for (const card of unit.cards) {
+  unit.cards = unit.cards.map((card) => {
     card.unitId = unitId;
-  }
+    card.dueAt = new Date().getTime();
+    return card;
+  });
   await db.flashcards.bulkAdd(unit.cards);
   res.send({});
 };
