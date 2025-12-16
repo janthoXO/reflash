@@ -46,9 +46,7 @@ export default function UnitPage() {
 
     setEditName(unit.name);
 
-    unit.cards = await db.flashcards
-      .where({ unitId: unit.id })
-      .toArray() ;
+    unit.cards = await db.flashcards.where({ unitId: unit.id }).toArray();
 
     return unit;
   }, [unitId, courseId]);
