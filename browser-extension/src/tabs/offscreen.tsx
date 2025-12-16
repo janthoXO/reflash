@@ -24,7 +24,7 @@ pdfjsLib.GlobalWorkerOptions.workerSrc = new URL(
   import.meta.url
 ).toString();
 
-const flashCardFormatPrompt = `Output JSON format: [{question: '...', answer: '...'}]`;
+const systemPrompt = `You are a teacher. Create flashcards from the provided file content. Output JSON format: [{question: '...', answer: '...'}]`;
 
 export default function Offscreen() {
   const [engine, setEngine] = useState<MLCEngine | null>(null);
@@ -162,9 +162,12 @@ export default function Offscreen() {
       messages: [
         {
           role: "system",
-          content: `${customPrompt} ${flashCardFormatPrompt}`,
+          content: systemPrompt,
         },
-        { role: "user", content: fileContent },
+        {
+          role: "user",
+          content: `${customPrompt}\n fileContent: ${fileContent}`,
+        },
       ],
       response_format: { type: "json_object" },
     });
@@ -224,8 +227,8 @@ export default function Offscreen() {
     let { text } = await retry<{ text: string }>(() => {
       return generateText({
         model,
-        system: `${customPrompt} ${flashCardFormatPrompt}`,
-        prompt: fileContent,
+        system: systemPrompt,
+        prompt: `${customPrompt}\n fileContent: ${fileContent}`,
       });
     }, 3);
 

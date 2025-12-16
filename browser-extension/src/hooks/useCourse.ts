@@ -10,7 +10,10 @@ export function useCourse() {
   ) {
     const customPrompt = await getPromptFromStorage(courseId);
     console.debug(
-      `useCourse: course-scan called with LLM settings ${llmSettings} and prompt ${customPrompt}`
+      "useCourse: course-scan called with LLM settings",
+      llmSettings,
+      "and prompt",
+      customPrompt
     );
     await sendToBackground({
       name: "course-scan",
