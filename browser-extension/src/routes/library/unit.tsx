@@ -1,23 +1,13 @@
 import type { Flashcard, Unit } from "@reflash/shared";
 import { useLiveQuery } from "dexie-react-hooks";
-import { ArrowLeft, Check, Trash, X } from "lucide-react";
+import { ArrowLeft, Check, X } from "lucide-react";
 import { useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import { toast } from "sonner";
+import DeleteDialog from "~components/deleteDialog";
 import EditDropdown from "~components/editDropdown";
 import Header from "~components/header";
 import { Button } from "~components/ui/button";
-import { Card, CardContent, CardHeader } from "~components/ui/card";
-import {
-  Dialog,
-  DialogClose,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "~components/ui/dialog";
-import { Input } from "~components/ui/input";
+import { Card, CardContent } from "~components/ui/card";
 import {
   InputGroup,
   InputGroupButton,
@@ -131,30 +121,13 @@ export default function UnitPage() {
         }
       />
 
-      <Dialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>{`Deleting ${unit.name}`}</DialogTitle>
-            <DialogDescription>
-              {`Are you sure you want to delete the unit ${unit.name} with all its flashcards?`}
-            </DialogDescription>
-          </DialogHeader>
-          <DialogFooter>
-            <div className="flex justify-end gap-2">
-              <DialogClose asChild>
-                <Button variant="outline">
-                  <X />
-                  {"Cancel"}
-                </Button>
-              </DialogClose>
-              <Button variant="destructive" type="submit" onClick={onDelete}>
-                <Trash />
-                {"Delete"}
-              </Button>
-            </div>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+      <DeleteDialog
+        open={showDeleteDialog}
+        setOpen={setShowDeleteDialog}
+        title={`Deleting ${unit.name}`}
+        description={`Are you sure you want to delete the unit ${unit.name} with all its flashcards?`}
+        onDelete={onDelete}
+      />
 
       <div className="space-y-2">
         <a
@@ -165,7 +138,9 @@ export default function UnitPage() {
           {unit.fileUrl}
         </a>
 
-        {unit.cards?.map((card) => <FlashcardItem flashcard={card} />)}
+        {unit.cards?.map((card) => (
+          <FlashcardItem flashcard={card} />
+        ))}
       </div>
     </div>
   );
@@ -252,30 +227,13 @@ function FlashcardItem({ flashcard }: { flashcard: Flashcard }) {
         )}
       </CardContent>
 
-      <Dialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>{`Deleting Flashcard`}</DialogTitle>
-            <DialogDescription>
-              {`Are you sure you want to delete this flashcard?`}
-            </DialogDescription>
-          </DialogHeader>
-          <DialogFooter>
-            <div className="flex justify-end gap-2">
-              <DialogClose asChild>
-                <Button variant="outline">
-                  <X />
-                  {"Cancel"}
-                </Button>
-              </DialogClose>
-              <Button variant="destructive" type="submit" onClick={onDelete}>
-                <Trash />
-                {"Delete"}
-              </Button>
-            </div>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+      <DeleteDialog
+        open={showDeleteDialog}
+        setOpen={setShowDeleteDialog}
+        title={`Deleting Flashcard`}
+        description={`Are you sure you want to delete this flashcard?`}
+        onDelete={onDelete}
+      />
     </Card>
   );
 }

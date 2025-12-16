@@ -1,10 +1,11 @@
 import { SiAnki } from "@icons-pack/react-simple-icons";
 import type { Course, Unit } from "@reflash/shared";
 import { useLiveQuery } from "dexie-react-hooks";
-import { Check, Trash, X } from "lucide-react";
+import { Check, X } from "lucide-react";
 import { useState } from "react";
 import { Link } from "react-router-dom";
 import { toast } from "sonner";
+import DeleteDialog from "~components/deleteDialog";
 import EditDropdown from "~components/editDropdown";
 import Header from "~components/header";
 import TrackingButton from "~components/trackingButton";
@@ -17,15 +18,6 @@ import {
 } from "~components/ui/accordion";
 import { Button } from "~components/ui/button";
 import {
-  Dialog,
-  DialogClose,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "~components/ui/dialog";
-import {
   InputGroup,
   InputGroupButton,
   InputGroupInput,
@@ -37,6 +29,8 @@ import {
 } from "~components/ui/tooltip";
 import { useSelected } from "~contexts/SelectedContext";
 import { db } from "~db/db";
+import PromptDialog from "./promptDialog";
+import { DropdownMenuItem } from "~components/ui/dropdown-menu";
 
 export default function LibraryPage() {
   const courses = useLiveQuery(async () => {
@@ -49,13 +43,7 @@ export default function LibraryPage() {
     return courses;
   }) as Course[] | undefined;
 
-  const {
-    isCourseSelected,
-    isUnitSelected,
-    toggleCourse,
-    toggleUnit,
-    isLoading: isSelectionLoading,
-  } = useSelected();
+  const { isLoading: isSelectionLoading } = useSelected();
 
   if (!courses || isSelectionLoading) {
     return <div className="p-4">Loading...</div>;
@@ -87,16 +75,7 @@ export default function LibraryPage() {
       ) : (
         <Accordion type="multiple" className="w-full space-y-2">
           {courses.map((course) => {
-            return (
-              <CourseItem
-                key={course.id}
-                course={course}
-                isSelected={isCourseSelected(course.id)}
-                isUnitSelected={isUnitSelected}
-                onToggleCourse={() => toggleCourse(course)}
-                onToggleUnit={toggleUnit}
-              />
-            );
+            return <CourseItem key={course.id} course={course} />;
           })}
         </Accordion>
       )}
@@ -104,22 +83,14 @@ export default function LibraryPage() {
   );
 }
 
-function CourseItem({
-  course,
-  isSelected,
-  isUnitSelected,
-  onToggleCourse,
-  onToggleUnit,
-}: {
-  course: Course;
-  isSelected: boolean;
-  isUnitSelected: (courseId: number, unitId: number) => boolean;
-  onToggleCourse: () => void;
-  onToggleUnit: (unit: Unit) => void;
-}) {
+function CourseItem({ course }: { course: Course }) {
+  const { isCourseSelected, isUnitSelected, toggleCourse, toggleUnit } =
+    useSelected();
+
   const [isEdit, setIsEdit] = useState<boolean>(false);
   const [editName, setEditName] = useState<string>(course.name);
   const [showDeleteDialog, setShowDeleteDialog] = useState<boolean>(false);
+  const [showPromptDialog, setShowPromptDialog] = useState<boolean>(false);
 
   function onSave() {
     course.name = editName;
@@ -151,9 +122,9 @@ function CourseItem({
         <div className="flex items-center gap-2">
           <input
             type="checkbox"
-            checked={isSelected}
+            checked={isCourseSelected(course.id)}
             onClick={(e) => e.stopPropagation()}
-            onChange={onToggleCourse}
+            onChange={() => toggleCourse(course)}
             className="h-4 w-4 rounded border-gray-300 text-primary focus:ring-primary"
           />
 
@@ -189,10 +160,28 @@ function CourseItem({
           )}
 
           {!isEdit && (
-            <EditDropdown
-              onEdit={() => setIsEdit(true)}
-              onDelete={() => setShowDeleteDialog(true)}
-            />
+            <>
+              <EditDropdown
+                onEdit={() => setIsEdit(true)}
+                onDelete={() => setShowDeleteDialog(true)}
+                menuItems={[
+                  <DropdownMenuItem
+                    key="promptDropdownButton"
+                    onSelect={() => {
+                      setShowPromptDialog(true);
+                    }}
+                    onClick={(e) => e.stopPropagation()}
+                  >
+                    Edit Prompt
+                  </DropdownMenuItem>,
+                ]}
+              />
+              <PromptDialog
+                course={course}
+                open={showPromptDialog}
+                setOpen={setShowPromptDialog}
+              />
+            </>
           )}
         </div>
       </AccordionTrigger>
@@ -210,7 +199,7 @@ function CourseItem({
               <input
                 type="checkbox"
                 checked={isUnitSelected(course.id, unit.id)}
-                onChange={() => onToggleUnit(unit)}
+                onChange={() => toggleUnit(unit)}
                 className="h-4 w-4 rounded border-gray-300 text-primary focus:ring-primary"
               />
               <Link
@@ -226,30 +215,14 @@ function CourseItem({
           )}
         </div>
       </AccordionContent>
-      <Dialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>{`Deleting ${course.name}`}</DialogTitle>
-            <DialogDescription>
-              {`Are you sure you want to delete the course ${course.name} with all its units and flashcards?`}
-            </DialogDescription>
-          </DialogHeader>
-          <DialogFooter>
-            <div className="flex justify-end gap-2">
-              <DialogClose asChild>
-                <Button variant="outline">
-                  <X />
-                  {"Cancel"}
-                </Button>
-              </DialogClose>
-              <Button variant="destructive" type="submit" onClick={onDelete}>
-                <Trash />
-                {"Delete"}
-              </Button>
-            </div>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+
+      <DeleteDialog
+        open={showDeleteDialog}
+        setOpen={setShowDeleteDialog}
+        title={`Deleting ${course.name}`}
+        description={`Are you sure you want to delete the course ${course.name} with all its units and flashcards?`}
+        onDelete={onDelete}
+      />
     </AccordionItem>
   );
 }

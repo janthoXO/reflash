@@ -4,7 +4,6 @@ import type { PlasmoMessaging } from "@plasmohq/messaging";
 import { sendToContentScript } from "@plasmohq/messaging";
 
 import { db } from "~db/db";
-import { LLMProvider } from "~models/ai-providers";
 import type { File } from "~models/file";
 import type { LLMSettings } from "~models/settings";
 
@@ -12,6 +11,7 @@ const OFFSCREEN_DOCUMENT_PATH = "tabs/offscreen.html";
 
 async function hasOffscreenDocument() {
   if ("getContexts" in chrome.runtime) {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const contexts = await (chrome.runtime as any).getContexts({
       contextTypes: ["OFFSCREEN_DOCUMENT"],
       documentUrls: [chrome.runtime.getURL(OFFSCREEN_DOCUMENT_PATH)],
@@ -33,18 +33,17 @@ async function setupOffscreenDocument() {
 }
 
 const handler: PlasmoMessaging.MessageHandler<
-  { llmSettings: LLMSettings },
+  { llmSettings: LLMSettings; customPrompt: string },
+  // eslint-disable-next-line @typescript-eslint/no-empty-object-type
   {}
 > = async (req, res) => {
   if (!req.body) {
-    req.body = {
-      llmSettings: {
-        provider: LLMProvider.WASM,
-      },
-    };
+    // TODO send error on error channel
+    res.send({});
+    return;
   }
 
-  console.debug("Background received files-scan request");
+  console.debug("Background received course-scan request");
 
   // request files on site
   console.debug("Requesting files-scan in content script");
@@ -52,7 +51,7 @@ const handler: PlasmoMessaging.MessageHandler<
     courseUrl,
     files: filesOnlyUrl,
   }: { courseUrl: string; files: File[] } = await sendToContentScript({
-    name: "files-scan",
+    name: "course-scan",
     body: {},
   });
 
@@ -85,14 +84,14 @@ const handler: PlasmoMessaging.MessageHandler<
   // send files to LLM
   console.debug("Requesting flashcard generation for files ", files);
   // Forward the message to the offscreen document
-  // const { units }: { units: Unit[] } = await chrome.runtime.sendMessage({
-  //   name: "flashcards-generate",
-  //   body: { files }
-  // })
   const { units }: { units: Unit[]; message: string } =
     await chrome.runtime.sendMessage({
       name: "flashcards-generate",
-      body: { files, llmSettings: req.body.llmSettings },
+      body: {
+        files,
+        llmSettings: req.body.llmSettings,
+        customPrompt: req.body.customPrompt,
+      },
     });
 
   console.debug("Received generated units from offscreen document", units);

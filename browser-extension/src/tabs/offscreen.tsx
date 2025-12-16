@@ -14,18 +14,25 @@ import { retry } from "~lib/retry";
 import { LLMProvider } from "~models/ai-providers";
 import type { File } from "~models/file";
 import type { LLMSettings } from "~models/settings";
+import type {
+  TextItem,
+  TextMarkedContent,
+} from "pdfjs-dist/types/src/display/api";
 
 pdfjsLib.GlobalWorkerOptions.workerSrc = new URL(
   "pdfjs-dist/build/pdf.worker.min.mjs",
   import.meta.url
 ).toString();
 
+const systemPrompt = `You are a teacher. Create flashcards from the provided file content. Output JSON format: [{question: '...', answer: '...'}]`;
+
 export default function Offscreen() {
   const [engine, setEngine] = useState<MLCEngine | null>(null);
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [modelStatus, setModelStatus] = useState<string>("Not Loaded");
 
   useMessage<
-    { files: File[]; llmSettings: LLMSettings },
+    { files: File[]; llmSettings: LLMSettings; customPrompt: string },
     { units: Partial<Unit>[] }
   >(async (req, res) => {
     if (req.name !== "flashcards-generate" || !req.body) return;
@@ -75,11 +82,15 @@ export default function Offscreen() {
       for (const file of parsedFiles) {
         let flashCards: Flashcard[] = [];
         if (req.body?.llmSettings.provider === LLMProvider.WASM) {
-          flashCards = await generateFlashcards(file.content);
+          flashCards = await generateFlashcards(
+            file.content,
+            req.body.customPrompt
+          );
         } else {
           flashCards = await generateFlashcardsByProvider(
             file.content,
-            req.body!.llmSettings
+            req.body.llmSettings,
+            req.body.customPrompt
           );
         }
         units.push({
@@ -119,7 +130,7 @@ export default function Offscreen() {
         const page = await pdf.getPage(i);
         const textContent = await page.getTextContent();
         const pageText = textContent.items
-          .map((item: any) => item.str)
+          .map((item: TextItem | TextMarkedContent) => item.str)
           .join(" ");
         fullText += pageText + "\n";
       }
@@ -158,7 +169,10 @@ export default function Offscreen() {
     setEngine(e);
   }
 
-  async function generateFlashcards(fileContent: string): Promise<Flashcard[]> {
+  async function generateFlashcards(
+    fileContent: string,
+    customPrompt: string
+  ): Promise<Flashcard[]> {
     if (!engine) {
       throw new Error("Model not loaded");
     }
@@ -167,10 +181,12 @@ export default function Offscreen() {
       messages: [
         {
           role: "system",
-          content:
-            "You are a teacher. Create flashcards from the user text. Output JSON format: [{question: '...', answer: '...'}]",
+          content: systemPrompt,
         },
-        { role: "user", content: fileContent },
+        {
+          role: "user",
+          content: `${customPrompt}\n fileContent: ${fileContent}`,
+        },
       ],
       response_format: { type: "json_object" },
     });
@@ -185,48 +201,53 @@ export default function Offscreen() {
 
   async function generateFlashcardsByProvider(
     fileContent: string,
-    llmSettings: LLMSettings
+    llmSettings: LLMSettings,
+    customPrompt: string
   ): Promise<Flashcard[]> {
     let model: LanguageModel;
 
     switch (llmSettings.provider) {
-      case LLMProvider.OPENAI:
+      case LLMProvider.OPENAI: {
         if (!llmSettings.apiKey) throw new Error("OpenAI API Key required");
         const openai = createOpenAI({ apiKey: llmSettings.apiKey });
         model = openai("gpt-5");
         break;
+      }
 
-      case LLMProvider.GOOGLE:
+      case LLMProvider.GOOGLE: {
         if (!llmSettings.apiKey) throw new Error("Google API Key required");
         const google = createGoogleGenerativeAI({ apiKey: llmSettings.apiKey });
         model = google("gemini-2.5-flash");
         break;
+      }
 
-      case LLMProvider.ANTHROPIC:
+      case LLMProvider.ANTHROPIC: {
         if (!llmSettings.apiKey) throw new Error("Anthropic API Key required");
         const anthropic = createAnthropic({ apiKey: llmSettings.apiKey });
         model = anthropic("claude-sonnet-4-20250514");
         break;
+      }
 
-      case LLMProvider.OLLAMA:
+      case LLMProvider.OLLAMA: {
         // Ollama runs locally on http://localhost:11434 by default
         // No API Key is required for local Ollama
         model = ollama("llama3");
         break;
+      }
 
-      default:
+      default: {
         throw new Error(
           `Provider ${llmSettings.provider} not supported in this helper`
         );
+      }
     }
 
     // Unified call for all external providers
     let { text } = await retry<{ text: string }>(() => {
       return generateText({
         model,
-        system:
-          "You are a teacher. Create flashcards from the user text. Output JSON format without any additional text: [{question: '...', answer: '...'}]",
-        prompt: fileContent,
+        system: systemPrompt,
+        prompt: `${customPrompt}\n fileContent: ${fileContent}`,
       });
     }, 3);
 

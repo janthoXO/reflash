@@ -5,9 +5,9 @@ import { MemoryRouter } from "react-router-dom";
 import { Toaster } from "~components/ui/sonner";
 import { TooltipProvider } from "~components/ui/tooltip";
 
-import { SettingsProvider } from "~contexts/SettingsContext";
 import { UrlProvider } from "~contexts/UrlContext";
 import { db, populateMockData } from "~db/db";
+import { useSettingsStorage } from "~local-storage/settings";
 import { Routing } from "~routes";
 
 function IndexPopup() {
@@ -16,18 +16,26 @@ function IndexPopup() {
     populateMockData(db);
   }, []);
 
+  const [settings] = useSettingsStorage();
+
+  useEffect(() => {
+    if (settings?.darkMode) {
+      document.documentElement.classList.add("dark");
+    } else {
+      document.documentElement.classList.remove("dark");
+    }
+  }, [settings?.darkMode]);
+
   return (
     <div>
-      <SettingsProvider>
-        <UrlProvider>
-          <TooltipProvider>
-            <MemoryRouter>
-              <Routing />
-            </MemoryRouter>
-          </TooltipProvider>
-        </UrlProvider>
-      </SettingsProvider>
-      <Toaster closeButton/>
+      <UrlProvider>
+        <TooltipProvider>
+          <MemoryRouter>
+            <Routing />
+          </MemoryRouter>
+        </TooltipProvider>
+      </UrlProvider>
+      <Toaster closeButton />
     </div>
   );
 }
