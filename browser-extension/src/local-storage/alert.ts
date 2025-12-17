@@ -1,5 +1,6 @@
 import { Storage } from "@plasmohq/storage";
 import { useStorage } from "@plasmohq/storage/hook";
+import type { Alert } from "~models/alert";
 
 const _alertStorageKey = "alert";
 
@@ -16,10 +17,14 @@ export const alertStorageInstance = () => {
 };
 
 export const useAlertStorage = () => {
-  const [_alert, setAlert, { isLoading }] = useStorage<Alert>({
+  const [_alert, _setAlert, { isLoading }] = useStorage<Alert>({
     key: _alertStorageKey,
     instance: alertStorageInstance(),
   });
+
+  const setAlert = (alert: Alert) => {
+    _setAlert({ ...alert, timestamp: new Date().getTime() });
+  };
 
   return [_alert, setAlert, isLoading] as const;
 };
@@ -29,5 +34,8 @@ export const getAlertFromStorage = async () => {
 };
 
 export const setAlertToStorage = (alert: Alert) => {
-  return alertStorageInstance().set(_alertStorageKey, alert);
+  return alertStorageInstance().set(_alertStorageKey, {
+    ...alert,
+    timestamp: new Date().getTime(),
+  });
 };

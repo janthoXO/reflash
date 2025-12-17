@@ -3,6 +3,7 @@ import type { PlasmoCSConfig } from "plasmo";
 import { useMessage } from "@plasmohq/messaging/hook";
 
 import type { File } from "~models/file";
+import { sendToBackground } from "@plasmohq/messaging";
 
 export const config: PlasmoCSConfig = {
   matches: ["<all_urls>"],
@@ -13,15 +14,25 @@ export default function FilesScan() {
   // TODO extract course heading as courseName and return
   // eslint-disable-next-line @typescript-eslint/no-empty-object-type
   useMessage<{}, { courseUrl: string; files: File[] }>(async (req, res) => {
-    if (req.name !== "files-scan") return;
-
     console.debug("Received files-scan", req);
 
-    const courseUrl = window.location.href;
-    const files = await scanForPDFLinks();
+    try {
+      const courseUrl = window.location.href;
+      const files = await scanForPDFLinks();
 
-    console.debug("Return scanned files ", files);
-    res.send({ courseUrl: courseUrl, files: files });
+      console.debug("Return scanned files ", files);
+      res.send({ courseUrl: courseUrl, files: files });
+    } catch (e) {
+      console.error("Error in files-scan:", e);
+      sendToBackground({
+        name: "alert",
+        body: {
+          level: "error",
+          message: "Failed to scan for files",
+        },
+      });
+      res.send({ courseUrl: "", files: [] });
+    }
   });
 
   return null;
