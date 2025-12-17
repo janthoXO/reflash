@@ -31,6 +31,7 @@ import { useSelected } from "~contexts/SelectedContext";
 import { db } from "~db/db";
 import PromptDialog from "./promptDialog";
 import { DropdownMenuItem } from "~components/ui/dropdown-menu";
+import { useAnki } from "~hooks/useAnki";
 
 export default function LibraryPage() {
   const courses = useLiveQuery(async () => {
@@ -44,6 +45,7 @@ export default function LibraryPage() {
   }) as Course[] | undefined;
 
   const { isLoading: isSelectionLoading } = useSelected();
+  const { exportAnki } = useAnki();
 
   if (!courses || isSelectionLoading) {
     return <div className="p-4">Loading...</div>;
@@ -58,9 +60,11 @@ export default function LibraryPage() {
             <TooltipTrigger asChild>
               <Button
                 variant="secondary"
-                onClick={() => {
-                  toast.warning("Export to Anki not implemented yet.");
-                }}
+                onClick={() =>
+                  exportAnki().catch(() => {
+                    toast.error("Failed to export flashcards to Anki format");
+                  })
+                }
               >
                 <SiAnki />
               </Button>
