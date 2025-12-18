@@ -1,10 +1,8 @@
-import { SiAnki } from "@icons-pack/react-simple-icons";
 import type { Course, Unit } from "@reflash/shared";
 import { useLiveQuery } from "dexie-react-hooks";
 import { Check, X } from "lucide-react";
 import { useState } from "react";
 import { Link } from "react-router-dom";
-import { toast } from "sonner";
 import DeleteDialog from "~components/deleteDialog";
 import EditDropdown from "~components/editDropdown";
 import Header from "~components/header";
@@ -16,7 +14,6 @@ import {
   AccordionItem,
   AccordionTrigger,
 } from "~components/ui/accordion";
-import { Button } from "~components/ui/button";
 import {
   InputGroup,
   InputGroupButton,
@@ -31,7 +28,7 @@ import { useSelected } from "~contexts/SelectedContext";
 import { db } from "~db/db";
 import PromptDialog from "./promptDialog";
 import { DropdownMenuItem } from "~components/ui/dropdown-menu";
-import { useAnki } from "~hooks/useAnki";
+import AnkiExportButton from "~components/ankiExportButton";
 
 export default function LibraryPage() {
   const courses = useLiveQuery(async () => {
@@ -45,7 +42,6 @@ export default function LibraryPage() {
   }) as Course[] | undefined;
 
   const { isLoading: isSelectionLoading } = useSelected();
-  const { exportAnki } = useAnki();
 
   if (!courses || isSelectionLoading) {
     return <div className="p-4">Loading...</div>;
@@ -58,16 +54,7 @@ export default function LibraryPage() {
         suffix={[
           <Tooltip key="export-anki-tooltip">
             <TooltipTrigger asChild>
-              <Button
-                variant="secondary"
-                onClick={() =>
-                  exportAnki().catch(() => {
-                    toast.error("Failed to export flashcards to Anki format");
-                  })
-                }
-              >
-                <SiAnki />
-              </Button>
+              <AnkiExportButton />
             </TooltipTrigger>
             <TooltipContent>Export Flashcards to Anki Format</TooltipContent>
           </Tooltip>,
