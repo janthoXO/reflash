@@ -2,7 +2,7 @@ import { SiAnki } from "@icons-pack/react-simple-icons";
 import type { Course, Unit } from "@reflash/shared";
 import { useLiveQuery } from "dexie-react-hooks";
 import { Check, X } from "lucide-react";
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import { toast } from "sonner";
 import DeleteDialog from "~components/deleteDialog";
@@ -33,19 +33,39 @@ import PromptDialog from "./promptDialog";
 import { DropdownMenuItem } from "~components/ui/dropdown-menu";
 
 export default function LibraryPage() {
-  const courses = useLiveQuery(async () => {
-    const courses = (await db.courses.toArray()) as Course[];
-    for (const course of courses) {
-      course.units = (await db.units
-        .where({ courseId: course.id })
-        .toArray()) as Unit[];
+  const courses = useLiveQuery(() => db.courses.toArray()) as
+    | Course[]
+    | undefined;
+
+  const units = useLiveQuery(() => db.units.toArray()) as Unit[] | undefined;
+
+  const populatedCourse = useMemo(() => {
+    if (!courses || !units) return;
+
+    const courseToUnits = new Map<number, Unit[]>();
+    for (const unit of units) {
+      if (!unit.courseId) continue;
+      if (!courseToUnits.has(unit.courseId)) {
+        courseToUnits.set(unit.courseId, []);
+      }
+      courseToUnits.get(unit.courseId)?.push(unit);
     }
-    return courses;
-  }) as Course[] | undefined;
+
+    return courses.map((course) => {
+      return {
+        ...course,
+        units: courseToUnits.get(course.id) || [],
+      };
+    });
+  }, [courses, units]);
 
   const { isLoading: isSelectionLoading } = useSelected();
 
-  if (!courses || isSelectionLoading) {
+  if (!populatedCourse){
+    return <div className="p-4">No courses yet.</div>;
+  }
+
+  if (isSelectionLoading) {
     return <div className="p-4">Loading...</div>;
   }
 
@@ -70,11 +90,11 @@ export default function LibraryPage() {
           <TrackingButton key="library-tracking-button" />,
         ]}
       />
-      {courses.length === 0 ? (
+      {populatedCourse.length === 0 ? (
         <p className="text-muted-foreground">No courses found.</p>
       ) : (
         <Accordion type="multiple" className="w-full space-y-2">
-          {courses.map((course) => {
+          {populatedCourse.map((course) => {
             return <CourseItem key={course.id} course={course} />;
           })}
         </Accordion>
