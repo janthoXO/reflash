@@ -61,7 +61,7 @@ export default function LibraryPage() {
 
   const { isLoading: isSelectionLoading } = useSelected();
 
-  if (!populatedCourse){
+  if (!populatedCourse) {
     return <div className="p-4">No courses yet.</div>;
   }
 
