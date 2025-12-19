@@ -11,7 +11,7 @@ function sanitizeForAnki(text: string): string {
 // exports the course with its units and flashcards as Anki format (each course is a deck and each unit a tag)
 export function exportAsAnki(courses: Course[]): string {
   let content =
-    "#separator:Semicolon\n#deck column:3\n#tags column:4\n#columns:Question;Answer;Deck;Tags";
+    "#separator:Semicolon\n#deck column:3\n#tags column:4\n#columns:Front;Back;Deck;Tags";
   for (const course of courses) {
     if (!course.units) continue;
     for (const unit of course.units) {
