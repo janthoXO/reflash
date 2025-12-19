@@ -17,25 +17,45 @@ export const alertStorageInstance = () => {
 };
 
 export const useAlertStorage = () => {
-  const [_alert, _setAlert, { isLoading }] = useStorage<Alert>({
+  const [_alert, _setAlert, { isLoading }] = useStorage<Alert | null>({
     key: _alertStorageKey,
     instance: alertStorageInstance(),
   });
 
-  const setAlert = (alert: Alert) => {
-    _setAlert({ ...alert, timestamp: new Date().getTime() });
+  const setAlert = (
+    value:
+      | Alert
+      | null
+      | ((prev?: Alert | null | undefined) => Alert | null | undefined)
+  ) => {
+    if (typeof value === "function") {
+      _setAlert((prev) => {
+        const next = value(prev);
+        if (!next) {
+          return null;
+        }
+        return { ...next, timestamp: new Date().getTime() };
+      });
+    } else {
+      _setAlert(value ? { ...value, timestamp: new Date().getTime() } : null);
+    }
   };
 
-  return [_alert, setAlert, isLoading] as const;
+  return { alert: _alert, setAlert, isLoading } as const;
 };
 
 export const getAlertFromStorage = async () => {
-  return alertStorageInstance().get<Alert>(_alertStorageKey);
+  return alertStorageInstance().get<Alert | null>(_alertStorageKey);
 };
 
-export const setAlertToStorage = (alert: Alert) => {
-  return alertStorageInstance().set(_alertStorageKey, {
-    ...alert,
-    timestamp: new Date().getTime(),
-  });
+export const setAlertToStorage = (alert: Alert | null) => {
+  return alertStorageInstance().set(
+    _alertStorageKey,
+    alert
+      ? {
+          ...alert,
+          timestamp: new Date().getTime(),
+        }
+      : null
+  );
 };
