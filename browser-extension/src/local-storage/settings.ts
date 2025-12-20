@@ -1,13 +1,19 @@
 import { Storage } from "@plasmohq/storage";
 import { useStorage } from "@plasmohq/storage/hook";
-import { LLMProvider } from "~models/ai-providers";
-import type { Settings } from "~models/settings";
+import {
+  type Settings,
+  LLMProvider,
+  ProvidersToModels,
+} from "~models/settings";
 
 const defaultSettings: Settings = {
   darkMode: false,
   autoScrape: false,
   llm: {
     provider: LLMProvider.WASM,
+    apiKey: "",
+    url: "",
+    model: ProvidersToModels[LLMProvider.WASM][0]!.toString(),
   },
 };
 
@@ -31,7 +37,11 @@ export const useSettingsStorage = () => {
     instance: settingsStorageInstance(),
   });
 
-  return [_settings || defaultSettings, setSettings, isLoading] as const;
+  return {
+    settings: _settings || defaultSettings,
+    setSettings,
+    isLoading,
+  } as const;
 };
 
 export const getSettingsFromStorage = async () => {
