@@ -22,10 +22,9 @@ export function useCourse() {
   }
 
   async function trackCourse(
-    courseId: number | undefined,
     llmSettings: LLMSettings
   ) {
-    scanFiles(courseId, llmSettings);
+    scanFiles(undefined, llmSettings);
   }
 
   return { scanFiles, trackCourse };
