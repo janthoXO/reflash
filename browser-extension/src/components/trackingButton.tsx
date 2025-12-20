@@ -9,84 +9,49 @@ import { BookMarked, FileSearchCorner } from "lucide-react";
 import { useUrl } from "~contexts/UrlContext";
 import { useSettingsStorage } from "~local-storage/settings";
 import { getPromptFromStorage } from "~local-storage/prompts";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import { Popover, PopoverContent, PopoverAnchor } from "./ui/popover";
 import { Label } from "./ui/label";
 import { Textarea } from "./ui/textarea";
 import type { LLMSettings } from "~models/settings";
 import {
-  ContextMenu,
-  ContextMenuContent,
-  ContextMenuItem,
-  ContextMenuTrigger,
-} from "./ui/context-menu";
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from "./ui/accordion";
+import { PopoverClose } from "@radix-ui/react-popover";
 
 export default function TrackingButton() {
   const [settings] = useSettingsStorage();
   const { currentUrlCourse } = useUrl();
-  const { scanFiles, trackCourse } = useCourse();
+  const { scanFiles } = useCourse();
 
   const [popoverOpen, setPopoverOpen] = useState(false);
-
-  useEffect(() => {
-    const onFocus = () => {
-      console.log("Focus moved to: ", document.activeElement);
-    };
-
-    // 'focusin' bubbles, 'focus' does not. Use focusin to catch everything.
-    document.addEventListener("focusin", onFocus);
-
-    return () => document.removeEventListener("focusin", onFocus);
-  }, []);
 
   return (
     <div>
       {!settings.autoScrape ? (
         <div>
-          <ContextMenu>
-            <Tooltip>
-              <ContextMenuTrigger>
+          <Popover open={popoverOpen} onOpenChange={setPopoverOpen}>
+            <PopoverAnchor>
+              <Tooltip>
                 <TooltipTrigger asChild>
                   <Button
                     onClick={() =>
-                      scanFiles(currentUrlCourse?.id, settings.llm)
+                      currentUrlCourse
+                        ? // only show custom prompt popup if course is not in library yet
+                          scanFiles(currentUrlCourse.id, settings.llm)
+                        : setPopoverOpen(true)
                     }
                   >
                     <FileSearchCorner />
                   </Button>
                 </TooltipTrigger>
-              </ContextMenuTrigger>
 
-              <TooltipContent>
-                Scan this site for new files.
-                <br /> Right Click for Custom Prompts
-              </TooltipContent>
-            </Tooltip>
-
-            <ContextMenuContent
-              onCloseAutoFocus={(e) => {
-                e.preventDefault();
-              }}
-            >
-              <ContextMenuItem
-                onSelect={() => scanFiles(currentUrlCourse?.id, settings.llm)}
-              >
-                Scan
-              </ContextMenuItem>
-              <ContextMenuItem
-                onSelect={() => {
-                  setTimeout(() => {
-                    setPopoverOpen(true);
-                  }, 200);
-                }}
-              >
-                Scan with Custom Prompt
-              </ContextMenuItem>
-            </ContextMenuContent>
-          </ContextMenu>
-
-          <Popover open={popoverOpen} onOpenChange={setPopoverOpen}>
-            <PopoverAnchor />
+                <TooltipContent>Scan this site for new files.</TooltipContent>
+              </Tooltip>
+            </PopoverAnchor>
             <TrackingButtonDialog
               courseId={currentUrlCourse?.id}
               llmSettings={settings.llm}
@@ -96,42 +61,20 @@ export default function TrackingButton() {
         </div>
       ) : !currentUrlCourse ? (
         <div>
-          <ContextMenu>
-            <Tooltip>
-              <ContextMenuTrigger asChild>
+          <Popover open={popoverOpen} onOpenChange={setPopoverOpen}>
+            <PopoverAnchor>
+              <Tooltip>
                 <TooltipTrigger asChild>
-                  <Button onClick={() => trackCourse(settings.llm)}>
+                  <Button onClick={() => setPopoverOpen(true)}>
                     <BookMarked />
                   </Button>
                 </TooltipTrigger>
-              </ContextMenuTrigger>
-              <TooltipContent>
-                Track this site for new files automatically.
-                <br /> Right Click for Custom Prompts
-              </TooltipContent>
-            </Tooltip>
-            <ContextMenuContent
-              onCloseAutoFocus={(e) => {
-                e.preventDefault();
-              }}
-            >
-              <ContextMenuItem onSelect={() => trackCourse(settings.llm)}>
-                Track
-              </ContextMenuItem>
-              <ContextMenuItem
-                onSelect={() => {
-                  setTimeout(() => {
-                    setPopoverOpen(true);
-                  }, 200);
-                }}
-              >
-                Track with Custom Prompt
-              </ContextMenuItem>
-            </ContextMenuContent>
-          </ContextMenu>
+                <TooltipContent>
+                  Track this site for new files automatically.
+                </TooltipContent>
+              </Tooltip>
+            </PopoverAnchor>
 
-          <Popover open={popoverOpen} onOpenChange={setPopoverOpen}>
-            <PopoverAnchor />
             <TrackingButtonDialog
               courseId={undefined}
               llmSettings={settings.llm}
@@ -165,26 +108,45 @@ function TrackingButtonDialog({
   }, [courseId]);
 
   return (
-    <PopoverContent
-      className="space-y-2"
-      onCloseAutoFocus={(e) => e.preventDefault()}
-    >
-      <Label htmlFor="custom-prompt">Custom Prompt</Label>
-      <Textarea
-        id="custom-prompt"
-        value={editCustomPrompt}
-        onChange={(e) => setEditCustomPrompt(e.target.value)}
-      />
+    <PopoverContent className="space-y-2">
+      <p className="text-sm">
+        {isTracking
+          ? "Add the current website to automatic tracking."
+          : "Scan the current website for new files."}
+      </p>
+      <Accordion type="single" collapsible>
+        <AccordionItem value="item-1">
+          <AccordionTrigger className="hover:no-underline">
+            <Label htmlFor="custom-prompt" className="text-muted-foreground">
+              Custom Prompt
+            </Label>
+          </AccordionTrigger>
+          <AccordionContent className="space-y-2">
+            <p className="text-xs">
+              This can also be adjusted per course in the library
+            </p>
+            {/* custom prompt will be saved to the course in course-scan background task */}
+            <Textarea
+              id="custom-prompt"
+              value={editCustomPrompt}
+              onChange={(e) => setEditCustomPrompt(e.target.value)}
+            />
+          </AccordionContent>
+        </AccordionItem>
+      </Accordion>
       <div className="flex justify-end">
-        <Button
-          onClick={() =>
-            isTracking
-              ? trackCourse(llmSettings)
-              : scanFiles(courseId, llmSettings)
-          }
-        >
-          {isTracking ? "Track" : "Scan"}
-        </Button>
+        <PopoverClose asChild>
+          <Button
+            type="submit"
+            onClick={() =>
+              isTracking
+                ? trackCourse(llmSettings, editCustomPrompt)
+                : scanFiles(courseId, llmSettings, editCustomPrompt)
+            }
+          >
+            {isTracking ? "Track" : "Scan"}
+          </Button>
+        </PopoverClose>
       </div>
     </PopoverContent>
   );

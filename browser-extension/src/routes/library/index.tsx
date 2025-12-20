@@ -1,7 +1,7 @@
 import { SiAnki } from "@icons-pack/react-simple-icons";
 import type { Course, Unit } from "@reflash/shared";
 import { useLiveQuery } from "dexie-react-hooks";
-import { Check, X } from "lucide-react";
+import { Check, MessageSquareCode, X } from "lucide-react";
 import { useState } from "react";
 import { Link } from "react-router-dom";
 import { toast } from "sonner";
@@ -168,6 +168,7 @@ function CourseItem({ course }: { course: Course }) {
                 }}
                 onClick={(e) => e.stopPropagation()}
               >
+                <MessageSquareCode />
                 Edit Prompt
               </DropdownMenuItem>,
             ]}
