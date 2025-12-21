@@ -42,7 +42,7 @@ export default function LearnScreen() {
       {flashcards.length > 0 ? (
         <View className="gap-4">
           <View className="flex-row items-center justify-between">
-            <Text className="text-muted-foreground text-sm font-medium">
+            <Text className="text-sm font-medium text-muted-foreground">
               Remaining cards: {flashcards.length}
             </Text>
           </View>
@@ -50,7 +50,7 @@ export default function LearnScreen() {
           <TouchableOpacity activeOpacity={0.9} onPress={() => setIsFlipped(!isFlipped)}>
             <Card className="min-h-[200px]">
               <CardContent className="flex-1 items-center justify-center py-12">
-                <Text className="text-muted-foreground mb-3 text-xs font-medium">
+                <Text className="mb-3 text-xs font-medium text-muted-foreground">
                   {isFlipped ? "Answer" : "Question"}
                 </Text>
                 <Text className="text-center text-base">
@@ -78,7 +78,7 @@ export default function LearnScreen() {
       ) : (
         <View className="items-center justify-center">
           <Text className="text-base font-medium">No flashcards</Text>
-          <Text className="text-muted-foreground mt-2 text-center text-sm">
+          <Text className="mt-2 text-center text-sm text-muted-foreground">
             Select flashcards in the library or sync from the browser extension.
           </Text>
         </View>

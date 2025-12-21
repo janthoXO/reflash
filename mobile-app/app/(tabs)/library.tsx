@@ -4,20 +4,15 @@ import {
   AccordionItem,
   AccordionTrigger,
 } from "@/components/ui/accordion";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
 import { Icon } from "@/components/ui/icon";
 import { Separator } from "@/components/ui/separator";
 import { Text } from "@/components/ui/text";
-import { Toggle } from "@/components/ui/toggle";
 import { useSelectedUnits } from "@/context/SelectedUnitsContext";
 import { db } from "@/db/db";
 import { useLiveQuery } from "drizzle-orm/expo-sqlite";
 import { useRouter } from "expo-router";
-import { Check, Square, SquareCheck } from "lucide-react-native";
-import { useEffect } from "react";
+import { Square, SquareCheck } from "lucide-react-native";
 import { ScrollView, TouchableOpacity, View } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
 
 export default function LibraryScreen() {
   const { data: courses } = useLiveQuery(
@@ -33,7 +28,7 @@ export default function LibraryScreen() {
   return (
     <ScrollView className="p-4">
       {courses.length === 0 ? (
-        <Text className="text-muted-foreground text-center">No courses found.</Text>
+        <Text className="text-center text-muted-foreground">No courses found.</Text>
       ) : (
         <Accordion type="multiple" className="gap-2">
           {courses.map((course) => {
@@ -43,7 +38,7 @@ export default function LibraryScreen() {
               <AccordionItem
                 key={course.id}
                 value={course.id.toString()}
-                className="border-border bg-card rounded-lg border px-2">
+                className="rounded-lg border border-border bg-card px-2">
                 <View className="flex-row items-center">
                   <TouchableOpacity onPress={() => toggleCourse(course)} className="mr-2">
                     {isSelected ? (
@@ -54,7 +49,7 @@ export default function LibraryScreen() {
                   </TouchableOpacity>
                   <View className="flex-1">
                     <AccordionTrigger>
-                      <Text className="text-card-foreground font-semibold">{course.name}</Text>
+                      <Text className="font-semibold text-card-foreground">{course.name}</Text>
                     </AccordionTrigger>
                   </View>
                 </View>
@@ -63,7 +58,7 @@ export default function LibraryScreen() {
                   <Separator />
                   <View>
                     {course.units.length === 0 ? (
-                      <Text className="text-muted-foreground text-sm">No units</Text>
+                      <Text className="text-sm text-muted-foreground">No units</Text>
                     ) : (
                       course.units.map((unit) => {
                         const isUnitSel = isUnitSelected(course.id, unit.id);

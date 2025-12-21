@@ -1,15 +1,15 @@
 import { ThemeProvider } from "@react-navigation/native";
 import "../global.css";
+import { NAV_THEME } from "@/lib/theme";
 import { PortalHost } from "@rn-primitives/portal";
+import { useMigrations } from "drizzle-orm/expo-sqlite/migrator";
 import { Stack } from "expo-router";
 import { StatusBar } from "expo-status-bar";
 import { useColorScheme } from "nativewind";
-import { NAV_THEME } from "@/lib/theme";
-import { useMigrations } from "drizzle-orm/expo-sqlite/migrator";
-import migrations from "../drizzle/migrations";
-import { db } from "../db/db";
 import { Text, View } from "react-native";
 import { SelectedUnitsProvider } from "../context/SelectedUnitsContext";
+import { db } from "../db/db";
+import migrations from "../drizzle/migrations";
 
 export {
   // Catch any errors thrown by the Layout component.

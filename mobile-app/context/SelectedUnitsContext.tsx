@@ -1,5 +1,5 @@
-import { createContext, useContext, useMemo, useState, type ReactNode } from "react";
 import type { Course, Unit } from "@reflash/shared";
+import { createContext, useContext, useMemo, type ReactNode } from "react";
 import { useMMKVString } from "react-native-mmkv";
 
 interface SelectedContextType {
@@ -14,7 +14,7 @@ interface SelectedContextType {
 const SelectedUnitsContext = createContext<SelectedContextType | null>(null);
 
 export function SelectedUnitsProvider({ children }: { children: ReactNode }) {
-  const [_selectedUnitsMapRaw, _setSelectedUnitsMapRaw] = useMMKVString('units.selected')
+  const [_selectedUnitsMapRaw, _setSelectedUnitsMapRaw] = useMMKVString("units.selected");
 
   const selectedUnitsMap: Record<number, number[]> = useMemo(() => {
     if (!_selectedUnitsMapRaw) {
@@ -28,7 +28,7 @@ export function SelectedUnitsProvider({ children }: { children: ReactNode }) {
   }, [_selectedUnitsMapRaw]);
   const setSelectedUnitsMap = (newMap: Record<number, number[]>) => {
     _setSelectedUnitsMapRaw(JSON.stringify(newMap));
-  }
+  };
 
   const toggleCourse = (course: Course) => {
     const newMap = { ...selectedUnitsMap };
@@ -79,8 +79,7 @@ export function SelectedUnitsProvider({ children }: { children: ReactNode }) {
         toggleUnit,
         isCourseSelected,
         isUnitSelected,
-      }}
-    >
+      }}>
       {children}
     </SelectedUnitsContext.Provider>
   );
