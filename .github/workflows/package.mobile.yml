@@ -1,22 +1,22 @@
-name: Package Extension
+name: Package Mobile App
 
 on:
   pull_request:
     branches:
       - main
     paths:
-      - "browser-extension/**"
+      - "mobile-app/**"
       - "shared/**"
   push:
     branches:
       - main
     paths:
-      - "browser-extension/**"
+      - "mobile-app/**"
       - "shared/**"
   workflow_call:
     inputs:
       version:
-        description: "Version of the plugin to build"
+        description: "Version of the app to build"
         default: "0.0.0"
         required: false
         type: string
@@ -26,7 +26,7 @@ jobs:
     runs-on: ubuntu-latest
     defaults:
       run:
-        working-directory: browser-extension
+        working-directory: mobile-app
 
     steps:
       - name: Checkout code
@@ -37,22 +37,26 @@ jobs:
         with:
           node-version: 20
           cache: "npm"
-          cache-dependency-path: browser-extension/package-lock.json
+          cache-dependency-path: mobile-app/package-lock.json
 
       - name: Install dependencies
         run: npm ci
 
       - name: Change version
+        if: ${{ inputs.version != '0.0.0' }}
         run: npm version ${{ inputs.version }} --no-git-tag-version
 
-      - name: Package extension
+      - name: Export Expo Bundle
+        run: npx expo export
+
+      - name: Zip Bundle
         run: |
-          mkdir -p build
-          npm run package
+          cd dist
+          zip -r ../mobile-app-${{ inputs.version }}.zip .
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
-          name: extension-${{ inputs.version }}.zip
-          path: browser-extension/build/**/*.zip
+          name: mobile-app-${{ inputs.version }}.zip
+          path: mobile-app/mobile-app-${{ inputs.version }}.zip
           if-no-files-found: error
