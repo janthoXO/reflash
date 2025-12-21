@@ -1,15 +1,12 @@
 import { useEffect, useState, useCallback } from "react"
 import { View, ScrollView, ActivityIndicator, TouchableOpacity, Alert } from "react-native"
 import { SafeAreaView } from "react-native-safe-area-context"
-import { useRouter } from "expo-router"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { Text } from "@/components/ui/text"
-import { fetchUnits, answerCard } from "@/api/units"
 import { Flashcard, Unit } from "@reflash/shared"
 
-export default function TrainingScreen() {
-  const router = useRouter()
+export default function LearnScreen() {
   const [units, setUnits] = useState<Unit[]>([])
   const [loading, setLoading] = useState(false)
   const [currentCardIndex, setCurrentCardIndex] = useState(0)
@@ -51,14 +48,14 @@ export default function TrainingScreen() {
   }, [currentCard, flashcards, currentCardIndex])
 
   return (
-    <SafeAreaView className="flex-1 bg-background" edges={["top"]}>
+    <SafeAreaView edges={["top"]}>
       {/* Header */}
-      <View className="flex-row items-center border-b border-border bg-card p-4">
+      <View className="flex-row items-center border-b border-border p-4">
             <Text className="text-lg font-semibold">Reflash</Text>
       </View>
 
       {/* Content */}
-      <ScrollView className="flex-1 p-4">
+      <ScrollView className="p-4">
         {loading ? (
           <View className="items-center justify-center py-12">
             <ActivityIndicator size="large" />
@@ -117,6 +114,7 @@ export default function TrainingScreen() {
             <Text className="mt-2 text-sm text-muted-foreground text-center">
               Upload PDFs from the browser extension to generate flashcards.
             </Text>
+            <Button><Text>Test</Text></Button>
           </View>
         )}
       </ScrollView>

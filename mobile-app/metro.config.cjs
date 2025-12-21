@@ -13,4 +13,6 @@ config.resolver.nodeModulesPaths = [
   path.resolve(__dirname, '..'),
 ];
 
+config.resolver.sourceExts.push('sql'); // drizzle schema files
+
 module.exports = withNativeWind(config, { input: './global.css', inlineRem: 16 });

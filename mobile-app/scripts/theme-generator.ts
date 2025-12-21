@@ -33,7 +33,7 @@ function parseCssVariables(css: string, theme: 'light' | 'dark') {
   return variables;
 }
 
-const cssContent = readFileSync(join(__dirname, '../global.css'), 'utf-8');
+const cssContent = readFileSync(join(import.meta.dirname, '../global.css'), 'utf-8');
 const lightVars = parseCssVariables(cssContent, 'light');
 const darkVars = parseCssVariables(cssContent, 'dark');
 
@@ -82,5 +82,5 @@ export const NAV_THEME: Record<'light' | 'dark', Theme> = {
 };
 `;
 
-writeFileSync(join(__dirname, '../lib/theme.ts'), themeContent);
+writeFileSync(join(import.meta.dirname, '../lib/theme.ts'), themeContent);
 console.log('✅ Theme generated successfully!');
