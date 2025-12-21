@@ -9,6 +9,7 @@ import { useMigrations } from "drizzle-orm/expo-sqlite/migrator";
 import migrations from "../drizzle/migrations";
 import { db } from "../db/db";
 import { Text, View } from "react-native";
+import { SelectedUnitsProvider } from "../context/SelectedUnitsContext";
 
 export {
   // Catch any errors thrown by the Layout component.
@@ -37,13 +38,15 @@ export default function RootLayout() {
 
   return (
     <>
-      <ThemeProvider value={NAV_THEME[colorScheme || "light"]}>
-        <StatusBar style={colorScheme} />
-        <Stack>
-          <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-        </Stack>
-        <PortalHost />
-      </ThemeProvider>
+      <SelectedUnitsProvider>
+        <ThemeProvider value={NAV_THEME[colorScheme || "light"]}>
+          <StatusBar style={colorScheme} />
+          <Stack>
+            <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+          </Stack>
+          <PortalHost />
+        </ThemeProvider>
+      </SelectedUnitsProvider>
     </>
   );
 }
