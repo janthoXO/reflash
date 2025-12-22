@@ -6,7 +6,9 @@
   "author": "Dennis Jandow, Lara Liebmann",
   "scripts": {
     "dev": "plasmo dev",
+    "dev:edge": "plasmo dev --target=edge-mv3",
     "build": "plasmo build",
+    "build:edge": "plasmo build --target=edge-mv3",
     "package": "plasmo package",
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
@@ -73,7 +75,8 @@
   },
   "manifest": {
     "permissions": [
-      "offscreen"
+      "offscreen",
+      "webgl"
     ],
     "host_permissions": [
       "https://*/*"

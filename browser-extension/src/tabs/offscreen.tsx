@@ -26,6 +26,8 @@ pdfjsLib.GlobalWorkerOptions.workerSrc = new URL(
 
 const systemPrompt = `You are a teacher. Create flashcards from the provided file content. Output JSON format: [{question: '...', answer: '...'}]`;
 
+const webLLMname = "Qwen3-0.6B-q4f16_1-MLC";
+
 export default function Offscreen() {
   const [engine, setEngine] = useState<MLCEngine | null>(null);
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
@@ -54,6 +56,8 @@ export default function Offscreen() {
       // 2. Start parsing all PDFs in parallel
       file.content = await parsePDF(file);
 
+      console.debug("Parsed file content size:", file.content.length);
+
       // 4. Wait for model to finish loading
       if (req.body.llmSettings.provider === LLMProvider.WASM) {
         await modelLoadingPromise;
@@ -81,6 +85,9 @@ export default function Offscreen() {
         cards: flashCards,
         courseId: req.body.courseId,
       };
+
+      console.debug("Generated flashcards:", flashCards);
+      console.debug("Generated Unit:", unit);
 
       res.send({ unit: unit });
     } catch (e) {
@@ -129,7 +136,7 @@ export default function Offscreen() {
       return;
     }
 
-    const e = await CreateMLCEngine("Qwen3-0.6B-q4f16_1-MLC", {
+    const e = await CreateMLCEngine(webLLMname, {
       // SHOULD ALREADY BE CACHED BY DEFAULT
       //   appConfig: {
       //     useIndexedDBCache: true,
@@ -198,7 +205,7 @@ export default function Offscreen() {
       case LLMProvider.GOOGLE: {
         if (!llmSettings.apiKey) throw new Error("Google API Key required");
         const google = createGoogleGenerativeAI({ apiKey: llmSettings.apiKey });
-        model = google("gemini-2.5-flash");
+        model = google("gemma-3-27b-it"); // changed temporarely to gemma for 14k requests per day, gemma could be an extra option later?
         break;
       }
 
