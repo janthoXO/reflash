@@ -29,6 +29,7 @@ export default function SyncPage() {
         let courses: Course[] = [];
 
         if (mode === "all") {
+          // fetch everything also deleted entries
           const dbCourses = await db.courses.toArray();
           courses = await Promise.all(
             dbCourses.map(async (course) => {
@@ -52,6 +53,7 @@ export default function SyncPage() {
           const dbCourses = await db.courses
             .where("id")
             .anyOf(selectedCourseIds)
+            .filter((course) => course.deletedAt === null)
             .toArray();
 
           courses = await Promise.all(
@@ -60,12 +62,14 @@ export default function SyncPage() {
               const units = await db.units
                 .where("id")
                 .anyOf(selectedUnitIds)
+                .filter((unit) => unit.deletedAt === null)
                 .toArray();
 
               const populatedUnits = await Promise.all(
                 units.map(async (unit) => {
                   const cards = await db.flashcards
                     .where({ unitId: unit.id })
+                    .filter((card) => card.deletedAt === null)
                     .toArray();
                   return { ...unit, cards };
                 })
@@ -95,7 +99,7 @@ export default function SyncPage() {
 
   async function startSync() {
     console.debug("Starting sync ", cancelQRGif);
-    if (!!cancelQRGif) return; // Already syncing
+    if (cancelQRGif) return; // Already syncing
 
     try {
       const payload = UR.fromData({

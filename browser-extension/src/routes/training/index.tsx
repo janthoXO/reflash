@@ -20,7 +20,7 @@ export default function TrainingPage() {
     return await db.flashcards
       .where("unitId")
       .anyOf(selectedUnitIds)
-      .filter((fc) => fc.dueAt < Date.now())
+      .filter((fc) => fc.dueAt < Date.now() && fc.deletedAt === null)
       .toArray();
   }, [selectedMap]);
 
@@ -29,13 +29,15 @@ export default function TrainingPage() {
   }
 
   const handleAnswer = async (flashcard: Flashcard, correct: boolean) => {
+    const now = Date.now();
     // Update dueAt based on answer
     // Simple SRS: Correct -> 1 day, Wrong -> 1 minute
-    const newDueAt = correct
-      ? Date.now() + 24 * 60 * 60 * 1000
-      : Date.now() + 60 * 1000;
+    const newDueAt = correct ? now + 24 * 60 * 60 * 1000 : now + 60 * 1000;
 
-    await db.flashcards.update(flashcard.id, { dueAt: newDueAt });
+    await db.flashcards.update(flashcard.id, {
+      dueAt: newDueAt,
+      updatedAt: now,
+    });
   };
 
   return (

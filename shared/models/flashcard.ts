@@ -4,4 +4,6 @@ export interface Flashcard {
   answer: string;
   dueAt: number; // Unix millisec timestamp
   unitId: number;
+  updatedAt: number;
+  deletedAt: number | null;
 }

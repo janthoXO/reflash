@@ -1,9 +1,9 @@
 import type { Course, Flashcard, Unit } from "@reflash/shared";
-import Dexie, { type EntityTable } from "dexie";
+import Dexie, { type EntityTable, type InsertType } from "dexie";
 
 class ReflashDB extends Dexie {
-  courses!: EntityTable<Omit<Course, "units">, "id">;
-  units!: EntityTable<Omit<Unit, "cards">, "id">;
+  courses!: EntityTable<Course, "id", InsertType<Omit<Course, "units">, "id">>;
+  units!: EntityTable<Unit, "id", InsertType<Omit<Unit, "cards">, "id">>;
   flashcards!: EntityTable<Flashcard, "id">;
 
   constructor() {
@@ -22,14 +22,20 @@ export async function populateMockData(db: ReflashDB) {
     "rw",
     [db.courses, db.units, db.flashcards],
     async () => {
+      const now = Date.now();
+
       const courses = await Promise.all([
         mockCourse({
           name: "Introduction to Computer Science",
           url: "https://example.com/cs101",
+          updatedAt: now,
+          deletedAt: null,
         } as Course),
         mockCourse({
           name: "Advanced Mathematics",
           url: "https://example.com/math201",
+          updatedAt: now,
+          deletedAt: null,
         } as Course),
       ]);
 
@@ -39,28 +45,35 @@ export async function populateMockData(db: ReflashDB) {
           name: "Lecture 1: Basics.pdf",
           fileName: "Lecture 1: Basics.pdf",
           fileUrl: "https://example.com/cs101/lecture1.pdf",
+          updatedAt: now,
+          deletedAt: null,
         } as Unit),
         mockUnit({
           courseId: courses[0].id,
           name: "Lecture 2: Algorithms.pdf",
           fileName: "Lecture 2: Algorithms.pdf",
           fileUrl: "https://example.com/cs101/lecture2.pdf",
+          updatedAt: now,
+          deletedAt: null,
         } as Unit),
         mockUnit({
           courseId: courses[1].id,
           name: "Calculus Review.pdf",
           fileName: "Calculus Review.pdf",
           fileUrl: "https://example.com/math201/calculus.pdf",
+          updatedAt: now,
+          deletedAt: null,
         } as Unit),
       ]);
 
-      const now = Date.now();
       await Promise.all([
         mockFlashcard({
           unitId: units[0]!.id,
           question: "What is a variable?",
           answer: "A storage location paired with an associated symbolic name.",
           dueAt: now - 10000,
+          updatedAt: now,
+          deletedAt: null,
         } as Flashcard),
         mockFlashcard({
           unitId: units[0]!.id,
@@ -68,6 +81,8 @@ export async function populateMockData(db: ReflashDB) {
           answer:
             "A sequence of instructions that is continually repeated until a certain condition is reached.",
           dueAt: now + 86400000,
+          updatedAt: now,
+          deletedAt: null,
         } as Flashcard),
         mockFlashcard({
           unitId: units[1]!.id,
@@ -75,6 +90,8 @@ export async function populateMockData(db: ReflashDB) {
           answer:
             "A mathematical notation that describes the limiting behavior of a function when the argument tends towards a particular value or infinity.",
           dueAt: now - 5000,
+          updatedAt: now,
+          deletedAt: null,
         } as Flashcard),
         mockFlashcard({
           unitId: units[2]!.id,
@@ -82,6 +99,8 @@ export async function populateMockData(db: ReflashDB) {
           answer:
             "The rate of change of a function with respect to a variable.",
           dueAt: now - 1000,
+          updatedAt: now,
+          deletedAt: null,
         } as Flashcard),
       ]);
     }

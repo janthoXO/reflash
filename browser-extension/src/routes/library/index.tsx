@@ -1,5 +1,5 @@
 import { SiAnki } from "@icons-pack/react-simple-icons";
-import type { Course, Unit } from "@reflash/shared";
+import type { Course } from "@reflash/shared";
 import { useLiveQuery } from "dexie-react-hooks";
 import { Check, X } from "lucide-react";
 import { useState } from "react";
@@ -35,14 +35,18 @@ import SyncButton from "~components/syncButton";
 
 export default function LibraryPage() {
   const courses = useLiveQuery(async () => {
-    const courses = (await db.courses.toArray()) as Course[];
+    const courses = await db.courses
+      .filter((course) => course.deletedAt === null)
+      .toArray();
     for (const course of courses) {
-      course.units = (await db.units
-        .where({ courseId: course.id })
-        .toArray()) as Unit[];
+      course.units = await db.units
+        .filter(
+          (unit) => unit.deletedAt === null && unit.courseId === course.id
+        )
+        .toArray();
     }
     return courses;
-  }) as Course[] | undefined;
+  });
 
   const { isLoading: isSelectionLoading } = useSelected();
 
@@ -96,7 +100,7 @@ function CourseItem({ course }: { course: Course }) {
 
   function onSave() {
     course.name = editName;
-    db.courses.update(course.id, { name: editName });
+    db.courses.update(course.id, { name: editName, updatedAt: Date.now() });
     setIsEdit(false);
   }
 
@@ -106,12 +110,15 @@ function CourseItem({ course }: { course: Course }) {
   }
 
   function onDelete() {
-    db.courses.delete(course.id);
-    db.units.where({ courseId: course.id }).delete();
+    const now = Date.now();
+    db.courses.update(course.id, { deletedAt: now, updatedAt: now });
+    db.units
+      .where({ courseId: course.id })
+      .modify({ deletedAt: now, updatedAt: now });
     db.flashcards
       .where("unitId")
       .anyOf(course.units?.map((u) => u.id) ?? [])
-      .delete();
+      .modify({ deletedAt: now, updatedAt: now });
     setShowDeleteDialog(false);
   }
 

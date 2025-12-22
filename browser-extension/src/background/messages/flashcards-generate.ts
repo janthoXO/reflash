@@ -26,7 +26,7 @@ const handler: PlasmoMessaging.MessageHandler<
   console.debug("Requesting flashcard generation for files ", req.body.file);
   // Forward the message to the offscreen document
   // TODO adjust to Firefox
-  const { unit }: { unit: Unit } = await chrome.runtime.sendMessage({
+  let { unit }: { unit: Unit } = await chrome.runtime.sendMessage({
     name: "flashcards-generate",
     body: {
       courseId: req.body.courseId,
@@ -41,10 +41,30 @@ const handler: PlasmoMessaging.MessageHandler<
     return;
   }
 
-  const unitId = await db.units.add(unit);
-  unit.cards = unit.cards.map((card) => {
+  const now = Date.now();
+  unit = {
+    ...unit,
+    updatedAt: now,
+    deletedAt: null,
+  };
+
+  const dbUnit = await db.units.get({
+    fileUrl: unit.fileUrl,
+    courseId: unit.courseId,
+  });
+  let unitId: number;
+  if (dbUnit) {
+    console.debug("Unit already exists, updating ", unit.fileUrl);
+    unitId = dbUnit.id;
+    await db.units.update(unitId, unit);
+  } else {
+    unitId = await db.units.add(unit);
+  }
+  unit.cards = unit.cards!.map((card) => {
     card.unitId = unitId;
-    card.dueAt = new Date().getTime();
+    card.dueAt = now;
+    card.updatedAt = now;
+    card.deletedAt = null;
     return card;
   });
   await db.flashcards.bulkAdd(unit.cards);

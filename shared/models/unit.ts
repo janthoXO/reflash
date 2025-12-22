@@ -6,5 +6,7 @@ export interface Unit {
   fileName: string;
   fileUrl: string;
   courseId: number;
+  updatedAt: number;
+  deletedAt: number | null;
   cards?: Flashcard[];
 }

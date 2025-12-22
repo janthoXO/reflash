@@ -37,12 +37,19 @@ const handler: PlasmoMessaging.MessageHandler<
     console.debug("Creating new course for url ", courseUrl);
     course = { name: "New Course", url: courseUrl } as Course;
     course.id = await db.courses.add(course);
+  } else if (course.deletedAt) {
+    console.debug("Restoring deleted course ", courseUrl);
+    await db.courses.update(course.id, {
+      deletedAt: null,
+      updatedAt: Date.now(),
+    });
   }
 
   // check which units already exist in this course and compare to files
   const savedUnits = await db.units
     .where("courseId")
     .equals(course.id)
+    .filter((unit) => unit.deletedAt === null)
     .toArray();
 
   const savedFileUrls = new Set(savedUnits.map((u) => u.fileUrl));
