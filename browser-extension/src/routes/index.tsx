@@ -16,6 +16,7 @@ import TrainingPage from "./training";
 import { SelectedProvider } from "~contexts/SelectedContext";
 import UnitPage from "./library/unit";
 import { getRouteFromStorage, useRouteStorage } from "~local-storage/routes";
+import SyncPage from "./sync";
 
 export const Routing = () => {
   const location = useLocation();
@@ -33,11 +34,12 @@ export const Routing = () => {
 
   // Update storage route on location change
   useEffect(() => {
-    if (location.pathname === route) return;
+    const fullPath = location.pathname + location.search;
+    if (fullPath === route) return;
 
-    console.debug("Updating currentRoute to:", location.pathname);
-    setRoute(location.pathname);
-  }, [location.pathname]);
+    console.debug("Updating currentRoute to:", fullPath);
+    setRoute(fullPath);
+  }, [location.pathname, location.search, route, setRoute]);
 
   return (
     <div className="w-[400px] h-[500px] bg-background flex flex-col">
@@ -48,6 +50,7 @@ export const Routing = () => {
             <Route path="/training" element={<TrainingPage />} />
             <Route path="/library" element={<LibraryPage />} />
             <Route path="/settings" element={<SettingsPage />} />
+            <Route path="/sync" element={<SyncPage />} />
             <Route
               path="/courses/:courseId/units/:unitId"
               element={<UnitPage />}
@@ -57,7 +60,7 @@ export const Routing = () => {
       </div>
 
       <Tabs
-        value={route.slice(1)}
+        value={location.pathname.slice(1)}
         onValueChange={(value) => navigate(`/${value}`)}
         className="w-full p-2"
       >

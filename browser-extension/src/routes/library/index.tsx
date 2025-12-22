@@ -31,6 +31,7 @@ import { useSelected } from "~contexts/SelectedContext";
 import { db } from "~db/db";
 import PromptDialog from "./promptDialog";
 import { DropdownMenuItem } from "~components/ui/dropdown-menu";
+import SyncButton from "~components/syncButton";
 
 export default function LibraryPage() {
   const courses = useLiveQuery(async () => {
@@ -67,6 +68,7 @@ export default function LibraryPage() {
             </TooltipTrigger>
             <TooltipContent>Export Flashcards to Anki Format</TooltipContent>
           </Tooltip>,
+          <SyncButton key="library-sync-button" />,
           <TrackingButton key="library-tracking-button" />,
         ]}
       />
