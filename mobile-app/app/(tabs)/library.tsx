@@ -9,6 +9,7 @@ import { Separator } from "@/components/ui/separator";
 import { Text } from "@/components/ui/text";
 import { useSelectedUnits } from "@/context/SelectedUnitsContext";
 import { db } from "@/db/db";
+import { isNull } from "drizzle-orm";
 import { useLiveQuery } from "drizzle-orm/expo-sqlite";
 import { useRouter } from "expo-router";
 import { Square, SquareCheck } from "lucide-react-native";
@@ -17,6 +18,7 @@ import { ScrollView, TouchableOpacity, View } from "react-native";
 export default function LibraryScreen() {
   const { data: courses } = useLiveQuery(
     db.query.coursesTable.findMany({
+      where: (coursesTable) => isNull(coursesTable.deletedAt),
       with: {
         units: true,
       },

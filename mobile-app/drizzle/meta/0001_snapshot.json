@@ -47,9 +47,7 @@
       "indexes": {
         "url_idx": {
           "name": "url_idx",
-          "columns": [
-            "url"
-          ],
+          "columns": ["url"],
           "isUnique": true
         }
       },
@@ -119,12 +117,8 @@
           "name": "flashcards_unitId_units_id_fk",
           "tableFrom": "flashcards",
           "tableTo": "units",
-          "columnsFrom": [
-            "unitId"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["unitId"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         }
@@ -193,12 +187,8 @@
           "name": "units_courseId_courses_id_fk",
           "tableFrom": "units",
           "tableTo": "courses",
-          "columnsFrom": [
-            "courseId"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["courseId"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         }

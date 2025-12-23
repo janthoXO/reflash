@@ -4,10 +4,8 @@ import { Collapsible, CollapsibleContent } from "@/components/ui/collapsible";
 import { Separator } from "@/components/ui/separator";
 import { Text } from "@/components/ui/text";
 import { db } from "@/db/db";
-import { flashcardsTable } from "@/db/schema/flashcard";
-import { unitsTable } from "@/db/schema/unit";
-import { Flashcard } from "@reflash/shared";
-import { and, eq } from "drizzle-orm";
+import { Flashcard, Unit } from "@reflash/shared";
+import { and, eq, isNull } from "drizzle-orm";
 import { useLiveQuery } from "drizzle-orm/expo-sqlite";
 import { Stack, useLocalSearchParams } from "expo-router";
 import { ChevronDown, ChevronUp, Search } from "lucide-react-native";
@@ -19,30 +17,30 @@ export default function UnitScreen() {
   const { courseId, unitId } = useLocalSearchParams<{ courseId: string; unitId: string }>();
   const [searchQuery, setSearchQuery] = useState("");
 
-  const { data: units } = useLiveQuery(
-    db
-      .select()
-      .from(unitsTable)
-      .where(and(eq(unitsTable.id, Number(unitId)), eq(unitsTable.courseId, Number(courseId))))
-  );
-  const unit = units?.[0];
-
-  const { data: flashcards } = useLiveQuery(
-    db
-      .select()
-      .from(flashcardsTable)
-      .where(eq(flashcardsTable.unitId, Number(unitId)))
-  );
+  const { data: unit } = useLiveQuery(
+    db.query.unitsTable.findFirst({
+      where: (unitsTable) =>
+        and(
+          eq(unitsTable.id, Number(unitId)),
+          eq(unitsTable.courseId, Number(courseId)),
+          isNull(unitsTable.deletedAt)
+        ),
+      with: {
+        cards: true,
+      },
+    })
+  ) as { data: Unit | undefined };
 
   const filteredFlashcards = useMemo(() => {
-    if (!flashcards) return [];
-    if (!searchQuery) return flashcards;
+    if (!unit?.cards) return [];
+    if (!searchQuery) return unit.cards;
+
     const query = searchQuery.toLowerCase();
-    return flashcards.filter(
+    return unit.cards.filter(
       (card) =>
         card.question.toLowerCase().includes(query) || card.answer.toLowerCase().includes(query)
     );
-  }, [flashcards, searchQuery]);
+  }, [unit, searchQuery]);
 
   if (!unit)
     return (
