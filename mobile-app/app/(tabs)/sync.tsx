@@ -1,6 +1,7 @@
 import { Alert, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
+import { Progress } from "@/components/ui/progress";
 import { Text } from "@/components/ui/text";
 import { db } from "@/db/db";
 import { coursesTable } from "@/db/schema/course";
@@ -94,7 +95,7 @@ export default function SyncScreen() {
         try {
           decoder.receivePartUr(code.value);
           const p = decoder.getProgress();
-          setProgress(p);
+          setProgress(p * 100);
 
           if (decoder.isComplete()) {
             setScanStatus("completed");
@@ -153,8 +154,9 @@ export default function SyncScreen() {
       {scanStatus === "scanning" ? (
         <View className="w-full flex-1 gap-4">
           <Text className="text-center text-sm text-muted-foreground">
-            Progress: {(progress * 100).toFixed(0)}%
+            Progress: {progress.toFixed(0)}%
           </Text>
+          <Progress value={progress} className="mb-4" />
           <Card className="w-full flex-1">
             <CardContent>
               <Camera
