@@ -2,7 +2,13 @@ import { Alert, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Text } from "@/components/ui/text";
+import { db } from "@/db/db";
+import { coursesTable } from "@/db/schema/course";
+import { flashcardsTable } from "@/db/schema/flashcard";
+import { unitsTable } from "@/db/schema/unit";
 import { UrFountainDecoder } from "@ngraveio/bc-ur";
+import { Course } from "@reflash/shared";
+import { sql } from "drizzle-orm";
 import { CheckCircle } from "lucide-react-native";
 import { useEffect, useRef, useState } from "react";
 import { View } from "react-native";
@@ -28,12 +34,59 @@ export default function SyncScreen() {
     }
   }, [hasPermission, requestPermission]);
 
+  async function updateCourses(courses: Course[]) {
+    try {
+      await Promise.all(
+        courses.map(async (course) => {
+          const { units, ...courseData } = course;
+          await db
+            .insert(coursesTable)
+            .values(courseData)
+            .onConflictDoUpdate({
+              target: coursesTable.id,
+              set: courseData,
+              setWhere: sql`${coursesTable.updatedAt} < ${courseData.updatedAt}`,
+            });
+
+          await Promise.all(
+            units?.map(async (unit) => {
+              const { cards, ...unitData } = unit;
+              await db
+                .insert(unitsTable)
+                .values(unitData)
+                .onConflictDoUpdate({
+                  target: unitsTable.id,
+                  set: unitData,
+                  setWhere: sql`${unitsTable.updatedAt} < ${unitData.updatedAt}`,
+                });
+
+              await Promise.all(
+                cards?.map(async (card) => {
+                  await db
+                    .insert(flashcardsTable)
+                    .values(card)
+                    .onConflictDoUpdate({
+                      target: flashcardsTable.id,
+                      set: card,
+                      setWhere: sql`${flashcardsTable.updatedAt} < ${card.updatedAt}`,
+                    });
+                }) ?? []
+              );
+            }) ?? []
+          );
+        })
+      );
+    } catch (error) {
+      console.error("Error updating courses:", error);
+    }
+  }
+
   const codeScanner = useCodeScanner({
     codeTypes: ["qr"],
     onCodeScanned: (codes) => {
       const decoder = decoderRef.current;
       // If already complete, ignore
-      if (scanStatus === "completed") return;
+      if (decoder.isComplete() || scanStatus === "completed") return;
 
       for (const code of codes) {
         if (!code.value) continue;
@@ -46,10 +99,12 @@ export default function SyncScreen() {
           if (decoder.isComplete()) {
             setScanStatus("completed");
             if (decoder.isSuccessful()) {
-              const decoded = decoder.getDecodedData();
-              console.log("Decoded data:", decoded);
+              const courses = decoder.getDecodedData() as Course[];
+              console.debug("Decoded courses:", JSON.stringify(courses));
+              updateCourses(courses);
+              break;
             } else {
-              console.log("Error found while decoding", decoder.getError());
+              console.error("Error found while decoding", decoder.getError());
             }
           }
         } catch (e) {
