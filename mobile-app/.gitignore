@@ -29,6 +29,9 @@ yarn-error.*
 *.pem
 ios/
 
+# Android
+android/
+
 # local env files
 .env*.local
 

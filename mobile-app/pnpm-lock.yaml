@@ -7,6 +7,9 @@ settings:
 importers:
   .:
     dependencies:
+      "@ngraveio/bc-ur":
+        specifier: 2.0.0-beta.9
+        version: 2.0.0-beta.9(react-native@0.81.5(@babel/core@7.28.5)(@types/react@19.1.17)(react@19.1.0))
       "@react-navigation/native":
         specifier: ^7.0.0
         version: 7.1.26(react-native@0.81.5(@babel/core@7.28.5)(@types/react@19.1.17)(react@19.1.0))(react@19.1.0)
@@ -112,6 +115,9 @@ importers:
       react-native-svg:
         specifier: 15.12.1
         version: 15.12.1(react-native@0.81.5(@babel/core@7.28.5)(@types/react@19.1.17)(react@19.1.0))(react@19.1.0)
+      react-native-vision-camera:
+        specifier: ^4.7.3
+        version: 4.7.3(react-native-reanimated@4.1.6(@babel/core@7.28.5)(react-native-worklets@0.5.1(@babel/core@7.28.5)(react-native@0.81.5(@babel/core@7.28.5)(@types/react@19.1.17)(react@19.1.0))(react@19.1.0))(react-native@0.81.5(@babel/core@7.28.5)(@types/react@19.1.17)(react@19.1.0))(react@19.1.0))(react-native@0.81.5(@babel/core@7.28.5)(@types/react@19.1.17)(react@19.1.0))(react@19.1.0)
       react-native-web:
         specifier: ^0.21.0
         version: 0.21.2(react-dom@19.1.0(react@19.1.0))(react@19.1.0)
@@ -968,6 +974,14 @@ packages:
         integrity: sha512-qQ5m48eI/MFLQ5PxQj4PFaprjyCTLI37ElWMmNs0K8Lk3dVeOdNpB3ks8jc7yM5CDmVC73eMVk/trk3fgmrUpA==,
       }
     engines: { node: ">=6.9.0" }
+
+  "@bacons/text-decoder@0.0.0":
+    resolution:
+      {
+        integrity: sha512-8KNbnXSHfhZRR1S1IQEdWQNa9HE/ylWRisDdkoCmHiaP53mksnPaxyqUSlwpJ3DyG1xEekRwFDEG+pbCbSsrkQ==,
+      }
+    peerDependencies:
+      react-native: "*"
 
   "@drizzle-team/brocli@0.10.2":
     resolution:
@@ -2081,6 +2095,12 @@ packages:
         integrity: sha512-zzNR+SdQSDJzc8joaeP8QQoCQr8NuYx2dIIytl1QeBEZHJ9uW6hebsrYgbz8hJwUQao3TWCMtmfV8Nu1twOLAw==,
       }
 
+  "@ngraveio/bc-ur@2.0.0-beta.9":
+    resolution:
+      {
+        integrity: sha512-vtKRvrrE3ux8Qvd2iMpJnpmHgx5GzytalJ9ORrOmdMWx8V+TBu4OU4sMcjtDgLwy2VElNi4d3jgpjgjGjnWxnw==,
+      }
+
   "@nodelib/fs.scandir@2.1.5":
     resolution:
       {
@@ -3188,6 +3208,13 @@ packages:
         integrity: sha512-Oei9OH4tRh0YqU3GxhX79dM/mwVgvbZJaSNaRk+bshkj0S5cfHcgYakreBjrHwatXKbz+IoIdYLxrKim2MjW0Q==,
       }
 
+  available-typed-arrays@1.0.7:
+    resolution:
+      {
+        integrity: sha512-wvUjBtSGN7+7SjNpq/9M2Tg350UZD3q62IFZLbRAR1bSMlCo1ZaeW+BJ+D090e4hIIZLBcTDWe4Mh4jvUDajzQ==,
+      }
+    engines: { node: ">= 0.4" }
+
   await-lock@2.2.2:
     resolution:
       {
@@ -3420,6 +3447,12 @@ packages:
         integrity: sha512-EHcyIPBQ4BSGlvjB16k5KgAJ27CIsHY/2JBmCRReo48y9rQ3MaUzWX3KVlBa4U7MyX02HdVj0K7C3WaB3ju7FQ==,
       }
 
+  buffer@6.0.3:
+    resolution:
+      {
+        integrity: sha512-FTiCpNxtwiZZHEZbcbTIcZjERVICn9yq/pDFkTl95/AxzD1naBctN7YO68riM/gLSDY7sdrMby8hofADYuuqOA==,
+      }
+
   bytes@3.1.2:
     resolution:
       {
@@ -3431,6 +3464,20 @@ packages:
     resolution:
       {
         integrity: sha512-Sp1ablJ0ivDkSzjcaJdxEunN5/XvksFJ2sMBFfq6x0ryhQV/2b/KwFe21cMpmHtPOSij8K99/wSfoEuTObmuMQ==,
+      }
+    engines: { node: ">= 0.4" }
+
+  call-bind@1.0.8:
+    resolution:
+      {
+        integrity: sha512-oKlSFMcMwpUg2ednkhQ454wfWiU/ul3CkJe/PEHcTKuiX6RpbehUiFMXu13HalGZxfUwCQzZG747YXBn1im9ww==,
+      }
+    engines: { node: ">= 0.4" }
+
+  call-bound@1.0.4:
+    resolution:
+      {
+        integrity: sha512-+ys997U96po4Kx/ABpBCqhA9EuxJaQWDQg7295H4hBphv3IZg0boBKuwYpt4YXp6MZ5AmZQnU/tyMTlRpaSejg==,
       }
     engines: { node: ">= 0.4" }
 
@@ -3467,6 +3514,13 @@ packages:
       {
         integrity: sha512-JF9ptu1vP2coz98+5051jZ4PwQgd2ni8A+gYSN7EA7dPKIMf0pDlSUxhdmVOaV3/fYK5uWBkgSXJaRLr4+3A6g==,
       }
+
+  cbor2@1.12.0:
+    resolution:
+      {
+        integrity: sha512-3Cco8XQhi27DogSp9Ri6LYNZLi/TBY/JVnDe+mj06NkBjW/ZYOtekaEU4wZ4xcRMNrFkDv8KNtOAqHyDfz3lYg==,
+      }
+    engines: { node: ">=18.7" }
 
   chalk@2.4.2:
     resolution:
@@ -3694,6 +3748,18 @@ packages:
         integrity: sha512-ZQBvi1DcpJ4GDqanjucZ2Hj3wEO5pZDS89BWbkcrvdxksJorwUDDZamX9ldFkp9aw2lmBDLgkObEA4DWNJ9FYQ==,
       }
 
+  crc@4.3.2:
+    resolution:
+      {
+        integrity: sha512-uGDHf4KLLh2zsHa8D8hIQ1H/HtFQhyHrc0uhHBcoKGol/Xnb+MPYfUMw7cvON6ze/GUESTudKayDcJC5HnJv1A==,
+      }
+    engines: { node: ">=12" }
+    peerDependencies:
+      buffer: ">=6.0.3"
+    peerDependenciesMeta:
+      buffer:
+        optional: true
+
   cross-fetch@3.2.0:
     resolution:
       {
@@ -3820,6 +3886,13 @@ packages:
       {
         integrity: sha512-eFuaLoy/Rxalv2kr+lqMlUnrDWV+3j4pljOIJgLIhI058IQfWJ7vXhyEIHu+HtC738klGALYxOKDO0bQP3tg8A==,
       }
+
+  define-data-property@1.1.4:
+    resolution:
+      {
+        integrity: sha512-rBMvIzlpA8v6E+SJZoo++HAYqsLrkg7MSfIinMPFhmkorw7X+dOXVJQs+QT69zGkzMyfDnIMN2Wid1+NbL3T+A==,
+      }
+    engines: { node: ">= 0.4" }
 
   define-lazy-prop@2.0.0:
     resolution:
@@ -4672,6 +4745,13 @@ packages:
         integrity: sha512-6FPvD/IVyT4ZlNe7Wcn5Fb/4ChigpucKYSvD6a+0iMoLn2inpo711eyIcKjmDtE5XNcgAkSH9uN/nfAeZzHEfg==,
       }
 
+  for-each@0.3.5:
+    resolution:
+      {
+        integrity: sha512-dKx12eRCVIzqCxFGplyFKJMPvLEWgmNtUrpTiJIR5u97zEhRG8ySrtboPHZXx7daLxQVrl643cTzbab2tkQjxg==,
+      }
+    engines: { node: ">= 0.4" }
+
   form-data@4.0.5:
     resolution:
       {
@@ -4837,6 +4917,12 @@ packages:
       }
     engines: { node: ">=8" }
 
+  has-property-descriptors@1.0.2:
+    resolution:
+      {
+        integrity: sha512-55JNKuIW+vq4Ke1BjOTjM2YctQIvCT7GFzHwmfZPGo5wnrgkid0YQtnAleFSqumZm4az3n2BS+erby5ipJdgrg==,
+      }
+
   has-symbols@1.1.0:
     resolution:
       {
@@ -4995,6 +5081,13 @@ packages:
       }
     engines: { node: ">=8" }
 
+  is-callable@1.2.7:
+    resolution:
+      {
+        integrity: sha512-1BC0BVFhS/p0qtw6enp8e+8OD0UrK0oFLztSjNzhcKA3WDuJxxAPXzPuPtKkjEY9UUoEWlX/8fgKeu2S8i9JTA==,
+      }
+    engines: { node: ">= 0.4" }
+
   is-core-module@2.16.1:
     resolution:
       {
@@ -5038,12 +5131,25 @@ packages:
       }
     engines: { node: ">=0.12.0" }
 
+  is-typed-array@1.1.15:
+    resolution:
+      {
+        integrity: sha512-p3EcsicXjit7SaskXHs1hA91QxgTw46Fv6EFKKGS5DRFLD8yKnohjF3hxoju94b/OcMZoQukzpPpBE9uLVKzgQ==,
+      }
+    engines: { node: ">= 0.4" }
+
   is-wsl@2.2.0:
     resolution:
       {
         integrity: sha512-fKzAra0rGJUUBwGBgNkHZuToZcn+TtXHpeCgmkMJMMYx1sQDYaCSyjJBSCa2nH1DGm7s3n1oBnohoVTBaN7Lww==,
       }
     engines: { node: ">=8" }
+
+  isarray@2.0.5:
+    resolution:
+      {
+        integrity: sha512-xHjhDr3cNBK0BzdUJSPXZntQUx/mwMS5Rw4A7lPJ90XGAO6ISP/ePDNuo0vhqOZU+UD5JoodwCAAoZQd3FeAKw==,
+      }
 
   isexe@2.0.0:
     resolution:
@@ -6131,6 +6237,13 @@ packages:
       }
     engines: { node: ">=4.0.0" }
 
+  possible-typed-array-names@1.1.0:
+    resolution:
+      {
+        integrity: sha512-/+5VFTchJDoVj3bhoqi6UeymcD00DAwb1nJwamzPvHEszJ4FpF6SNNbUbOS8yI56qHzdV8eK0qEfOSiodkTdxg==,
+      }
+    engines: { node: ">= 0.4" }
+
   postcss-import@15.1.0:
     resolution:
       {
@@ -6511,6 +6624,25 @@ packages:
       react: "*"
       react-native: "*"
 
+  react-native-vision-camera@4.7.3:
+    resolution:
+      {
+        integrity: sha512-g1/neOyjSqn1kaAa2FxI/qp5KzNvPcF0bnQw6NntfbxH6tm0+8WFZszlgb5OV+iYlB6lFUztCbDtyz5IpL47OA==,
+      }
+    peerDependencies:
+      "@shopify/react-native-skia": "*"
+      react: "*"
+      react-native: "*"
+      react-native-reanimated: "*"
+      react-native-worklets-core: "*"
+    peerDependenciesMeta:
+      "@shopify/react-native-skia":
+        optional: true
+      react-native-reanimated:
+        optional: true
+      react-native-worklets-core:
+        optional: true
+
   react-native-web@0.21.2:
     resolution:
       {
@@ -6834,6 +6966,13 @@ packages:
         integrity: sha512-qepMx2JxAa5jjfzxG79yPPq+8BuFToHd1hm7kI+Z4zAq1ftQiP7HcxMhDDItrbtwVeLg/cY2JnKnrcFkmiswNA==,
       }
 
+  set-function-length@1.2.2:
+    resolution:
+      {
+        integrity: sha512-pgRc4hJ4/sNjWCSS9AmnS40x3bNMDTknHgL5UaMBTMyJnU90EgWh1Rz+MC9eFu4BuN/UwZjKQuY/1v3rM7HMfg==,
+      }
+    engines: { node: ">= 0.4" }
+
   setimmediate@1.0.5:
     resolution:
       {
@@ -6852,6 +6991,14 @@ packages:
         integrity: sha512-TPbeg0b7ylrswdGCji8FRGFAKuqbpQlLbL8SOle3j1iHSs5Ob5mhvMAxWN2UItOjgALAB5Zp3fmMfj8mbWvXKw==,
       }
     engines: { node: ">=10" }
+
+  sha.js@2.4.12:
+    resolution:
+      {
+        integrity: sha512-8LzC5+bvI45BjpfXU8V5fdU2mfeKiQe1D1gIMn7XUlF3OTUrpdJpPPH4EMAnF0DsHHdSZqCdSss5qCmJKuiO3w==,
+      }
+    engines: { node: ">= 0.10" }
+    hasBin: true
 
   shallowequal@1.1.0:
     resolution:
@@ -7186,6 +7333,13 @@ packages:
         integrity: sha512-3f0uOEAQwIqGuWW2MVzYg8fV/QNnc/IpuJNG837rLuczAaLVHslWHZQj4IGiEl5Hs3kkbhwL9Ab7Hrsmuj+Smw==,
       }
 
+  to-buffer@1.2.2:
+    resolution:
+      {
+        integrity: sha512-db0E3UJjcFhpDhAF4tLo03oli3pwl3dbnzXOUIlRKrp+ldk/VUxzpWYZENsw2SZiuBjHAk7DfB0VU7NKdpb6sw==,
+      }
+    engines: { node: ">= 0.4" }
+
   to-regex-range@5.0.1:
     resolution:
       {
@@ -7262,6 +7416,13 @@ packages:
         integrity: sha512-Ne2YiiGN8bmrmJJEuTWTLJR32nh/JdL1+PSicowtNb0WFpn59GK8/lfD61bVtzguz7b3PBt74nxpv/Pw5po5Rg==,
       }
     engines: { node: ">=8" }
+
+  typed-array-buffer@1.0.3:
+    resolution:
+      {
+        integrity: sha512-nAYYwfY3qnzX30IkA6AQZjVbtK6duGontcQm1WSG1MD94YLqK0515GNApXkoxKOWMusVssAHWLh9SeaoefYFGw==,
+      }
+    engines: { node: ">= 0.4" }
 
   typescript-eslint@8.50.0:
     resolution:
@@ -7498,6 +7659,13 @@ packages:
       {
         integrity: sha512-saE57nupxk6v3HY35+jzBwYa0rKSy0XR8JSxZPwgLr7ys0IBzhGviA1/TUGJLmSVqs8pb9AnvICXEuOHLprYTw==,
       }
+
+  which-typed-array@1.1.19:
+    resolution:
+      {
+        integrity: sha512-rEvr90Bck4WZt9HHFC4DJMsjvu7x+r6bImz0/BrbWb7A2djJ8hnZMrWnHo9F8ssv0OMErasDhftrfROTyqSDrw==,
+      }
+    engines: { node: ">= 0.4" }
 
   which@2.0.2:
     resolution:
@@ -8303,6 +8471,10 @@ snapshots:
       "@babel/helper-string-parser": 7.27.1
       "@babel/helper-validator-identifier": 7.28.5
 
+  "@bacons/text-decoder@0.0.0(react-native@0.81.5(@babel/core@7.28.5)(@types/react@19.1.17)(react@19.1.0))":
+    dependencies:
+      react-native: 0.81.5(@babel/core@7.28.5)(@types/react@19.1.17)(react@19.1.0)
+
   "@drizzle-team/brocli@0.10.2": {}
 
   "@esbuild-kit/core-utils@3.3.2":
@@ -9004,6 +9176,16 @@ snapshots:
     dependencies:
       "@jridgewell/resolve-uri": 3.1.2
       "@jridgewell/sourcemap-codec": 1.5.5
+
+  "@ngraveio/bc-ur@2.0.0-beta.9(react-native@0.81.5(@babel/core@7.28.5)(@types/react@19.1.17)(react@19.1.0))":
+    dependencies:
+      "@bacons/text-decoder": 0.0.0(react-native@0.81.5(@babel/core@7.28.5)(@types/react@19.1.17)(react@19.1.0))
+      buffer: 6.0.3
+      cbor2: 1.12.0
+      crc: 4.3.2(buffer@6.0.3)
+      sha.js: 2.4.12
+    transitivePeerDependencies:
+      - react-native
 
   "@nodelib/fs.scandir@2.1.5":
     dependencies:
@@ -9823,6 +10005,10 @@ snapshots:
 
   asynckit@0.4.0: {}
 
+  available-typed-arrays@1.0.7:
+    dependencies:
+      possible-typed-array-names: 1.1.0
+
   await-lock@2.2.2: {}
 
   axios@1.13.2:
@@ -10024,12 +10210,29 @@ snapshots:
       base64-js: 1.5.1
       ieee754: 1.2.1
 
+  buffer@6.0.3:
+    dependencies:
+      base64-js: 1.5.1
+      ieee754: 1.2.1
+
   bytes@3.1.2: {}
 
   call-bind-apply-helpers@1.0.2:
     dependencies:
       es-errors: 1.3.0
       function-bind: 1.1.2
+
+  call-bind@1.0.8:
+    dependencies:
+      call-bind-apply-helpers: 1.0.2
+      es-define-property: 1.0.1
+      get-intrinsic: 1.3.0
+      set-function-length: 1.2.2
+
+  call-bound@1.0.4:
+    dependencies:
+      call-bind-apply-helpers: 1.0.2
+      get-intrinsic: 1.3.0
 
   callsites@3.1.0: {}
 
@@ -10040,6 +10243,8 @@ snapshots:
   camelcase@6.3.0: {}
 
   caniuse-lite@1.0.30001761: {}
+
+  cbor2@1.12.0: {}
 
   chalk@2.4.2:
     dependencies:
@@ -10187,6 +10392,10 @@ snapshots:
 
   core-util-is@1.0.3: {}
 
+  crc@4.3.2(buffer@6.0.3):
+    optionalDependencies:
+      buffer: 6.0.3
+
   cross-fetch@3.2.0:
     dependencies:
       node-fetch: 2.7.0
@@ -10247,6 +10456,12 @@ snapshots:
   defaults@1.0.4:
     dependencies:
       clone: 1.0.4
+
+  define-data-property@1.1.4:
+    dependencies:
+      es-define-property: 1.0.1
+      es-errors: 1.3.0
+      gopd: 1.2.0
 
   define-lazy-prop@2.0.0: {}
 
@@ -10828,6 +11043,10 @@ snapshots:
 
   fontfaceobserver@2.3.0: {}
 
+  for-each@0.3.5:
+    dependencies:
+      is-callable: 1.2.7
+
   form-data@4.0.5:
     dependencies:
       asynckit: 0.4.0
@@ -10916,6 +11135,10 @@ snapshots:
 
   has-flag@4.0.0: {}
 
+  has-property-descriptors@1.0.2:
+    dependencies:
+      es-define-property: 1.0.1
+
   has-symbols@1.1.0: {}
 
   has-tostringtag@1.0.2:
@@ -10999,6 +11222,8 @@ snapshots:
     dependencies:
       binary-extensions: 2.3.0
 
+  is-callable@1.2.7: {}
+
   is-core-module@2.16.1:
     dependencies:
       hasown: 2.0.2
@@ -11015,9 +11240,15 @@ snapshots:
 
   is-number@7.0.0: {}
 
+  is-typed-array@1.1.15:
+    dependencies:
+      which-typed-array: 1.1.19
+
   is-wsl@2.2.0:
     dependencies:
       is-docker: 2.2.1
+
+  isarray@2.0.5: {}
 
   isexe@2.0.0: {}
 
@@ -11699,6 +11930,8 @@ snapshots:
 
   pngjs@3.4.0: {}
 
+  possible-typed-array-names@1.1.0: {}
+
   postcss-import@15.1.0(postcss@8.5.6):
     dependencies:
       postcss: 8.5.6
@@ -11893,6 +12126,13 @@ snapshots:
       react: 19.1.0
       react-native: 0.81.5(@babel/core@7.28.5)(@types/react@19.1.17)(react@19.1.0)
       warn-once: 0.1.1
+
+  react-native-vision-camera@4.7.3(react-native-reanimated@4.1.6(@babel/core@7.28.5)(react-native-worklets@0.5.1(@babel/core@7.28.5)(react-native@0.81.5(@babel/core@7.28.5)(@types/react@19.1.17)(react@19.1.0))(react@19.1.0))(react-native@0.81.5(@babel/core@7.28.5)(@types/react@19.1.17)(react@19.1.0))(react@19.1.0))(react-native@0.81.5(@babel/core@7.28.5)(@types/react@19.1.17)(react@19.1.0))(react@19.1.0):
+    dependencies:
+      react: 19.1.0
+      react-native: 0.81.5(@babel/core@7.28.5)(@types/react@19.1.17)(react@19.1.0)
+    optionalDependencies:
+      react-native-reanimated: 4.1.6(@babel/core@7.28.5)(react-native-worklets@0.5.1(@babel/core@7.28.5)(react-native@0.81.5(@babel/core@7.28.5)(@types/react@19.1.17)(react@19.1.0))(react@19.1.0))(react-native@0.81.5(@babel/core@7.28.5)(@types/react@19.1.17)(react@19.1.0))(react@19.1.0)
 
   react-native-web@0.21.2(react-dom@19.1.0(react@19.1.0))(react@19.1.0):
     dependencies:
@@ -12135,11 +12375,26 @@ snapshots:
 
   server-only@0.0.1: {}
 
+  set-function-length@1.2.2:
+    dependencies:
+      define-data-property: 1.1.4
+      es-errors: 1.3.0
+      function-bind: 1.1.2
+      get-intrinsic: 1.3.0
+      gopd: 1.2.0
+      has-property-descriptors: 1.0.2
+
   setimmediate@1.0.5: {}
 
   setprototypeof@1.2.0: {}
 
   sf-symbols-typescript@2.2.0: {}
+
+  sha.js@2.4.12:
+    dependencies:
+      inherits: 2.0.4
+      safe-buffer: 5.2.1
+      to-buffer: 1.2.2
 
   shallowequal@1.1.0: {}
 
@@ -12332,6 +12587,12 @@ snapshots:
 
   tmpl@1.0.5: {}
 
+  to-buffer@1.2.2:
+    dependencies:
+      isarray: 2.0.5
+      safe-buffer: 5.2.1
+      typed-array-buffer: 1.0.3
+
   to-regex-range@5.0.1:
     dependencies:
       is-number: 7.0.0
@@ -12364,6 +12625,12 @@ snapshots:
   type-fest@0.21.3: {}
 
   type-fest@0.7.1: {}
+
+  typed-array-buffer@1.0.3:
+    dependencies:
+      call-bound: 1.0.4
+      es-errors: 1.3.0
+      is-typed-array: 1.1.15
 
   typescript-eslint@8.50.0(eslint@9.39.2(jiti@1.21.7))(typescript@5.9.3):
     dependencies:
@@ -12481,6 +12748,16 @@ snapshots:
     dependencies:
       tr46: 0.0.3
       webidl-conversions: 3.0.1
+
+  which-typed-array@1.1.19:
+    dependencies:
+      available-typed-arrays: 1.0.7
+      call-bind: 1.0.8
+      call-bound: 1.0.4
+      for-each: 0.3.5
+      get-proto: 1.0.1
+      gopd: 1.2.0
+      has-tostringtag: 1.0.2
 
   which@2.0.2:
     dependencies:

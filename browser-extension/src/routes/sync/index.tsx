@@ -93,36 +93,55 @@ export default function SyncPage() {
     fetchCourses();
   }, [mode, selectedMap]);
 
+  const [encoder, setEncoder] = useState<UrFountainEncoder | undefined>(
+    undefined
+  );
+
+  async function resetEncoder() {
+    // reset QR code
+    if (cancelQRGif) {
+      cancelQRGif();
+      setCancelQRGif(undefined);
+    }
+
+    const payload = UR.fromData({
+      type: "courses",
+      payload: populatedCourses,
+    });
+    console.debug("Payload UR: ", payload);
+    const newEncoder = new UrFountainEncoder(payload);
+    console.debug("Fountain encoder initialized: ", newEncoder);
+    setEncoder(newEncoder);
+
+    const nextPart = newEncoder.nextPartUr();
+    console.debug("Next QR Code Part: ", nextPart);
+    // Get the next fountain code part
+    setQrCodeValue(nextPart.toString());
+  }
+
   useEffect(() => {
     console.debug("Populated Courses for Sync:", populatedCourses);
+    resetEncoder();
   }, [populatedCourses]);
 
   async function startSync() {
     console.debug("Starting sync ", cancelQRGif);
     if (cancelQRGif) return; // Already syncing
+    if (!encoder) return;
 
     try {
-      const payload = UR.fromData({
-        type: "courses",
-        payload: populatedCourses,
-      });
-      console.debug("Payload UR: ", payload);
-      const encoder = new UrFountainEncoder(payload);
-      console.debug("Fountain encoder initialized: ", encoder);
-
       const interval = setInterval(() => {
         if (encoder.isComplete()) {
+          encoder.reset();
+          // clearInterval(interval);
           console.debug("Fountain encoding complete");
-          clearInterval(interval);
-          setCancelQRGif(undefined);
           return;
         }
-
-        const nextPart = encoder.nextPart();
+        const nextPart = encoder.nextPartUr();
         console.debug("Next QR Code Part: ", nextPart);
         // Get the next fountain code part
         setQrCodeValue(nextPart.toString());
-      }, 100); // 100ms = 10 FPS (Adjust based on phone camera capability)
+      }, 200); // 200ms = 5 FPS (Adjust based on phone camera capability)
 
       console.debug("QR code interval started");
       setCancelQRGif(() => () => clearInterval(interval));
@@ -155,12 +174,11 @@ export default function SyncPage() {
         <Button
           variant="secondary"
           onClick={() => {
-            cancelQRGif();
-            setCancelQRGif(undefined);
+            resetEncoder();
           }}
         >
           <Ban />
-          Stop Sync
+          Reset Sync
         </Button>
       ) : (
         <Button onClick={() => startSync()}>

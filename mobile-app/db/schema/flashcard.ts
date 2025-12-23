@@ -6,10 +6,12 @@ export const flashcardsTable = sqliteTable("flashcards", {
   id: int().primaryKey(),
   question: text().notNull(),
   answer: text().notNull(),
-  dueAt: int().notNull(),
+  dueAt: int("dueAt", { mode: "timestamp_ms" }).notNull(),
   unitId: int()
     .references(() => unitsTable.id)
     .notNull(),
+  updatedAt: int("updatedAt", { mode: "timestamp_ms" }).notNull(),
+  deletedAt: int("deletedAt", { mode: "timestamp_ms" }),
 });
 
 export const unitToFlashcardsTableRelations = relations(unitsTable, ({ many }) => ({
