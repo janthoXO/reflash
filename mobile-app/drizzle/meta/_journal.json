@@ -15,6 +15,13 @@
       "when": 1766337721910,
       "tag": "0001_seed-db",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "6",
+      "when": 1766494689751,
+      "tag": "0002_add-update-timestamps",
+      "breakpoints": true
     }
   ]
 }

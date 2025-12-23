@@ -10,8 +10,8 @@ export const unitsTable = sqliteTable("units", {
   courseId: int()
     .references(() => coursesTable.id)
     .notNull(),
-  updatedAt: int("updatedAt", { mode: "timestamp_ms" }).notNull(),
-  deletedAt: int("deletedAt", { mode: "timestamp_ms" }),
+  updatedAt: int().notNull().default(0),
+  deletedAt: int(),
 });
 
 export const courseToUnitsTableRelations = relations(coursesTable, ({ many }) => ({
