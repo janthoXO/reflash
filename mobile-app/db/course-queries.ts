@@ -14,16 +14,11 @@ export async function deleteCourse(courseId: number, now?: number) {
       .update(coursesTable)
       .set({ deletedAt: now, updatedAt: now })
       .where(eq(coursesTable.id, courseId));
-    await tx
+    const updatedUnits: { id: number }[] = await tx
       .update(unitsTable)
       .set({ deletedAt: now, updatedAt: now })
-      .where(eq(unitsTable.courseId, courseId));
-    const updatedUnits: { id: number }[] = await tx
-      .select({ id: unitsTable.id })
-      .from(unitsTable)
       .where(eq(unitsTable.courseId, courseId))
       .returning({ id: unitsTable.id });
-
     await tx
       .update(flashcardsTable)
       .set({ deletedAt: now, updatedAt: now })
