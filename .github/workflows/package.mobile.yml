@@ -7,12 +7,6 @@ on:
     paths:
       - "mobile-app/**"
       - "shared/**"
-  push:
-    branches:
-      - main
-    paths:
-      - "mobile-app/**"
-      - "shared/**"
   workflow_call:
     inputs:
       version:
@@ -20,6 +14,10 @@ on:
         default: "0.0.0"
         required: false
         type: string
+    secrets:
+      EXPO_TOKEN:
+        description: "Expo access token for EAS Build"
+        required: true
 
 jobs:
   package:
@@ -39,6 +37,12 @@ jobs:
           cache: "npm"
           cache-dependency-path: mobile-app/package-lock.json
 
+      - name: Setup EAS
+        uses: expo/expo-github-action@v8
+        with:
+          eas-version: latest
+          token: ${{ secrets.EXPO_TOKEN }}
+
       - name: Install dependencies
         run: npm ci
 
@@ -46,17 +50,17 @@ jobs:
         if: ${{ inputs.version != '0.0.0' }}
         run: npm version ${{ inputs.version }} --no-git-tag-version
 
-      - name: Export Expo Bundle
-        run: npx expo export
+      - name: Build Android APK
+        run: eas build --platform android --profile preview --non-interactive --local --output ./mobile-app-${{ inputs.version || '0.0.0' }}.apk
 
-      - name: Zip Bundle
-        run: |
-          cd dist
-          zip -r ../mobile-app-${{ inputs.version }}.zip .
+      - name: Build Android AAB
+        run: eas build --platform android --profile production --non-interactive --local --output ./mobile-app-${{ inputs.version || '0.0.0' }}.aab
 
-      - name: Upload artifact
+      - name: Upload Android artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: mobile-app-${{ inputs.version }}.zip
-          path: mobile-app/mobile-app-${{ inputs.version }}.zip
+          name: mobile-app-${{ inputs.version || '0.0.0' }}
+          path: |
+            mobile-app/mobile-app-${{ inputs.version || '0.0.0' }}.apk
+            mobile-app/mobile-app-${{ inputs.version || '0.0.0' }}.aab
           if-no-files-found: error
