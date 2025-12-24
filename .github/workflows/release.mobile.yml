@@ -1,31 +1,62 @@
 name: Release Mobile App
 
 on:
-  release:
-    types: [released]
+  push:
+    tags:
+      - 'v*'
+    branches:
+      - main
+    paths:
+      - "mobile-app/**"
+      - "shared/**"
 
 jobs:
+  versioning:
+    runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.version.outputs.version }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Determine Version
+        id: version
+        uses: ./.github/actions/determine-version
+
   package:
+    needs: versioning
     uses: ./.github/workflows/package.mobile.yml
     with:
-      version: ${{ github.event.release.tag_name }}
+      version: ${{ needs.versioning.outputs.version }}
+    secrets:
+      EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
 
   release:
-    needs: package
+    needs: [versioning, package]
     runs-on: ubuntu-latest
     permissions:
       contents: write
 
     steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
       - name: Download artifact
         uses: actions/download-artifact@v4
         with:
-          name: mobile-app-${{ github.event.release.tag_name }}.zip
-          path: .
+          name: mobile-app-${{ needs.versioning.outputs.version }}
+          path: dist
 
-      - name: Upload Release Asset
-        uses: softprops/action-gh-release@v1
+      - name: Create Release
+        uses: softprops/action-gh-release@v2
         with:
-          files: mobile-app-${{ github.event.release.tag_name }}.zip
+          tag_name: v${{ needs.versioning.outputs.version }}
+          name: v${{ needs.versioning.outputs.version }}
+          files: |
+            dist/*.apk
+            dist/*.aab
+          generate_release_notes: true
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
