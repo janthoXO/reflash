@@ -24,6 +24,8 @@ export default function FilesDownload() {
     // eslint-disable-next-line @typescript-eslint/no-empty-object-type
     {}
   >(async (req, res) => {
+    if (req.name !== "files-download") return;
+
     if (!req.body) {
       sendToBackground({
         name: "alert",

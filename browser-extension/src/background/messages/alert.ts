@@ -8,6 +8,8 @@ const handler: PlasmoMessaging.MessageHandler<
   // eslint-disable-next-line @typescript-eslint/no-empty-object-type
   {}
 > = async (req, res) => {
+  if (req.name !== "alert") return;
+  
   await alertPopup(req.body.alert);
   res.send({});
 };

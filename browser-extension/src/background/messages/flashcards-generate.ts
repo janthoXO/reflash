@@ -16,18 +16,20 @@ const handler: PlasmoMessaging.MessageHandler<
   // eslint-disable-next-line @typescript-eslint/no-empty-object-type
   {}
 > = async (req, res) => {
-  try {
-    if (!req.body) {
-      // this should not happen
-      console.error("No body in flashcards-generate request");
-      await alertPopup({
-        level: "error",
-        message: "Failed to generate flashcards: no request body",
-      });
-      res.send({});
-      return;
-    }
+  if (req.name !== "flashcards-generate") return;
 
+  if (!req.body) {
+    // this should not happen
+    console.error("No body in flashcards-generate request");
+    await alertPopup({
+      level: "error",
+      message: "Failed to generate flashcards: no request body",
+    });
+    res.send({});
+    return;
+  }
+
+  try {
     await setupOffscreenDocument();
 
     // send files to LLM

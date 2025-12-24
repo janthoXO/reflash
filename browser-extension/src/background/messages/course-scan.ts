@@ -14,6 +14,8 @@ const handler: PlasmoMessaging.MessageHandler<
   // eslint-disable-next-line @typescript-eslint/no-empty-object-type
   {}
 > = async (req, res) => {
+  if (req.name !== "course-scan") return;
+  
   if (!req.body) {
     // this should not happen
     console.error("No body in course-scan request");
@@ -33,7 +35,7 @@ const handler: PlasmoMessaging.MessageHandler<
     const {
       courseUrl,
       files: filesOnlyUrl,
-    }: { courseUrl: string; files: File[] } = await sendToContentScript({
+    } = await sendToContentScript<{}, { courseUrl: string; files: File[] }>({
       name: "files-scan",
       body: {},
     });
