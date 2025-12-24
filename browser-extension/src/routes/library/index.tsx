@@ -1,10 +1,8 @@
-import { SiAnki } from "@icons-pack/react-simple-icons";
 import type { Course, Unit } from "@reflash/shared";
 import { useLiveQuery } from "dexie-react-hooks";
 import { Check, X } from "lucide-react";
 import { useMemo, useState } from "react";
 import { Link } from "react-router-dom";
-import { toast } from "sonner";
 import DeleteDialog from "~components/deleteDialog";
 import EditDropdown from "~components/editDropdown";
 import Header from "~components/header";
@@ -16,7 +14,6 @@ import {
   AccordionItem,
   AccordionTrigger,
 } from "~components/ui/accordion";
-import { Button } from "~components/ui/button";
 import {
   InputGroup,
   InputGroupButton,
@@ -31,6 +28,7 @@ import { useSelected } from "~contexts/SelectedContext";
 import { db } from "~db/db";
 import PromptDialog from "./promptDialog";
 import { DropdownMenuItem } from "~components/ui/dropdown-menu";
+import AnkiExportButton from "~components/ankiExportButton";
 
 export default function LibraryPage() {
   const courses = useLiveQuery(() => db.courses.toArray()) as
@@ -76,14 +74,7 @@ export default function LibraryPage() {
         suffix={[
           <Tooltip key="export-anki-tooltip">
             <TooltipTrigger asChild>
-              <Button
-                variant="secondary"
-                onClick={() => {
-                  toast.warning("Export to Anki not implemented yet.");
-                }}
-              >
-                <SiAnki />
-              </Button>
+              <AnkiExportButton />
             </TooltipTrigger>
             <TooltipContent>Export Flashcards to Anki Format</TooltipContent>
           </Tooltip>,
