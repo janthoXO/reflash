@@ -4,6 +4,12 @@ on:
   pull_request:
     paths:
       - "browser-extension/**"
+  workflow_call:
+    inputs:
+      version:
+        description: "Version to build"
+        required: false
+        type: string
 
 jobs:
   build:
@@ -26,6 +32,10 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
+      - name: Change version
+        if: ${{ inputs.version }}
+        run: npm version ${{ inputs.version }} --no-git-tag-version
+
       - name: Check formatting
         run: npm run format:check
 
@@ -34,3 +44,9 @@ jobs:
 
       - name: Build
         run: npm run build
+
+      - name: Upload build artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: build-artifact
+          path: browser-extension/build
