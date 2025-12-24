@@ -55,7 +55,7 @@ const handler: PlasmoMessaging.MessageHandler<
     const savedFileUrls = new Set(savedUnits.map((u) => u.fileUrl));
     const newFiles = filesOnlyUrl.filter((f) => !savedFileUrls.has(f.url));
 
-    alertPopup({
+    await alertPopup({
       level: "info",
       message: `Found ${newFiles.length} new files.`,
     });

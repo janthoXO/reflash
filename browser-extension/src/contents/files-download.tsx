@@ -28,8 +28,10 @@ export default function FilesDownload() {
       sendToBackground({
         name: "alert",
         body: {
-          level: "error",
-          message: "Failed to download files: no request body",
+          alert: {
+            level: "error",
+            message: "Failed to download files: no request body",
+          },
         },
       });
       res.send({});
@@ -43,8 +45,10 @@ export default function FilesDownload() {
       sendToBackground({
         name: "alert",
         body: {
-          level: "error",
-          message: "Failed to download files: course URL mismatch",
+          alert: {
+            level: "error",
+            message: "Failed to download files: course URL mismatch",
+          },
         },
       });
       console.error(
@@ -77,8 +81,10 @@ export default function FilesDownload() {
       sendToBackground({
         name: "alert",
         body: {
-          level: "error",
-          message: "Failed to download files",
+          alert: {
+            level: "error",
+            message: "Failed to download files",
+          },
         },
       });
     } finally {

@@ -46,8 +46,10 @@ export default function Offscreen() {
       sendToBackground({
         name: "alert",
         body: {
-          level: "error",
-          message: "Failed to generate flashcards: no request body",
+          alert: {
+            level: "error",
+            message: "Failed to generate flashcards: no request body",
+          },
         },
       });
       res.send({ unit: {} });
@@ -100,8 +102,10 @@ export default function Offscreen() {
       sendToBackground({
         name: "alert",
         body: {
-          level: "error",
-          message: "Failed to generate flashcards",
+          alert: {
+            level: "error",
+            message: "Failed to generate flashcards",
+          },
         },
       });
       res.send({ unit: {} });

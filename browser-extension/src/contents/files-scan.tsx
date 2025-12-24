@@ -27,8 +27,10 @@ export default function FilesScan() {
       sendToBackground({
         name: "alert",
         body: {
-          level: "error",
-          message: "Failed to scan for files",
+          alert: {
+            level: "error",
+            message: "Failed to scan for files",
+          },
         },
       });
       res.send({ courseUrl: "", files: [] });
