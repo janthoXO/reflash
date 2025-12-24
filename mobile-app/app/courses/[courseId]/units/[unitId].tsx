@@ -1,4 +1,5 @@
 import DeleteDialog from "@/components/deleteDialog";
+import EditContextmenu from "@/components/editContextmenu";
 import EditDropdown from "@/components/editDropdown";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -9,15 +10,17 @@ import { Separator } from "@/components/ui/separator";
 import { Text } from "@/components/ui/text";
 import { Textarea } from "@/components/ui/textarea";
 import { db } from "@/db/db";
+import { deleteFlashcard } from "@/db/flashcard-queries";
 import { flashcardsTable } from "@/db/schema/flashcard";
 import { unitsTable } from "@/db/schema/unit";
+import { deleteUnit } from "@/db/unit-queries";
 import { Flashcard, Unit } from "@reflash/shared";
 import { and, eq, isNull } from "drizzle-orm";
 import { useLiveQuery } from "drizzle-orm/expo-sqlite";
 import { Stack, useLocalSearchParams, useRouter } from "expo-router";
 import { Check, ChevronDown, ChevronUp, Search, X } from "lucide-react-native";
 import { useEffect, useMemo, useState } from "react";
-import { ScrollView, TextInput, View } from "react-native";
+import { Pressable, ScrollView, TextInput, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 export default function UnitScreen() {
@@ -76,17 +79,8 @@ export default function UnitScreen() {
 
   async function onDelete() {
     if (!unit) return;
-    const now = Date.now();
-    await db.transaction(async (tx) => {
-      await tx
-        .update(unitsTable)
-        .set({ deletedAt: now, updatedAt: now })
-        .where(eq(unitsTable.id, unit.id));
-      await tx
-        .update(flashcardsTable)
-        .set({ deletedAt: now, updatedAt: now })
-        .where(eq(flashcardsTable.unitId, unit.id));
-    });
+
+    await deleteUnit(unit.id);
     setShowDeleteDialog(false);
     router.back();
   }
@@ -127,10 +121,8 @@ export default function UnitScreen() {
         }}
       />
 
-      <View className="mb-4 flex-row items-center rounded-md bg-secondary px-3 py-2">
-        <View className="mr-2">
-          <Search size={20} className="text-muted-foreground" />
-        </View>
+      <View className="mb-4 flex-row items-center gap-2 rounded-md bg-secondary px-3 py-2">
+        <Icon as={Search} className="text-muted-foreground" />
         <TextInput
           className="h-full flex-1 text-foreground"
           placeholder="Search flashcards..."
@@ -185,11 +177,7 @@ function FlashcardItem({ card, forceExpand }: { card: Flashcard; forceExpand: bo
   }
 
   async function onDelete() {
-    const now = Date.now();
-    await db
-      .update(flashcardsTable)
-      .set({ deletedAt: now, updatedAt: now })
-      .where(eq(flashcardsTable.id, card.id));
+    await deleteFlashcard(card.id);
     setShowDeleteDialog(false);
   }
 
@@ -217,35 +205,33 @@ function FlashcardItem({ card, forceExpand }: { card: Flashcard; forceExpand: bo
             </View>
           </View>
         ) : (
-          <View>
-            <View className="absolute right-2 top-2 z-10">
-              <EditDropdown
-                onEdit={() => setIsEdit(true)}
-                onDelete={() => setShowDeleteDialog(true)}
-              />
-            </View>
-            <Collapsible open={isExpanded} onOpenChange={setIsExpanded}>
-              <Text className="mt-8 p-4 pt-0 text-center text-base font-medium text-card-foreground">
-                {card.question}
-              </Text>
-              {!isExpanded && (
-                <Button variant="ghost" onPress={() => setIsExpanded(true)}>
-                  <Icon as={ChevronDown} className="text-muted-foreground" />
-                </Button>
-              )}
-              <CollapsibleContent>
-                <Separator />
-                <Text className="p-4 pb-0 text-center text-base text-card-foreground">
-                  {card.answer}
+          <EditContextmenu
+            onEdit={() => setIsEdit(true)}
+            onDelete={() => setShowDeleteDialog(true)}>
+            <Pressable>
+              <Collapsible open={isExpanded} onOpenChange={setIsExpanded}>
+                <Text className="p-4 text-center text-base font-medium text-card-foreground">
+                  {card.question}
                 </Text>
-                {isExpanded && (
-                  <Button variant="ghost" onPress={() => setIsExpanded(false)}>
-                    <Icon as={ChevronUp} className="text-muted-foreground" />
+                {!isExpanded && (
+                  <Button variant="ghost" onPress={() => setIsExpanded(true)}>
+                    <Icon as={ChevronDown} className="text-muted-foreground" />
                   </Button>
                 )}
-              </CollapsibleContent>
-            </Collapsible>
-          </View>
+                <CollapsibleContent>
+                  <Separator />
+                  <Text className="p-4 pb-0 text-center text-base text-card-foreground">
+                    {card.answer}
+                  </Text>
+                  {isExpanded && (
+                    <Button variant="ghost" onPress={() => setIsExpanded(false)}>
+                      <Icon as={ChevronUp} className="text-muted-foreground" />
+                    </Button>
+                  )}
+                </CollapsibleContent>
+              </Collapsible>
+            </Pressable>
+          </EditContextmenu>
         )}
       </CardContent>
 
