@@ -2,6 +2,9 @@ name: Build Extension
 
 on:
   pull_request:
+    # Run for PRs targeting branches other than `main` (package handles PRs to main)
+    branches-ignore:
+      - main
     paths:
       - "browser-extension/**"
   workflow_call:
