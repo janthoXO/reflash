@@ -9,7 +9,7 @@ const handler: PlasmoMessaging.MessageHandler<
   {}
 > = async (req, res) => {
   if (req.name !== "alert") return;
-  
+
   await alertPopup(req.body.alert);
   res.send({});
 };

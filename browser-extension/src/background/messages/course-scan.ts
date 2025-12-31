@@ -15,7 +15,7 @@ const handler: PlasmoMessaging.MessageHandler<
   {}
 > = async (req, res) => {
   if (req.name !== "course-scan") return;
-  
+
   if (!req.body) {
     // this should not happen
     console.error("No body in course-scan request");
@@ -32,10 +32,11 @@ const handler: PlasmoMessaging.MessageHandler<
   try {
     // request files on site
     console.debug("Requesting files-scan in content script");
-    const {
-      courseUrl,
-      files: filesOnlyUrl,
-    } = await sendToContentScript<{}, { courseUrl: string; files: File[] }>({
+    const { courseUrl, files: filesOnlyUrl } = await sendToContentScript<
+      // eslint-disable-next-line @typescript-eslint/no-empty-object-type
+      {},
+      { courseUrl: string; files: File[] }
+    >({
       name: "files-scan",
       body: {},
     });
