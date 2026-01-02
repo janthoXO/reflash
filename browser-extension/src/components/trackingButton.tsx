@@ -10,7 +10,7 @@ import { useUrl } from "~contexts/UrlContext";
 import { useSettingsStorage } from "~local-storage/settings";
 
 export default function TrackingButton() {
-  const [settings] = useSettingsStorage();
+  const { settings } = useSettingsStorage();
   const { currentUrlCourse } = useUrl();
   const { scanFiles, trackCourse } = useCourse();
 
