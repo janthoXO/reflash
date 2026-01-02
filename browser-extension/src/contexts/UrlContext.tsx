@@ -20,13 +20,13 @@ const UrlContext = createContext<UrlContextType | null>(null);
 
 export function UrlProvider({ children }: { children: ReactNode }) {
   const [currentUrl, setCurrentUrl] = useState<string | undefined>(undefined);
-  const [settings] = useSettingsStorage();
+  const { settings } = useSettingsStorage();
   const { scanFiles } = useCourse();
 
   // query already saved course for current URL
-  const currentUrlCourse = useLiveQuery(async () => {
+  const currentUrlCourse = useLiveQuery(() => {
     if (!currentUrl) return undefined;
-    return await db.courses.get({ url: currentUrl });
+    return db.courses.get({ url: currentUrl });
   }, [currentUrl]);
 
   // if autoscrape is enabled, scan files when URL changes to an already tracked course
@@ -39,16 +39,16 @@ export function UrlProvider({ children }: { children: ReactNode }) {
   // Listen for active tab URL changes
   useEffect(() => {
     // 1. Get initial URL of the active tab
-    const getUrl = async () => {
-      const [tab] = await chrome.tabs.query({
+    chrome.tabs
+      .query({
         active: true,
         currentWindow: true,
+      })
+      .then(([tab]) => {
+        if (tab?.url) {
+          setCurrentUrl(tab.url);
+        }
       });
-      if (tab?.url) {
-        setCurrentUrl(tab.url);
-      }
-    };
-    getUrl();
 
     // 2. Listen for URL changes (navigation within the tab)
     const handleUpdate = (

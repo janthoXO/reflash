@@ -18,7 +18,7 @@ function IndexPopup() {
     populateMockData(db);
   }, []);
 
-  const [settings] = useSettingsStorage();
+  const { settings } = useSettingsStorage();
   const { alert, setAlert } = useAlertStorage();
 
   useEffect(() => {

@@ -6,11 +6,6 @@ on:
       - main
     paths:
       - "browser-extension/**"
-  push:
-    branches:
-      - main
-    paths:
-      - "browser-extension/**"
   workflow_call:
     inputs:
       version:
@@ -20,7 +15,13 @@ on:
         type: string
 
 jobs:
+  build:
+    uses: ./.github/workflows/build.extension.yml
+    with:
+      version: ${{ inputs.version }}
+
   package:
+    needs: build
     runs-on: ubuntu-latest
     defaults:
       run:
@@ -40,8 +41,11 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      - name: Change version
-        run: npm version ${{ inputs.version }} --no-git-tag-version
+      - name: Download build artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: build-artifact
+          path: browser-extension/build
 
       - name: Package extension
         run: npm run package
@@ -49,6 +53,6 @@ jobs:
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
-          name: extension-${{ inputs.version }}.zip
+          name: extension-${{ inputs.version || '0.0.0' }}
           path: browser-extension/build/**/*.zip
           if-no-files-found: error
