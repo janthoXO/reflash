@@ -31,7 +31,6 @@ import { DropdownMenuItem } from "~components/ui/dropdown-menu";
 import AnkiExportButton from "~components/ankiExportButton";
 import SyncButton from "~components/syncButton";
 
-
 export default function LibraryPage() {
   const courses = useLiveQuery(() => db.courses.toArray()) as
     | Course[]

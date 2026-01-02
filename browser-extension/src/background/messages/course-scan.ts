@@ -75,7 +75,12 @@ const handler: PlasmoMessaging.MessageHandler<
 
     if (!course) {
       console.debug("Creating new course for url ", courseUrl);
-      course = { name: "New Course", url: courseUrl, updatedAt: Date.now(), deletedAt: null } as Course;
+      course = {
+        name: "New Course",
+        url: courseUrl,
+        updatedAt: Date.now(),
+        deletedAt: null,
+      } as Course;
       course.id = await db.courses.add(course);
     } else if (course.deletedAt) {
       console.debug("Restoring deleted course ", courseUrl);
