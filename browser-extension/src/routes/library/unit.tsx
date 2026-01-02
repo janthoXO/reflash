@@ -1,4 +1,4 @@
-import type { Flashcard, Unit } from "@reflash/shared";
+import type { Flashcard } from "@reflash/shared";
 import { useLiveQuery } from "dexie-react-hooks";
 import { ArrowLeft, Check, ChevronDown, ChevronUp, X } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
@@ -33,20 +33,23 @@ export default function UnitPage() {
   const [showDeleteDialog, setShowDeleteDialog] = useState<boolean>(false);
   const [searchQuery, setSearchQuery] = useState<string>("");
 
-  // query already saved course for current URL
   const unit = useLiveQuery(async () => {
     if (!courseId || !unitId) return;
 
-    const unit = (await db.units.get({
+    const unit = await db.units.get({
       id: parseInt(unitId),
       courseId: parseInt(courseId),
-    })) as Unit | undefined;
+      deletedAt: null,
+    });
 
     if (!unit) return undefined;
 
     setEditName(unit.name);
 
-    unit.cards = await db.flashcards.where({ unitId: unit.id }).toArray();
+    unit.cards = await db.flashcards
+      .where({ unitId: unit.id })
+      .filter((card) => card.deletedAt === null)
+      .toArray();
 
     return unit;
   }, [unitId, courseId]);
@@ -66,7 +69,7 @@ export default function UnitPage() {
 
   function onSave() {
     unit!.name = editName;
-    db.units.update(unit!.id, { name: editName });
+    db.units.update(unit!.id, { name: editName, updatedAt: Date.now() });
     setIsEdit(false);
   }
 
@@ -76,8 +79,11 @@ export default function UnitPage() {
   }
 
   function onDelete() {
-    db.units.delete(unit!.id);
-    db.flashcards.where({ unitId: unit!.id }).delete();
+    const now = Date.now();
+    db.units.update(unit!.id, { deletedAt: now, updatedAt: now });
+    db.flashcards
+      .where({ unitId: unit!.id })
+      .modify({ deletedAt: now, updatedAt: now });
     setShowDeleteDialog(false);
   }
 
@@ -212,6 +218,7 @@ function FlashcardItem({
     db.flashcards.update(flashcard.id, {
       question: editCard.question,
       answer: editCard.answer,
+      updatedAt: Date.now(),
     });
     setIsEdit(false);
   }
@@ -222,7 +229,11 @@ function FlashcardItem({
   }
 
   function onDelete() {
-    db.flashcards.delete(flashcard.id);
+    const now = Date.now();
+    db.flashcards.update(flashcard.id, {
+      deletedAt: now,
+      updatedAt: now,
+    });
     setShowDeleteDialog(false);
   }
 

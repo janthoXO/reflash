@@ -47,10 +47,11 @@ const handler: PlasmoMessaging.MessageHandler<
 
     // check which units already exist in this course and compare to files
     let newFiles: File[] = [];
-    if (course) {
+    if (course && !course.deletedAt) {
       const savedUnits = await db.units
         .where("courseId")
         .equals(course.id)
+        .filter((unit) => unit.deletedAt === null)
         .toArray();
 
       const savedFileUrls = new Set(savedUnits.map((u) => u.fileUrl));
@@ -74,8 +75,19 @@ const handler: PlasmoMessaging.MessageHandler<
 
     if (!course) {
       console.debug("Creating new course for url ", courseUrl);
-      course = { name: "New Course", url: courseUrl } as Course;
+      course = {
+        name: "New Course",
+        url: courseUrl,
+        updatedAt: Date.now(),
+        deletedAt: null,
+      } as Course;
       course.id = await db.courses.add(course);
+    } else if (course.deletedAt) {
+      console.debug("Restoring deleted course ", courseUrl);
+      await db.courses.update(course.id, {
+        deletedAt: null,
+        updatedAt: Date.now(),
+      });
     }
 
     // save custom prompt to course

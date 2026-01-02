@@ -1,8 +1,8 @@
 {
-  "id": "749cc545-21cd-4d2c-9488-2b9daed5f842",
-  "prevId": "eead0659-9988-49cd-818e-8f3067ed6645",
   "version": "6",
   "dialect": "sqlite",
+  "id": "3469c5b6-a756-4d0d-8f5b-d359603be5fc",
+  "prevId": "eead0659-9988-49cd-818e-8f3067ed6645",
   "tables": {
     "courses": {
       "name": "courses",
@@ -26,6 +26,21 @@
           "type": "text",
           "primaryKey": false,
           "notNull": true,
+          "autoincrement": false
+        },
+        "updatedAt": {
+          "name": "updatedAt",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": 0
+        },
+        "deletedAt": {
+          "name": "deletedAt",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false,
           "autoincrement": false
         }
       },
@@ -70,13 +85,29 @@
           "type": "integer",
           "primaryKey": false,
           "notNull": true,
-          "autoincrement": false
+          "autoincrement": false,
+          "default": 0
         },
         "unitId": {
           "name": "unitId",
           "type": "integer",
           "primaryKey": false,
           "notNull": true,
+          "autoincrement": false
+        },
+        "updatedAt": {
+          "name": "updatedAt",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": 0
+        },
+        "deletedAt": {
+          "name": "deletedAt",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false,
           "autoincrement": false
         }
       },
@@ -85,11 +116,11 @@
         "flashcards_unitId_units_id_fk": {
           "name": "flashcards_unitId_units_id_fk",
           "tableFrom": "flashcards",
-          "columnsFrom": ["unitId"],
           "tableTo": "units",
+          "columnsFrom": ["unitId"],
           "columnsTo": ["id"],
-          "onUpdate": "no action",
-          "onDelete": "no action"
+          "onDelete": "no action",
+          "onUpdate": "no action"
         }
       },
       "compositePrimaryKeys": {},
@@ -133,6 +164,21 @@
           "primaryKey": false,
           "notNull": true,
           "autoincrement": false
+        },
+        "updatedAt": {
+          "name": "updatedAt",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": 0
+        },
+        "deletedAt": {
+          "name": "deletedAt",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
         }
       },
       "indexes": {},
@@ -140,11 +186,11 @@
         "units_courseId_courses_id_fk": {
           "name": "units_courseId_courses_id_fk",
           "tableFrom": "units",
-          "columnsFrom": ["courseId"],
           "tableTo": "courses",
+          "columnsFrom": ["courseId"],
           "columnsTo": ["id"],
-          "onUpdate": "no action",
-          "onDelete": "no action"
+          "onDelete": "no action",
+          "onUpdate": "no action"
         }
       },
       "compositePrimaryKeys": {},
@@ -155,9 +201,9 @@
   "views": {},
   "enums": {},
   "_meta": {
-    "columns": {},
     "schemas": {},
-    "tables": {}
+    "tables": {},
+    "columns": {}
   },
   "internal": {
     "indexes": {}

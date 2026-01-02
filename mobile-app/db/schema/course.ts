@@ -6,6 +6,8 @@ export const coursesTable = sqliteTable(
     id: int().primaryKey(),
     name: text().notNull(),
     url: text().notNull(),
+    updatedAt: int().notNull().default(0),
+    deletedAt: int(),
   },
   (table) => [uniqueIndex("url_idx").on(table.url)]
 );

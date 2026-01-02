@@ -29,6 +29,7 @@ import { db } from "~db/db";
 import PromptDialog from "./promptDialog";
 import { DropdownMenuItem } from "~components/ui/dropdown-menu";
 import AnkiExportButton from "~components/ankiExportButton";
+import SyncButton from "~components/syncButton";
 
 export default function LibraryPage() {
   const courses = useLiveQuery(() => db.courses.toArray()) as
@@ -78,6 +79,7 @@ export default function LibraryPage() {
             </TooltipTrigger>
             <TooltipContent>Export Flashcards to Anki Format</TooltipContent>
           </Tooltip>,
+          <SyncButton key="library-sync-button" />,
           <TrackingButton key="library-tracking-button" />,
         ]}
       />
@@ -105,7 +107,7 @@ function CourseItem({ course }: { course: Course }) {
 
   function onSave() {
     course.name = editName;
-    db.courses.update(course.id, { name: editName });
+    db.courses.update(course.id, { name: editName, updatedAt: Date.now() });
     setIsEdit(false);
   }
 
@@ -115,12 +117,15 @@ function CourseItem({ course }: { course: Course }) {
   }
 
   function onDelete() {
-    db.courses.delete(course.id);
-    db.units.where({ courseId: course.id }).delete();
+    const now = Date.now();
+    db.courses.update(course.id, { deletedAt: now, updatedAt: now });
+    db.units
+      .where({ courseId: course.id })
+      .modify({ deletedAt: now, updatedAt: now });
     db.flashcards
       .where("unitId")
       .anyOf(course.units?.map((u) => u.id) ?? [])
-      .delete();
+      .modify({ deletedAt: now, updatedAt: now });
     setShowDeleteDialog(false);
   }
 

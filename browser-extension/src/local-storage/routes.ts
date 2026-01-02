@@ -7,7 +7,7 @@ const _routeStorageKey = "route";
 
 let _routeStorageInstance: Storage | null = null;
 
-export const routeStorageInstance = () => {
+const routeStorageInstance = () => {
   if (!_routeStorageInstance) {
     _routeStorageInstance = new Storage({
       area: "local",

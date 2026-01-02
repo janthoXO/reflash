@@ -4,7 +4,7 @@ import { Text } from "@/components/ui/text";
 import { useSelectedUnits } from "@/context/SelectedUnitsContext";
 import { db } from "@/db/db";
 import { flashcardsTable } from "@/db/schema/flashcard";
-import { and, eq, inArray, lt } from "drizzle-orm";
+import { and, eq, inArray, isNull, lt } from "drizzle-orm";
 import { useLiveQuery } from "drizzle-orm/expo-sqlite";
 import { useMemo, useState } from "react";
 import { ScrollView, TouchableOpacity, View } from "react-native";
@@ -19,7 +19,13 @@ export default function LearnScreen() {
     db
       .select()
       .from(flashcardsTable)
-      .where(and(inArray(flashcardsTable.unitId, unitIds), lt(flashcardsTable.dueAt, Date.now()))),
+      .where(
+        and(
+          inArray(flashcardsTable.unitId, unitIds),
+          lt(flashcardsTable.dueAt, Date.now()),
+          isNull(flashcardsTable.deletedAt)
+        )
+      ),
     [unitIds]
   );
 

@@ -26,7 +26,7 @@ export function UrlProvider({ children }: { children: ReactNode }) {
   // query already saved course for current URL
   const currentUrlCourse = useLiveQuery(() => {
     if (!currentUrl) return undefined;
-    return db.courses.get({ url: currentUrl });
+    return db.courses.get({ url: currentUrl, deletedAt: null });
   }, [currentUrl]);
 
   // if autoscrape is enabled, scan files when URL changes to an already tracked course
