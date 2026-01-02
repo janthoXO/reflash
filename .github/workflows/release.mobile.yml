@@ -1,4 +1,4 @@
-name: Release Extension
+name: Release Mobile App
 
 on:
   push:
@@ -7,7 +7,7 @@ on:
     branches:
       - main
     paths:
-      - "browser-extension/**"
+      - "mobile-app/**"
       - "shared/**"
 
 jobs:
@@ -27,9 +27,11 @@ jobs:
 
   package:
     needs: versioning
-    uses: ./.github/workflows/package.extension.yml
+    uses: ./.github/workflows/package.mobile.yml
     with:
       version: ${{ needs.versioning.outputs.version }}
+    secrets:
+      EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
 
   release:
     needs: [versioning, package]
@@ -44,7 +46,7 @@ jobs:
       - name: Download artifact
         uses: actions/download-artifact@v4
         with:
-          name: extension-${{ needs.versioning.outputs.version }}
+          name: mobile-app-${{ needs.versioning.outputs.version }}
           path: dist
 
       - name: Create Release
@@ -52,13 +54,9 @@ jobs:
         with:
           tag_name: v${{ needs.versioning.outputs.version }}
           name: v${{ needs.versioning.outputs.version }}
-          files: dist/**/*.zip
+          files: |
+            dist/*.apk
+            dist/*.aab
           generate_release_notes: true
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Publish to Web Store
-        uses: PlasmoHQ/bpp@v3
-        with:
-          keys: ${{ secrets.SUBMIT_KEYS }}
-          artifact: dist/**/*.zip

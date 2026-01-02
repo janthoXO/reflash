@@ -1,15 +1,15 @@
-import { readFileSync, writeFileSync } from 'fs';
-import { join } from 'path';
+import { readFileSync, writeFileSync } from "fs";
+import { join } from "path";
 
 // Parse CSS variables from global.css
-function parseCssVariables(css: string, theme: 'light' | 'dark') {
-  const regex = theme === 'light' ? /:root\s*{([^}]+)}/ : /\.dark:root\s*{([^}]+)}/;
+function parseCssVariables(css: string, theme: "light" | "dark") {
+  const regex = theme === "light" ? /:root\s*{([^}]+)}/ : /\.dark:root\s*{([^}]+)}/;
 
   const match = css.match(regex);
   if (!match) return {};
 
   const variables: Record<string, string> = {};
-  const lines = match[1].split('\n');
+  const lines = match[1].split("\n");
 
   lines.forEach((line) => {
     const varMatch = line.match(/--([^:]+):\s*([^;]+);/);
@@ -19,11 +19,11 @@ function parseCssVariables(css: string, theme: 'light' | 'dark') {
       name = name
         .trim()
         .replace(/-([a-z])/g, (_, letter) => letter.toUpperCase())
-        .replace(/-/g, '');
+        .replace(/-/g, "");
 
-        // wrap color values in hsl()
-        // hsl is normally written as three space-separated numbers but sometimes includes alpha
-      if (value.split(' ').length !== 1 ) {
+      // wrap color values in hsl()
+      // hsl is normally written as three space-separated numbers but sometimes includes alpha
+      if (value.split(" ").length !== 1) {
         value = `hsl(${value.trim()})`;
       }
       variables[name] = value.trim();
@@ -33,9 +33,9 @@ function parseCssVariables(css: string, theme: 'light' | 'dark') {
   return variables;
 }
 
-const cssContent = readFileSync(join(__dirname, '../global.css'), 'utf-8');
-const lightVars = parseCssVariables(cssContent, 'light');
-const darkVars = parseCssVariables(cssContent, 'dark');
+const cssContent = readFileSync(join(import.meta.dirname, "../global.css"), "utf-8");
+const lightVars = parseCssVariables(cssContent, "light");
+const darkVars = parseCssVariables(cssContent, "dark");
 
 // Generate theme.ts content
 const themeContent = `// filepath: /Users/dpjandow/Documents/react-native-skeleton/lib/theme.ts
@@ -47,12 +47,12 @@ export const THEME = {
   light: {
     ${Object.entries(lightVars)
       .map(([key, value]) => `${key}: '${value}',`)
-      .join('\n')}
+      .join("\n")}
       },
   dark: {
     ${Object.entries(darkVars)
       .map(([key, value]) => `${key}: '${value}',`)
-      .join('\n')}
+      .join("\n")}
   },
 };
 
@@ -82,5 +82,5 @@ export const NAV_THEME: Record<'light' | 'dark', Theme> = {
 };
 `;
 
-writeFileSync(join(__dirname, '../lib/theme.ts'), themeContent);
-console.log('✅ Theme generated successfully!');
+writeFileSync(join(import.meta.dirname, "../lib/theme.ts"), themeContent);
+console.log("✅ Theme generated successfully!");

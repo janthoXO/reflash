@@ -6,6 +6,7 @@ on:
       - main
     paths:
       - "browser-extension/**"
+      - "shared/**"
   workflow_call:
     inputs:
       version:

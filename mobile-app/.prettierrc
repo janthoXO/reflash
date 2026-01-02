@@ -1,9 +1,10 @@
 {
-  "printWidth": 100,
+  "semi": true,
+  "singleQuote": false,
   "tabWidth": 2,
-  "singleQuote": true,
-  "bracketSameLine": true,
   "trailingComma": "es5",
-  "plugins": ["prettier-plugin-tailwindcss"],
+  "printWidth": 100,
+  "bracketSameLine": true,
+  "plugins": ["@ianvs/prettier-plugin-sort-imports", "prettier-plugin-tailwindcss"],
   "tailwindFunctions": ["cva"]
 }
