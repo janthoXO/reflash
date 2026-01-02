@@ -13,7 +13,7 @@ import { Tabs, TabsList, TabsTrigger } from "~components/ui/tabs";
 import LibraryPage from "./library";
 import SettingsPage from "./settings";
 import TrainingPage from "./training";
-import { SelectedProvider } from "~contexts/SelectedContext";
+import { SelectedUnitsProvider } from "~contexts/SelectedContext";
 import UnitPage from "./library/unit";
 import { getRouteFromStorage, useRouteStorage } from "~local-storage/routes";
 import SyncPage from "./sync";
@@ -44,7 +44,7 @@ export const Routing = () => {
   return (
     <div className="w-[400px] h-[500px] bg-background flex flex-col">
       <div className="flex-1 flex flex-col p-4 overflow-y-auto">
-        <SelectedProvider>
+        <SelectedUnitsProvider>
           <Routes>
             <Route path="/" element={<Navigate to="/training" />} />
             <Route path="/training" element={<TrainingPage />} />
@@ -56,7 +56,7 @@ export const Routing = () => {
               element={<UnitPage />}
             />
           </Routes>
-        </SelectedProvider>
+        </SelectedUnitsProvider>
       </div>
 
       <Tabs

@@ -33,7 +33,7 @@ export const usePromptStorage = (courseId: number) => {
     }
   };
 
-  return [customPrompt, setCustomPrompt, { isLoading }] as const;
+  return { customPrompt, setCustomPrompt, isLoading };
 };
 
 export const getPromptFromStorage = async (courseId?: number) => {

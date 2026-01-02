@@ -4,20 +4,20 @@ import { createOpenAI } from "@ai-sdk/openai";
 import { CreateMLCEngine, MLCEngine } from "@mlc-ai/web-llm";
 import type { Flashcard, Unit } from "@reflash/shared";
 import { generateText, type LanguageModel } from "ai";
-import { ollama } from "ollama-ai-provider-v2";
+import { createOllama } from "ollama-ai-provider-v2";
 import * as pdfjsLib from "pdfjs-dist";
 import { useState } from "react";
 
 import { useMessage } from "@plasmohq/messaging/hook";
 
 import { retry } from "~lib/retry";
-import { LLMProvider } from "~models/ai-providers";
 import type { File } from "~models/file";
-import type { LLMSettings } from "~models/settings";
+import { type LLMSettings, LLMProvider } from "~models/settings";
 import type {
   TextItem,
   TextMarkedContent,
 } from "pdfjs-dist/types/src/display/api";
+import { sendToBackground } from "@plasmohq/messaging";
 
 pdfjsLib.GlobalWorkerOptions.workerSrc = new URL(
   "pdfjs-dist/build/pdf.worker.min.mjs",
@@ -40,14 +40,27 @@ export default function Offscreen() {
     },
     { unit: Partial<Unit> }
   >(async (req, res) => {
-    if (req.name !== "flashcards-generate" || !req.body) return;
+    if (!req.body) {
+      console.error("No body in flashcards-generate request");
+      sendToBackground({
+        name: "alert",
+        body: {
+          alert: {
+            level: "error",
+            message: "Failed to generate flashcards: no request body",
+          },
+        },
+      });
+      res.send({ unit: {} });
+      return;
+    }
 
     console.debug("Received flashcards-generate", req.body);
     try {
       // 1. Start loading model immediately
       let modelLoadingPromise;
       if (req.body.llmSettings.provider === LLMProvider.WASM) {
-        modelLoadingPromise = loadModel();
+        modelLoadingPromise = loadModel(req.body.llmSettings.model);
       }
 
       const file = req.body.file;
@@ -85,6 +98,15 @@ export default function Offscreen() {
       res.send({ unit: unit });
     } catch (e) {
       console.error("Error in flashcards-generate:", e);
+      sendToBackground({
+        name: "alert",
+        body: {
+          alert: {
+            level: "error",
+            message: "Failed to generate flashcards",
+          },
+        },
+      });
       res.send({ unit: {} });
     }
   });
@@ -123,13 +145,13 @@ export default function Offscreen() {
     }
   }
 
-  async function loadModel() {
+  async function loadModel(model: string) {
     if (engine !== null) {
       console.debug("Model already loaded");
       return;
     }
 
-    const e = await CreateMLCEngine("Qwen3-0.6B-q4f16_1-MLC", {
+    const e = await CreateMLCEngine(model, {
       // SHOULD ALREADY BE CACHED BY DEFAULT
       //   appConfig: {
       //     useIndexedDBCache: true,
@@ -189,30 +211,28 @@ export default function Offscreen() {
 
     switch (llmSettings.provider) {
       case LLMProvider.OPENAI: {
-        if (!llmSettings.apiKey) throw new Error("OpenAI API Key required");
         const openai = createOpenAI({ apiKey: llmSettings.apiKey });
-        model = openai("gpt-5");
+        model = openai(llmSettings.model);
         break;
       }
 
       case LLMProvider.GOOGLE: {
-        if (!llmSettings.apiKey) throw new Error("Google API Key required");
         const google = createGoogleGenerativeAI({ apiKey: llmSettings.apiKey });
-        model = google("gemini-2.5-flash");
+        model = google(llmSettings.model);
         break;
       }
 
       case LLMProvider.ANTHROPIC: {
-        if (!llmSettings.apiKey) throw new Error("Anthropic API Key required");
         const anthropic = createAnthropic({ apiKey: llmSettings.apiKey });
-        model = anthropic("claude-sonnet-4-20250514");
+        model = anthropic(llmSettings.model);
         break;
       }
 
       case LLMProvider.OLLAMA: {
-        // Ollama runs locally on http://localhost:11434 by default
         // No API Key is required for local Ollama
-        model = ollama("llama3");
+        model = createOllama({
+          baseURL: llmSettings.url,
+        })(llmSettings.model);
         break;
       }
 

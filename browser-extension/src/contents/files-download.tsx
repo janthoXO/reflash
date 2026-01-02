@@ -24,35 +24,74 @@ export default function FilesDownload() {
     // eslint-disable-next-line @typescript-eslint/no-empty-object-type
     {}
   >(async (req, res) => {
-    if (req.name !== "files-download" || !req.body) return;
+    if (req.name !== "files-download") return;
+
+    if (!req.body) {
+      sendToBackground({
+        name: "alert",
+        body: {
+          alert: {
+            level: "error",
+            message: "Failed to download files: no request body",
+          },
+        },
+      });
+      res.send({});
+      return;
+    }
 
     console.debug("Received files-download", req.body);
 
     const siteCourseUrl = window.location.href;
     if (siteCourseUrl !== req.body.courseUrl) {
-      console.warn(
+      sendToBackground({
+        name: "alert",
+        body: {
+          alert: {
+            level: "error",
+            message: "Failed to download files: course URL mismatch",
+          },
+        },
+      });
+      console.error(
         `Course URL mismatch: expected ${req.body.courseUrl}, got ${siteCourseUrl}`
       );
+      res.send({});
+      return;
     }
 
-    await Promise.all(
-      req.body.files.map((file) =>
-        downloadPDF(file).then((file) => {
-          // Publish FILES_SCANNED event
-          sendToBackground({
-            name: "flashcards-generate",
-            body: {
-              courseId: req.body?.courseId,
-              llmSettings: req.body?.llmSettings,
-              customPrompt: req.body?.customPrompt,
-              file: file,
-            },
-          });
-          console.debug("Send downloaded file to background ", file);
-        })
-      )
-    );
-    res.send({});
+    try {
+      await Promise.all(
+        req.body.files.map((file) =>
+          downloadPDF(file).then((file) => {
+            // Publish FILES_SCANNED event
+            sendToBackground({
+              name: "flashcards-generate",
+              body: {
+                courseId: req.body?.courseId,
+                llmSettings: req.body?.llmSettings,
+                customPrompt: req.body?.customPrompt,
+                file: file,
+              },
+            });
+            console.debug("Send downloaded file to background ", file);
+          })
+        )
+      );
+    } catch (e) {
+      console.error("Error in files-download:", e);
+      sendToBackground({
+        name: "alert",
+        body: {
+          alert: {
+            level: "error",
+            message: "Failed to download files",
+          },
+        },
+      });
+    } finally {
+      res.send({});
+    }
   });
 
   return null;

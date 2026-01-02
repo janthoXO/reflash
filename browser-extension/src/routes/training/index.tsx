@@ -10,11 +10,11 @@ import Header from "~components/header";
 import TrackingButton from "~components/trackingButton";
 
 export default function TrainingPage() {
-  const { selectedMap, isLoading } = useSelected();
+  const { selectedUnitsMap, isLoading } = useSelected();
 
   // Fetch due cards
   const dueCards = useLiveQuery(async () => {
-    const selectedUnitIds = Object.values(selectedMap).flat();
+    const selectedUnitIds = Object.values(selectedUnitsMap).flat();
     if (selectedUnitIds.length === 0) return [];
 
     return await db.flashcards
@@ -22,7 +22,7 @@ export default function TrainingPage() {
       .anyOf(selectedUnitIds)
       .filter((fc) => fc.dueAt < Date.now() && fc.deletedAt === null)
       .toArray();
-  }, [selectedMap]);
+  }, [selectedUnitsMap]);
 
   if (isLoading || !dueCards) {
     return <div className="p-4">Loading...</div>;

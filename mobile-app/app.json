@@ -1,11 +1,11 @@
 {
   "expo": {
-    "name": "reflash-app",
-    "slug": "reflash-app",
+    "name": "reflash",
+    "slug": "reflash",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
-    "scheme": "reflash-app",
+    "scheme": "reflash",
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
     "splash": {
@@ -49,6 +49,13 @@
     ],
     "experiments": {
       "typedRoutes": true
-    }
+    },
+    "extra": {
+      "router": {},
+      "eas": {
+        "projectId": "53ab69bf-6da6-4a1a-802f-4035e1a40b66"
+      }
+    },
+    "owner": "jandotek"
   }
 }

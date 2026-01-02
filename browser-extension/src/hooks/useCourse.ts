@@ -6,9 +6,12 @@ import type { LLMSettings } from "~models/settings";
 export function useCourse() {
   async function scanFiles(
     courseId: number | undefined,
-    llmSettings: LLMSettings
+    llmSettings: LLMSettings,
+    customPrompt?: string
   ) {
-    const customPrompt = await getPromptFromStorage(courseId);
+    if (!customPrompt) {
+      customPrompt = await getPromptFromStorage(courseId);
+    }
     console.debug(
       "useCourse: course-scan called with LLM settings",
       llmSettings,
@@ -21,11 +24,8 @@ export function useCourse() {
     });
   }
 
-  async function trackCourse(
-    courseId: number | undefined,
-    llmSettings: LLMSettings
-  ) {
-    scanFiles(courseId, llmSettings);
+  async function trackCourse(llmSettings: LLMSettings, customPrompt?: string) {
+    scanFiles(undefined, llmSettings, customPrompt);
   }
 
   return { scanFiles, trackCourse };

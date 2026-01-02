@@ -1,11 +1,13 @@
-import { createContext, useContext, type ReactNode } from "react";
+import { createContext, useContext, useEffect, type ReactNode } from "react";
 
 import type { Course, Unit } from "@reflash/shared";
 import { useSelectedUnitsStorage } from "~local-storage/selected-units";
+import { useUrl } from "./UrlContext";
+import { db } from "~db/db";
 
 interface SelectedContextType {
   // courseId -> unitIds
-  selectedMap: Record<number, number[]>;
+  selectedUnitsMap: Record<number, number[]>;
   isLoading: boolean;
   toggleCourse: (course: Course) => void;
   toggleUnit: (unit: Unit) => void;
@@ -15,12 +17,27 @@ interface SelectedContextType {
 
 const SelectedContext = createContext<SelectedContextType | null>(null);
 
-export function SelectedProvider({ children }: { children: ReactNode }) {
-  const [selectedMap, setSelectedMap, { isLoading }] =
+export function SelectedUnitsProvider({ children }: { children: ReactNode }) {
+  const { currentUrlCourse } = useUrl();
+  const [selectedUnitsMap, setSelectedUnitsMap, { isLoading }] =
     useSelectedUnitsStorage();
 
+  useEffect(() => {
+    if (!currentUrlCourse) return;
+
+    db.units
+      .where({ courseId: currentUrlCourse.id })
+      .toArray()
+      .then((units) => {
+        currentUrlCourse.units = units;
+        setSelectedUnitsMap({
+          [currentUrlCourse.id]: currentUrlCourse.units.map((u) => u.id),
+        });
+      });
+  }, [currentUrlCourse]);
+
   const toggleCourse = (course: Course) => {
-    const newMap = { ...selectedMap };
+    const newMap = { ...selectedUnitsMap };
     if (newMap[course.id]) {
       // Deselect course
       delete newMap[course.id];
@@ -32,11 +49,11 @@ export function SelectedProvider({ children }: { children: ReactNode }) {
       }
       newMap[course.id] = course.units.map((unit) => unit.id);
     }
-    setSelectedMap(newMap);
+    setSelectedUnitsMap(newMap);
   };
 
   const toggleUnit = (unit: Unit) => {
-    const newMap = { ...selectedMap };
+    const newMap = { ...selectedUnitsMap };
     const currentUnits = newMap[unit.courseId] || [];
 
     if (currentUnits.includes(unit.id)) {
@@ -49,21 +66,22 @@ export function SelectedProvider({ children }: { children: ReactNode }) {
       }
     } else {
       // Select unit
-      newMap[unit.courseId] = [...currentUnits, unit.courseId];
+      newMap[unit.courseId] = [...currentUnits, unit.id];
     }
-    setSelectedMap(newMap);
+
+    setSelectedUnitsMap(newMap);
   };
 
-  const isCourseSelected = (courseId: number) => !!selectedMap?.[courseId];
+  const isCourseSelected = (courseId: number) => !!selectedUnitsMap?.[courseId];
 
   const isUnitSelected = (courseId: number, unitId: number) => {
-    return selectedMap?.[courseId]?.includes(unitId) ?? false;
+    return selectedUnitsMap?.[courseId]?.includes(unitId) ?? false;
   };
 
   return (
     <SelectedContext.Provider
       value={{
-        selectedMap: selectedMap || {},
+        selectedUnitsMap,
         isLoading,
         toggleCourse,
         toggleUnit,

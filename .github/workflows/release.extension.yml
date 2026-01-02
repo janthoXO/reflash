@@ -1,31 +1,64 @@
 name: Release Extension
 
 on:
-  release:
-    types: [released]
+  push:
+    tags:
+      - 'v*'
+    branches:
+      - main
+    paths:
+      - "browser-extension/**"
+      - "shared/**"
 
 jobs:
+  versioning:
+    runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.version.outputs.version }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Determine Version
+        id: version
+        uses: ./.github/actions/determine-version
+
   package:
+    needs: versioning
     uses: ./.github/workflows/package.extension.yml
     with:
-      version: ${{ github.event.release.tag_name }}
+      version: ${{ needs.versioning.outputs.version }}
 
   release:
-    needs: package
+    needs: [versioning, package]
     runs-on: ubuntu-latest
     permissions:
       contents: write
 
     steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
       - name: Download artifact
         uses: actions/download-artifact@v4
         with:
-          name: extension-${{ github.event.release.tag_name }}.zip
-          path: .
+          name: extension-${{ needs.versioning.outputs.version }}
+          path: dist
 
-      - name: Upload Release Asset
-        uses: softprops/action-gh-release@v1
+      - name: Create Release
+        uses: softprops/action-gh-release@v2
         with:
-          files: extension-build/**/*.zip
+          tag_name: v${{ needs.versioning.outputs.version }}
+          name: v${{ needs.versioning.outputs.version }}
+          files: dist/**/*.zip
+          generate_release_notes: true
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Publish to Web Store
+        uses: PlasmoHQ/bpp@v3
+        with:
+          keys: ${{ secrets.SUBMIT_KEYS }}
+          artifact: dist/**/*.zip

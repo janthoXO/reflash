@@ -1,6 +1,5 @@
 import type { Flashcard } from "@reflash/shared";
 import { useLiveQuery } from "dexie-react-hooks";
-import { get } from "fast-levenshtein";
 import { ArrowLeft, Check, ChevronDown, ChevronUp, X } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
@@ -23,6 +22,7 @@ import {
 import { Separator } from "~components/ui/separator";
 import { Textarea } from "~components/ui/textarea";
 import { db } from "~db/db";
+import { fuzzySearch, fuzzySearchAndMap } from "~lib/search";
 
 export default function UnitPage() {
   const { courseId, unitId } = useParams();
@@ -61,26 +61,9 @@ export default function UnitPage() {
 
     const query = searchQuery.toLowerCase();
     return unit.cards.filter((card) => {
-      const question = card.question.toLowerCase();
-      const answer = card.answer.toLowerCase();
-
-      // Exact match or substring match
-      if (question.includes(query) || answer.includes(query)) return true;
-
-      // Levenshtein distance check (allow some fuzziness based on length)
-      const maxDistance = Math.max(1, Math.floor(query.length * 0.2));
-
-      // Check distance for question words
-      const questionWords = question.split(/\s+/);
-      if (questionWords.some((word) => get(word, query) <= maxDistance))
-        return true;
-
-      // Check distance for answer words
-      const answerWords = answer.split(/\s+/);
-      if (answerWords.some((word) => get(word, query) <= maxDistance))
-        return true;
-
-      return false;
+      return (
+        fuzzySearch(card.question, query) || fuzzySearch(card.answer, query)
+      );
     });
   }, [searchQuery, unit?.cards]);
 
@@ -194,6 +177,7 @@ export default function UnitPage() {
             key={card.id}
             flashcard={card}
             forceExpand={!!searchQuery}
+            searchQuery={searchQuery}
           />
         ))}
       </div>
@@ -204,9 +188,11 @@ export default function UnitPage() {
 function FlashcardItem({
   flashcard,
   forceExpand,
+  searchQuery,
 }: {
   flashcard: Flashcard;
   forceExpand: boolean;
+  searchQuery: string;
 }) {
   const [isHovered, setIsHovered] = useState<boolean>(false);
   const [isDropdownOpen, setIsDropdownOpen] = useState<boolean>(false);
@@ -300,7 +286,16 @@ function FlashcardItem({
             <CollapsibleTrigger asChild>
               <div className="cursor-pointer w-full group">
                 <p className="text-base text-card-foreground mb-2">
-                  {flashcard.question}
+                  {fuzzySearchAndMap(
+                    flashcard.question,
+                    searchQuery,
+                    (word) => (
+                      <mark>{word}</mark>
+                    ),
+                    (word) => (
+                      <span>{word}</span>
+                    )
+                  )}
                 </p>
                 {!isExpanded && (
                   <div className="flex justify-center text-muted-foreground group-hover:text-primary transition-colors">
@@ -312,7 +307,16 @@ function FlashcardItem({
             <CollapsibleContent>
               <Separator className="my-2" />
               <p className="text-base text-card-foreground">
-                {flashcard.answer}
+                {fuzzySearchAndMap(
+                  flashcard.answer,
+                  searchQuery,
+                  (word) => (
+                    <mark>{word}</mark>
+                  ),
+                  (word) => (
+                    <span>{word}</span>
+                  )
+                )}
               </p>
               <div
                 className="flex justify-center text-muted-foreground hover:text-primary transition-colors mt-2 cursor-pointer"
