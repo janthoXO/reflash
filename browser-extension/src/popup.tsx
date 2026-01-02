@@ -19,7 +19,7 @@ function IndexPopup() {
   }, []);
 
   const { settings } = useSettingsStorage();
-  const [alert] = useAlertStorage();
+  const { alert, setAlert } = useAlertStorage();
 
   useEffect(() => {
     if (settings?.darkMode) {
@@ -50,6 +50,14 @@ function IndexPopup() {
         break;
       }
     }
+    setAlert((prev) => {
+      // timestamp check to avoid clearing a new alert set during the toast display
+      if (!prev || prev.timestamp !== alert.timestamp) {
+        return prev;
+      }
+
+      return null;
+    });
   }, [alert]);
 
   return (

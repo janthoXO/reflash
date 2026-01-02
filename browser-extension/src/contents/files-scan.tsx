@@ -3,6 +3,7 @@ import type { PlasmoCSConfig } from "plasmo";
 import { useMessage } from "@plasmohq/messaging/hook";
 
 import type { File } from "~models/file";
+import { sendToBackground } from "@plasmohq/messaging";
 
 export const config: PlasmoCSConfig = {
   matches: ["<all_urls>"],
@@ -17,11 +18,25 @@ export default function FilesScan() {
 
     console.debug("Received files-scan", req);
 
-    const courseUrl = window.location.href;
-    const files = await scanForPDFLinks();
+    try {
+      const courseUrl = window.location.href;
+      const files = await scanForPDFLinks();
 
-    console.debug("Return scanned files ", files);
-    res.send({ courseUrl: courseUrl, files: files });
+      console.debug("Return scanned files ", { courseUrl, files });
+      res.send({ courseUrl: courseUrl, files: files });
+    } catch (e) {
+      console.error("Error in files-scan:", e);
+      sendToBackground({
+        name: "alert",
+        body: {
+          alert: {
+            level: "error",
+            message: "Failed to scan for files",
+          },
+        },
+      });
+      res.send({ courseUrl: "", files: [] });
+    }
   });
 
   return null;

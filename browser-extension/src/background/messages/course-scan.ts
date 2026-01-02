@@ -6,6 +6,7 @@ import { sendToContentScript } from "@plasmohq/messaging";
 import { db } from "~db/db";
 import type { File } from "~models/file";
 import type { LLMSettings } from "~models/settings";
+import { alertPopup } from "~background/alertManager";
 import { setPromptToStorage } from "~local-storage/prompts";
 
 // handles the event loop for scanning the course for new files
@@ -14,68 +15,93 @@ const handler: PlasmoMessaging.MessageHandler<
   // eslint-disable-next-line @typescript-eslint/no-empty-object-type
   {}
 > = async (req, res) => {
+  if (req.name !== "course-scan") return;
+
   if (!req.body) {
-    // TODO send error on error channel
+    // this should not happen
+    console.error("No body in course-scan request");
+    await alertPopup({
+      level: "error",
+      message: "Failed to scan course: no request body",
+    });
     res.send({});
     return;
   }
 
   console.debug("Background received course-scan request");
 
-  // request files on site
-  console.debug("Requesting files-scan in content script");
-  const {
-    courseUrl,
-    files: filesOnlyUrl,
-  }: { courseUrl: string; files: File[] } = await sendToContentScript({
-    name: "files-scan",
-    body: {},
-  });
+  try {
+    // request files on site
+    console.debug("Requesting files-scan in content script");
+    const { courseUrl, files: filesOnlyUrl } = await sendToContentScript<
+      // eslint-disable-next-line @typescript-eslint/no-empty-object-type
+      {},
+      { courseUrl: string; files: File[] }
+    >({
+      name: "files-scan",
+      body: {},
+    });
 
-  // check if course already exists, if not, create new course
-  let course = await db.courses.get({ url: courseUrl });
+    // check if course already exists, if not, create new course
+    let course = await db.courses.get({ url: courseUrl });
 
-  // check which units already exist in this course and compare to files
-  let newFiles: File[] = [];
-  if (course) {
-    const savedUnits = await db.units
-      .where("courseId")
-      .equals(course.id)
-      .toArray();
+    // check which units already exist in this course and compare to files
+    let newFiles: File[] = [];
+    if (course) {
+      const savedUnits = await db.units
+        .where("courseId")
+        .equals(course.id)
+        .toArray();
 
-    const savedFileUrls = new Set(savedUnits.map((u) => u.fileUrl));
-    newFiles = filesOnlyUrl.filter((f) => !savedFileUrls.has(f.url));
-  }
+      const savedFileUrls = new Set(savedUnits.map((u) => u.fileUrl));
+      newFiles = filesOnlyUrl.filter((f) => !savedFileUrls.has(f.url));
+    }
 
-  if (newFiles.length === 0) {
-    console.debug("No new files to download for course ", course);
+    if (newFiles.length === 0) {
+      console.debug("No new files to download for course ", course);
+      await alertPopup({
+        level: "info",
+        message: `No new files found.`,
+      });
+      res.send({});
+      return;
+    }
+
+    await alertPopup({
+      level: "info",
+      message: `Found ${newFiles.length} new files.`,
+    });
+
+    if (!course) {
+      console.debug("Creating new course for url ", courseUrl);
+      course = { name: "New Course", url: courseUrl } as Course;
+      course.id = await db.courses.add(course);
+    }
+
+    // save custom prompt to course
+    await setPromptToStorage(course.id, req.body.customPrompt);
+
+    // send new file Urls for download
+    console.debug("Requesting download for new files ", newFiles);
+    await sendToContentScript({
+      name: "files-download",
+      body: {
+        courseId: course.id,
+        courseUrl: course.url,
+        llmSettings: req.body.llmSettings,
+        customPrompt: req.body.customPrompt,
+        files: newFiles,
+      },
+    });
+  } catch (e) {
+    console.error("Error in course-scan handler:", e);
+    await alertPopup({
+      level: "error",
+      message: `Failed to scan course`,
+    });
+  } finally {
     res.send({});
-    return;
   }
-
-  if (!course) {
-    console.debug("Creating new course for url ", courseUrl);
-    course = { name: "New Course", url: courseUrl } as Course;
-    course.id = await db.courses.add(course);
-  }
-
-  // save custom prompt to course
-  await setPromptToStorage(course.id, req.body.customPrompt);
-
-  // send new file Urls for download
-  console.debug("Requesting download for new files ", newFiles);
-  await sendToContentScript({
-    name: "files-download",
-    body: {
-      courseId: course.id,
-      courseUrl: course.url,
-      llmSettings: req.body.llmSettings,
-      customPrompt: req.body.customPrompt,
-      files: newFiles,
-    },
-  });
-
-  res.send({});
 };
 
 export default handler;

@@ -17,6 +17,7 @@ import type {
   TextItem,
   TextMarkedContent,
 } from "pdfjs-dist/types/src/display/api";
+import { sendToBackground } from "@plasmohq/messaging";
 
 pdfjsLib.GlobalWorkerOptions.workerSrc = new URL(
   "pdfjs-dist/build/pdf.worker.min.mjs",
@@ -39,7 +40,20 @@ export default function Offscreen() {
     },
     { unit: Partial<Unit> }
   >(async (req, res) => {
-    if (req.name !== "flashcards-generate" || !req.body) return;
+    if (!req.body) {
+      console.error("No body in flashcards-generate request");
+      sendToBackground({
+        name: "alert",
+        body: {
+          alert: {
+            level: "error",
+            message: "Failed to generate flashcards: no request body",
+          },
+        },
+      });
+      res.send({ unit: {} });
+      return;
+    }
 
     console.debug("Received flashcards-generate", req.body);
     try {
@@ -84,6 +98,15 @@ export default function Offscreen() {
       res.send({ unit: unit });
     } catch (e) {
       console.error("Error in flashcards-generate:", e);
+      sendToBackground({
+        name: "alert",
+        body: {
+          alert: {
+            level: "error",
+            message: "Failed to generate flashcards",
+          },
+        },
+      });
       res.send({ unit: {} });
     }
   });
