@@ -23,7 +23,7 @@ import {
 import { PopoverClose } from "@radix-ui/react-popover";
 
 export default function TrackingButton() {
-  const [settings] = useSettingsStorage();
+  const { settings } = useSettingsStorage();
   const { currentUrlCourse } = useUrl();
   const { scanFiles } = useCourse();
 

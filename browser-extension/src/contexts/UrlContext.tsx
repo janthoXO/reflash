@@ -20,7 +20,7 @@ const UrlContext = createContext<UrlContextType | null>(null);
 
 export function UrlProvider({ children }: { children: ReactNode }) {
   const [currentUrl, setCurrentUrl] = useState<string | undefined>(undefined);
-  const [settings] = useSettingsStorage();
+  const { settings } = useSettingsStorage();
   const { scanFiles } = useCourse();
 
   // query already saved course for current URL
