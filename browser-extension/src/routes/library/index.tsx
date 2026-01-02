@@ -1,6 +1,6 @@
 import type { Course, Unit } from "@reflash/shared";
 import { useLiveQuery } from "dexie-react-hooks";
-import { Check, X } from "lucide-react";
+import { Check, MessageSquareCode, X } from "lucide-react";
 import { useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import DeleteDialog from "~components/deleteDialog";
@@ -179,6 +179,7 @@ function CourseItem({ course }: { course: Course }) {
                 }}
                 onClick={(e) => e.stopPropagation()}
               >
+                <MessageSquareCode />
                 Edit Prompt
               </DropdownMenuItem>,
             ]}
