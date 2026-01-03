@@ -1,3 +1,5 @@
+import z from "zod";
+
 export enum LLMProvider {
   WASM = "Default Local",
   OPENAI = "Open AI",
@@ -55,15 +57,19 @@ export const ProvidersToModels: Record<LLMProvider, LLMModel[]> = {
   [LLMProvider.OLLAMA]: [LLMModel.LLAMA3, LLMModel.CUSTOM],
 };
 
-export interface LLMSettings {
-  provider: LLMProvider;
-  model: string;
-  apiKey: string;
-  url: string; // For Ollama
-}
+export const LLMSettingsSchema = z.object({
+  provider: z.enum(LLMProvider),
+  model: z.string(),
+  apiKey: z.string(),
+  url: z.string(), // For Ollama
+});
 
-export interface Settings {
-  darkMode: boolean;
-  autoScrape: boolean;
-  llm: LLMSettings;
-}
+export type LLMSettings = z.infer<typeof LLMSettingsSchema>;
+
+export const SettingsSchema = z.object({
+  darkMode: z.boolean().default(false),
+  autoScrape: z.boolean().default(false),
+  llm: LLMSettingsSchema,
+});
+
+export type Settings = z.infer<typeof SettingsSchema>;

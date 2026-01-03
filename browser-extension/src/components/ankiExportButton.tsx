@@ -11,20 +11,29 @@ import {
   SelectValue,
 } from "./ui/select";
 import { useState } from "react";
-import { Popover, PopoverContent, PopoverTrigger } from "./ui/popover";
+import { Popover, PopoverAnchor, PopoverContent } from "./ui/popover";
+import { Tooltip, TooltipContent, TooltipTrigger } from "./ui/tooltip";
 
 type AnkiVersion = "2.1.54+" | "before-2.1.54";
 
 export default function AnkiExportButton() {
   const { exportAnki } = useAnki();
   const [ankiVersion, setAnkiVersion] = useState<AnkiVersion>("2.1.54+");
+  const [isPopoverOpen, setIsPopoverOpen] = useState(false);
+
   return (
-    <Popover>
-      <PopoverTrigger asChild>
-        <Button variant="secondary">
-          <SiAnki />
-        </Button>
-      </PopoverTrigger>
+    <Popover open={isPopoverOpen} onOpenChange={setIsPopoverOpen}>
+      <PopoverAnchor>
+        <Tooltip key="export-anki-tooltip">
+          <TooltipTrigger asChild>
+            <Button variant="secondary" onClick={() => setIsPopoverOpen(true)}>
+              <SiAnki />
+            </Button>
+          </TooltipTrigger>
+          <TooltipContent>Export Flashcards to Anki Format</TooltipContent>
+        </Tooltip>
+      </PopoverAnchor>
+
       <PopoverContent className=" w-sm space-y-2 p-2">
         <Label htmlFor="anki-version-select">AnkiVersion</Label>
         <Select

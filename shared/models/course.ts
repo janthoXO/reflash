@@ -1,10 +1,13 @@
-import { Unit } from "./unit";
+import z from "zod";
+import { UnitSchema } from "./unit";
 
-export interface Course {
-  id: number;
-  name: string;
-  url: string;
-  updatedAt: number;
-  deletedAt: number | null;
-  units?: Unit[];
-}
+export const CourseSchema = z.object({
+  id: z.number(),
+  name: z.string(),
+  url: z.string(),
+  updatedAt: z.number(),
+  deletedAt: z.number().nullable(),
+  units: z.array(UnitSchema).default([]),
+});
+
+export type Course = z.infer<typeof CourseSchema>;

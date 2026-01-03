@@ -2,35 +2,63 @@ import type { PlasmoCSConfig } from "plasmo";
 
 import { useMessage } from "@plasmohq/messaging/hook";
 
-import type { File } from "~models/file";
+import { FileSchema, type File } from "~models/file";
 import { sendToBackground } from "@plasmohq/messaging";
+import z from "zod";
+import { AlertLevel } from "~models/alert";
 
 export const config: PlasmoCSConfig = {
   matches: ["<all_urls>"],
   all_frames: true,
 };
 
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+const ResponseSchema = z.object({
+  courseUrl: z.string(),
+  files: z.array(FileSchema),
+});
+
+type ResponseType = z.infer<typeof ResponseSchema>;
+
 export default function FilesScan() {
   // TODO extract course heading as courseName and return
   // eslint-disable-next-line @typescript-eslint/no-empty-object-type
-  useMessage<{}, { courseUrl: string; files: File[] }>(async (req, res) => {
+  useMessage<{}, ResponseType>(async (req, res) => {
     if (req.name !== "files-scan") return;
 
-    console.debug("Received files-scan", req);
+    console.debug("[Content Script: files-scan] Received request\n", req.body);
+
+    if (!req.body) {
+      console.error("[Content Script: files-scan] Invalid body in request");
+      sendToBackground({
+        name: "alert",
+        body: {
+          alert: {
+            level: AlertLevel.Error,
+            message: "Failed to scan files",
+          },
+        },
+      });
+      res.send({ courseUrl: "", files: [] });
+      return;
+    }
 
     try {
       const courseUrl = window.location.href;
       const files = await scanForPDFLinks();
 
-      console.debug("Return scanned files ", { courseUrl, files });
+      console.debug("[Content Script: files-scan] Return scanned files\n", {
+        courseUrl,
+        files,
+      });
       res.send({ courseUrl: courseUrl, files: files });
     } catch (e) {
-      console.error("Error in files-scan:", e);
+      console.error("[Content Script: files-scan] Error:", e);
       sendToBackground({
         name: "alert",
         body: {
           alert: {
-            level: "error",
+            level: AlertLevel.Error,
             message: "Failed to scan for files",
           },
         },

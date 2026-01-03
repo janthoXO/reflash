@@ -1,4 +1,4 @@
-import type { Course } from "@reflash/shared";
+import type { Course } from "~models/course";
 import { useLiveQuery } from "dexie-react-hooks";
 import {
   createContext,
@@ -26,7 +26,9 @@ export function UrlProvider({ children }: { children: ReactNode }) {
   // query already saved course for current URL
   const currentUrlCourse = useLiveQuery(() => {
     if (!currentUrl) return undefined;
-    return db.courses.get({ url: currentUrl, deletedAt: null });
+    return db.courses
+      .get({ url: currentUrl })
+      .then((course) => (course?.deletedAt ? undefined : course));
   }, [currentUrl]);
 
   // if autoscrape is enabled, scan files when URL changes to an already tracked course

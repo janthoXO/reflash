@@ -3,58 +3,67 @@ import type { PlasmoCSConfig } from "plasmo";
 
 import { useMessage } from "@plasmohq/messaging/hook";
 
-import type { File } from "~models/file";
-import type { LLMSettings } from "~models/settings";
+import { FileSchema, type File } from "~models/file";
+import { LLMSettingsSchema } from "~models/settings";
 import { sendToBackground } from "@plasmohq/messaging";
+import z from "zod";
+import { AlertLevel } from "~models/alert";
 
 export const config: PlasmoCSConfig = {
   matches: ["<all_urls>"],
   all_frames: true,
 };
 
+const RequestSchema = z.object({
+  courseId: z.number(),
+  courseUrl: z.string(),
+  llmSettings: LLMSettingsSchema,
+  customPrompt: z.string(),
+  files: z.array(FileSchema),
+});
+
+type RequestType = z.infer<typeof RequestSchema>;
+
 export default function FilesDownload() {
   useMessage<
-    {
-      courseId: number;
-      courseUrl: string;
-      llmSettings: LLMSettings;
-      customPrompt: string;
-      files: File[];
-    },
+    RequestType,
     // eslint-disable-next-line @typescript-eslint/no-empty-object-type
     {}
   >(async (req, res) => {
     if (req.name !== "files-download") return;
 
-    if (!req.body) {
+    console.debug("[Content Script: files-scan] Received request\n", req.body);
+
+    const reqBodyParsed = RequestSchema.safeParse(req.body);
+    if (!reqBodyParsed.success) {
+      console.error("[Content Script: files-download] Invalid body in request");
       sendToBackground({
         name: "alert",
         body: {
           alert: {
-            level: "error",
-            message: "Failed to download files: no request body",
+            level: AlertLevel.Error,
+            message: "Failed to download files",
           },
         },
       });
       res.send({});
       return;
     }
-
-    console.debug("Received files-download", req.body);
+    const reqBody: RequestType = reqBodyParsed.data;
 
     const siteCourseUrl = window.location.href;
-    if (siteCourseUrl !== req.body.courseUrl) {
+    if (siteCourseUrl !== reqBody.courseUrl) {
       sendToBackground({
         name: "alert",
         body: {
           alert: {
-            level: "error",
+            level: AlertLevel.Error,
             message: "Failed to download files: course URL mismatch",
           },
         },
       });
       console.error(
-        `Course URL mismatch: expected ${req.body.courseUrl}, got ${siteCourseUrl}`
+        `[Content Script: files-download] Course URL mismatch: expected ${reqBody.courseUrl}, got ${siteCourseUrl}`
       );
       res.send({});
       return;
@@ -62,29 +71,33 @@ export default function FilesDownload() {
 
     try {
       await Promise.all(
-        req.body.files.map((file) =>
+        reqBody.files.map((file) =>
           downloadPDF(file).then((file) => {
-            // Publish FILES_SCANNED event
+            if (!file || !file.base64) return;
+
             sendToBackground({
               name: "flashcards-generate",
               body: {
-                courseId: req.body?.courseId,
-                llmSettings: req.body?.llmSettings,
-                customPrompt: req.body?.customPrompt,
+                courseId: reqBody.courseId,
+                llmSettings: reqBody.llmSettings,
+                customPrompt: reqBody.customPrompt,
                 file: file,
               },
             });
-            console.debug("Send downloaded file to background ", file);
+            console.debug(
+              "[Content Script: files-download] Send downloaded file to background\n",
+              file
+            );
           })
         )
       );
     } catch (e) {
-      console.error("Error in files-download:", e);
+      console.error("[Content Script: files-download] Error:", e);
       sendToBackground({
         name: "alert",
         body: {
           alert: {
-            level: "error",
+            level: AlertLevel.Error,
             message: "Failed to download files",
           },
         },
@@ -112,7 +125,7 @@ async function downloadPDF(file: File): Promise<File | null> {
     const type = preCheck.headers["content-type"];
 
     if (!type || !type.includes("application/pdf")) {
-      console.warn(`⚠️ Not a PDF. Type: ${type}`);
+      console.warn(`[Content Script: files-download] Not a PDF. Type: ${type}`);
       return null;
     }
 
@@ -126,18 +139,24 @@ async function downloadPDF(file: File): Promise<File | null> {
       }
     }
 
-    console.log(`⬇️ Downloading full file: ${file.name}`);
+    console.debug(
+      `[Content Script: files-download] Downloading full file: ${file.name}`
+    );
     // 3. THE DOWNLOAD: Axios with Blob response
     const response = await axios.get(file.url, {
       responseType: "blob", // Critical for binary files
       withCredentials: true,
     });
 
-    file.blob = response.data;
-    file.base64 = await blobToBase64(file.blob!, "application/pdf"); // response.data is the Blob
-    console.log(`Downloaded PDF: ${file.name}`);
+    file.base64 = await blobToBase64(response.data!, "application/pdf"); // response.data is the Blob
+    console.debug(
+      `[Content Script: files-download] Downloaded PDF: ${file.name}`
+    );
   } catch (error) {
-    console.error(`Error downloading ${file.url}:`, error);
+    console.error(
+      `[Content Script: files-download] Error downloading ${file.url}:`,
+      error
+    );
   }
 
   return file;

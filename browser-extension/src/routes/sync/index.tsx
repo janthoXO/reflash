@@ -12,8 +12,9 @@ import { Ban, Play } from "lucide-react";
 export default function SyncPage() {
   const [searchParams] = useSearchParams();
   const mode = searchParams.get("mode");
-  const { selectedMap } = useSelected();
+  const { selectedUnitsMap } = useSelected();
 
+  // use shared model here to have proper dto
   const [populatedCourses, setPopulatedCourses] = useState<Course[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
@@ -49,27 +50,25 @@ export default function SyncPage() {
             })
           );
         } else if (mode === "selected") {
-          const selectedCourseIds = Object.keys(selectedMap).map(Number);
+          // synchronize deleted entries as well
+          const selectedCourseIds = Object.keys(selectedUnitsMap).map(Number);
           const dbCourses = await db.courses
             .where("id")
             .anyOf(selectedCourseIds)
-            .filter((course) => course.deletedAt === null)
             .toArray();
 
           courses = await Promise.all(
             dbCourses.map(async (course) => {
-              const selectedUnitIds = selectedMap[course.id] || [];
+              const selectedUnitIds = selectedUnitsMap[course.id] || [];
               const units = await db.units
                 .where("id")
                 .anyOf(selectedUnitIds)
-                .filter((unit) => unit.deletedAt === null)
                 .toArray();
 
               const populatedUnits = await Promise.all(
                 units.map(async (unit) => {
                   const cards = await db.flashcards
                     .where({ unitId: unit.id })
-                    .filter((card) => card.deletedAt === null)
                     .toArray();
                   return { ...unit, cards };
                 })
@@ -91,7 +90,7 @@ export default function SyncPage() {
     };
 
     fetchCourses();
-  }, [mode, selectedMap]);
+  }, [mode, selectedUnitsMap]);
 
   const [encoder, setEncoder] = useState<UrFountainEncoder | undefined>(
     undefined

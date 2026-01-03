@@ -1,4 +1,4 @@
-import type { Course } from "@reflash/shared";
+import type { Course } from "~models/course";
 
 export function sanitizeStringForFilename(text: string): string {
   return text.replaceAll(/[^a-z0-9]/gi, "_");

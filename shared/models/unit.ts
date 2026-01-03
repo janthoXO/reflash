@@ -1,12 +1,15 @@
-import type { Flashcard } from './flashcard';
+import z from "zod";
+import { FlashcardSchema } from "./flashcard";
 
-export interface Unit {
-  id: number;
-  name: string;
-  fileName: string;
-  fileUrl: string;
-  courseId: number;
-  updatedAt: number;
-  deletedAt: number | null;
-  cards?: Flashcard[];
-}
+export const UnitSchema = z.object({
+  id: z.number(),
+  name: z.string(),
+  fileName: z.string(),
+  fileUrl: z.string(),
+  courseId: z.number(),
+  updatedAt: z.number(),
+  deletedAt: z.number().nullable(),
+  cards: z.array(FlashcardSchema).default([]),
+});
+
+export type Unit= z.infer<typeof UnitSchema>;

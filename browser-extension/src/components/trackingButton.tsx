@@ -21,11 +21,12 @@ import {
   AccordionTrigger,
 } from "./ui/accordion";
 import { PopoverClose } from "@radix-ui/react-popover";
+import { Spinner } from "./ui/spinner";
 
 export default function TrackingButton() {
   const { settings } = useSettingsStorage();
   const { currentUrlCourse } = useUrl();
-  const { scanFiles } = useCourse();
+  const { scanFiles, loading } = useCourse();
 
   const [popoverOpen, setPopoverOpen] = useState(false);
 
@@ -44,7 +45,9 @@ export default function TrackingButton() {
                           scanFiles(currentUrlCourse.id, settings.llm)
                         : setPopoverOpen(true)
                     }
+                    disabled={loading}
                   >
+                    {loading && <Spinner />}
                     <FileSearchCorner />
                   </Button>
                 </TooltipTrigger>
@@ -65,7 +68,11 @@ export default function TrackingButton() {
             <PopoverAnchor>
               <Tooltip>
                 <TooltipTrigger asChild>
-                  <Button onClick={() => setPopoverOpen(true)}>
+                  <Button
+                    onClick={() => setPopoverOpen(true)}
+                    disabled={loading}
+                  >
+                    {loading && <Spinner />}
                     <BookMarked />
                   </Button>
                 </TooltipTrigger>
@@ -96,7 +103,7 @@ function TrackingButtonDialog({
   llmSettings: LLMSettings;
   isTracking: boolean;
 }) {
-  const { scanFiles, trackCourse } = useCourse();
+  const { scanFiles, trackCourse, loading } = useCourse();
   const [editCustomPrompt, setEditCustomPrompt] = useState<string>("");
 
   useEffect(() => {
@@ -143,7 +150,9 @@ function TrackingButtonDialog({
                 ? trackCourse(llmSettings, editCustomPrompt)
                 : scanFiles(courseId, llmSettings, editCustomPrompt)
             }
+            disabled={loading}
           >
+            {loading && <Spinner />}
             {isTracking ? "Track" : "Scan"}
           </Button>
         </PopoverClose>

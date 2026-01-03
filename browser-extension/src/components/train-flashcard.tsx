@@ -1,4 +1,4 @@
-import type { Flashcard } from "@reflash/shared";
+import type { Flashcard } from "~models/flashcard";
 import { Check, RotateCcw, XCircle } from "lucide-react";
 import { useEffect, useState } from "react";
 

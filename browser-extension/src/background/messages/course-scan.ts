@@ -1,38 +1,48 @@
-import type { Course } from "@reflash/shared";
+import type { Course } from "~models/course";
 
 import type { PlasmoMessaging } from "@plasmohq/messaging";
 import { sendToContentScript } from "@plasmohq/messaging";
 
 import { db } from "~db/db";
 import type { File } from "~models/file";
-import type { LLMSettings } from "~models/settings";
+import { LLMSettingsSchema } from "~models/settings";
 import { alertPopup } from "~background/alertManager";
 import { setPromptToStorage } from "~local-storage/prompts";
+import z from "zod";
+import { AlertLevel } from "~models/alert";
+
+const RequestSchema = z.object({
+  llmSettings: LLMSettingsSchema,
+  customPrompt: z.string(),
+});
+
+type RequestType = z.infer<typeof RequestSchema>;
 
 // handles the event loop for scanning the course for new files
 const handler: PlasmoMessaging.MessageHandler<
-  { llmSettings: LLMSettings; customPrompt: string },
+  RequestType,
   // eslint-disable-next-line @typescript-eslint/no-empty-object-type
   {}
 > = async (req, res) => {
   if (req.name !== "course-scan") return;
 
-  if (!req.body) {
+  console.debug("[Background: course-scan] received request\n", req.body);
+
+  const reqBodyParsed = RequestSchema.safeParse(req.body);
+  if (!reqBodyParsed.success) {
     // this should not happen
-    console.error("No body in course-scan request");
+    console.error("[Background: course-scan] Invalid body in request");
     await alertPopup({
-      level: "error",
-      message: "Failed to scan course: no request body",
+      level: AlertLevel.Error,
+      message: "Failed to scan course",
     });
     res.send({});
     return;
   }
-
-  console.debug("Background received course-scan request");
+  const reqBody: RequestType = reqBodyParsed.data;
 
   try {
     // request files on site
-    console.debug("Requesting files-scan in content script");
     const { courseUrl, files: filesOnlyUrl } = await sendToContentScript<
       // eslint-disable-next-line @typescript-eslint/no-empty-object-type
       {},
@@ -42,12 +52,11 @@ const handler: PlasmoMessaging.MessageHandler<
       body: {},
     });
 
-    // check if course already exists, if not, create new course
-    let course = await db.courses.get({ url: courseUrl });
-
     // check which units already exist in this course and compare to files
+    let course = await db.courses.get({ url: courseUrl });
     let newFiles: File[] = [];
     if (course && !course.deletedAt) {
+      // if course already exists and is not deleted, filter out existing files
       const savedUnits = await db.units
         .where("courseId")
         .equals(course.id)
@@ -56,12 +65,17 @@ const handler: PlasmoMessaging.MessageHandler<
 
       const savedFileUrls = new Set(savedUnits.map((u) => u.fileUrl));
       newFiles = filesOnlyUrl.filter((f) => !savedFileUrls.has(f.url));
+    } else {
+      newFiles = filesOnlyUrl;
     }
 
     if (newFiles.length === 0) {
-      console.debug("No new files to download for course ", course);
+      console.debug(
+        "[Background: course-scan] No new files to download for course\n",
+        course
+      );
       await alertPopup({
-        level: "info",
+        level: AlertLevel.Info,
         message: `No new files found.`,
       });
       res.send({});
@@ -69,12 +83,16 @@ const handler: PlasmoMessaging.MessageHandler<
     }
 
     await alertPopup({
-      level: "info",
+      level: AlertLevel.Info,
       message: `Found ${newFiles.length} new files.`,
     });
 
+    // create course if it does not exist
     if (!course) {
-      console.debug("Creating new course for url ", courseUrl);
+      console.debug(
+        "[Background: course-scan] Creating new course for url: ",
+        courseUrl
+      );
       course = {
         name: "New Course",
         url: courseUrl,
@@ -83,7 +101,10 @@ const handler: PlasmoMessaging.MessageHandler<
       } as Course;
       course.id = await db.courses.add(course);
     } else if (course.deletedAt) {
-      console.debug("Restoring deleted course ", courseUrl);
+      console.debug(
+        "[Background: course-scan] Restoring deleted course: ",
+        courseUrl
+      );
       await db.courses.update(course.id, {
         deletedAt: null,
         updatedAt: Date.now(),
@@ -91,24 +112,27 @@ const handler: PlasmoMessaging.MessageHandler<
     }
 
     // save custom prompt to course
-    await setPromptToStorage(course.id, req.body.customPrompt);
+    await setPromptToStorage(course.id, reqBody.customPrompt);
 
     // send new file Urls for download
-    console.debug("Requesting download for new files ", newFiles);
+    console.debug(
+      "[Background: course-scan] Requesting download for new files\n",
+      newFiles
+    );
     await sendToContentScript({
       name: "files-download",
       body: {
         courseId: course.id,
         courseUrl: course.url,
-        llmSettings: req.body.llmSettings,
-        customPrompt: req.body.customPrompt,
+        llmSettings: reqBody.llmSettings,
+        customPrompt: reqBody.customPrompt,
         files: newFiles,
       },
     });
   } catch (e) {
-    console.error("Error in course-scan handler:", e);
+    console.error("[Background: course-scan] Error:", e);
     await alertPopup({
-      level: "error",
+      level: AlertLevel.Error,
       message: `Failed to scan course`,
     });
   } finally {

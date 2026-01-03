@@ -1,87 +1,96 @@
 import type { PlasmoMessaging } from "@plasmohq/messaging";
-import type { Unit } from "@reflash/shared";
+import type { Unit } from "~models/unit";
+import { FileSchema } from "~models/file";
 import { alertPopup } from "~background/alertManager";
 import { setupOffscreenDocument } from "~background/offscreenManager";
 import { db } from "~db/db";
-import type { LLMSettings } from "~models/settings";
+import { LLMSettingsSchema } from "~models/settings";
+import z from "zod";
+import { AlertLevel } from "~models/alert";
+
+const RequestSchema = z.object({
+  courseId: z.number(),
+  llmSettings: LLMSettingsSchema,
+  customPrompt: z.string(),
+  file: FileSchema,
+});
+
+type RequestType = z.infer<typeof RequestSchema>;
 
 // receives files from the content script, checks the course and forwards them to the offscreen document
 const handler: PlasmoMessaging.MessageHandler<
-  {
-    courseId: number;
-    llmSettings: LLMSettings;
-    customPrompt: string;
-    file: File;
-  },
+  RequestType,
   // eslint-disable-next-line @typescript-eslint/no-empty-object-type
   {}
 > = async (req, res) => {
   if (req.name !== "flashcards-generate") return;
 
-  if (!req.body) {
+  console.debug(
+    "[Background: flashcards-generate] received request\n",
+    req.body
+  );
+
+  const reqBodyParsed = RequestSchema.safeParse(req.body);
+  if (!reqBodyParsed.success) {
     // this should not happen
-    console.error("No body in flashcards-generate request");
+    console.error("[Background: flashcards-generate] Invalid body in request");
     await alertPopup({
-      level: "error",
-      message: "Failed to generate flashcards: no request body",
+      level: AlertLevel.Error,
+      message: "Failed to generate flashcards",
     });
     res.send({});
     return;
   }
+  const reqBody: RequestType = reqBodyParsed.data;
 
   try {
     await setupOffscreenDocument();
 
-    // send files to LLM
-    console.debug("Requesting flashcard generation for files ", req.body.file);
-    // Forward the message to the offscreen document
-    // TODO adjust to Firefox
-    let { unit }: { unit: Unit } = await chrome.runtime.sendMessage({
-      name: "flashcards-generate",
-      body: {
-        courseId: req.body.courseId,
-        file: req.body.file,
-        llmSettings: req.body.llmSettings,
-        customPrompt: req.body.customPrompt,
-      },
-    });
-    if (!unit || !unit.cards) {
-      console.warn("Received empty unit from offscreen");
-      res.send({});
-      return;
-    }
-
-    const now = Date.now();
-    unit = {
-      ...unit,
-      updatedAt: now,
+    // save unit with generationFlag true to indicate generation in progress
+    const unit: Unit = {
+      name: reqBody.file.name,
+      fileName: reqBody.file.name,
+      fileUrl: reqBody.file.url,
+      courseId: reqBody.courseId,
+      updatedAt: Date.now(),
       deletedAt: null,
-    };
+      isGenerating: true,
+    } as Unit;
 
-    const dbUnit = await db.units.get({
+    // unit might exist but is soft deleted
+    const existingUnit = await db.units.get({
       fileUrl: unit.fileUrl,
       courseId: unit.courseId,
     });
     let unitId: number;
-    if (dbUnit) {
+    if (existingUnit) {
       console.debug("Unit already exists, updating ", unit.fileUrl);
-      unitId = dbUnit.id;
-      await db.units.update(unitId, unit);
+      unit.id = existingUnit.id;
+      await db.units.update(existingUnit.id, unit);
+      unitId = unit.id;
     } else {
       unitId = await db.units.add(unit);
     }
-    unit.cards = unit.cards!.map((card) => {
-      card.unitId = unitId;
-      card.dueAt = now;
-      card.updatedAt = now;
-      card.deletedAt = null;
-      return card;
+
+    // Forward the files to the offscreen document
+    const payload = {
+      courseId: reqBody.courseId,
+      unitId: unitId,
+      fileBase64: reqBody.file.base64,
+      llmSettings: reqBody.llmSettings,
+      customPrompt: reqBody.customPrompt,
+    };
+    console.debug("Requesting flashcard generation for file\n", payload);
+    // response gonna be returned asynchronously
+    // TODO adjust to Firefox
+    await chrome.runtime.sendMessage({
+      name: "flashcards-generate",
+      body: payload,
     });
-    await db.flashcards.bulkAdd(unit.cards);
   } catch (e) {
     console.error("Error in flashcards-generate handler:", e);
     await alertPopup({
-      level: "error",
+      level: AlertLevel.Error,
       message: `Failed to generate flashcards`,
     });
   } finally {
