@@ -26,25 +26,15 @@ const handler: PlasmoMessaging.MessageHandler<
   if (req.name !== "flashcards-save") return;
 
   console.debug("[Background: flashcards-save] Received request", req.body);
-  const reqBodyParsed = RequestSchema.safeParse(req.body);
-  if (!reqBodyParsed.success) {
-    // this should not happen
-    console.error("[Background: flashcards-save] Invalid body in request");
-    await alertPopup({
-      level: AlertLevel.Error,
-      message: "Failed to save flashcards",
-    });
-    res.send({});
-    return;
-  }
-  const reqBody: RequestType = reqBodyParsed.data;
 
   try {
+    const reqBody = RequestSchema.parse(req.body);
+
     const unit = await db.units.get({
       id: reqBody.unitId,
       courseId: reqBody.courseId,
     });
-    if (!unit) {
+    if (!unit || unit.deletedAt) {
       console.error(
         `[Background: flashcards-save] Unit ${reqBody.unitId} not found`
       );
@@ -56,24 +46,21 @@ const handler: PlasmoMessaging.MessageHandler<
       return;
     }
 
-    if (reqBody.cards.length === 0) {
-      // no flashcards genereated would lead to an empty unit
-      // -> delete the unit
-      console.warn("[Background: flashcards-save] Received empty unit");
-      await alertPopup({
-        level: AlertLevel.Warning,
-        message: `No flashcards were generated for ${unit.name}.`,
-      });
-      await db.units.delete(unit.id);
-      res.send({});
-      return;
-    }
-
     const now = Date.now();
     await db.units.update(reqBody.unitId, {
       updatedAt: now,
       isGenerating: false,
     });
+
+    if (reqBody.cards.length === 0) {
+      console.warn("[Background: flashcards-save] Received empty unit");
+      await alertPopup({
+        level: AlertLevel.Warning,
+        message: `No flashcards were generated for ${unit.name}.`,
+      });
+      res.send({});
+      return;
+    }
 
     const cards: Flashcard[] = reqBody.cards.map((card) => {
       return {

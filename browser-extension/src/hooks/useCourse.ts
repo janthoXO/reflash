@@ -1,10 +1,14 @@
 import { sendToBackground } from "@plasmohq/messaging";
 import { useState } from "react";
+import { retry } from "~lib/retry";
+import { useAlertStorage } from "~local-storage/alert";
 import { getPromptFromStorage } from "~local-storage/prompts";
+import { AlertLevel } from "~models/alert";
 
 import type { LLMSettings } from "~models/settings";
 
 export function useCourse() {
+  const { setAlert } = useAlertStorage();
   const [loading, setLoading] = useState(false);
 
   async function scanFiles(
@@ -23,11 +27,26 @@ export function useCourse() {
     );
 
     setLoading(true);
-    await sendToBackground({
-      name: "course-scan",
-      body: { llmSettings: llmSettings, customPrompt: customPrompt },
-    });
-    setLoading(false);
+
+    try {
+      await retry(
+        async () =>
+          await sendToBackground({
+            name: "course-scan",
+            body: { llmSettings: llmSettings, customPrompt: customPrompt },
+          }),
+        3
+      );
+    } catch (error) {
+      console.error("Error during course scan:", error);
+      setAlert({
+        level: AlertLevel.Error,
+        message: "Failed to scan course files.",
+      });
+      throw error;
+    } finally {
+      setLoading(false);
+    }
   }
 
   async function trackCourse(llmSettings: LLMSettings, customPrompt?: string) {

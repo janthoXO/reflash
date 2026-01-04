@@ -14,16 +14,63 @@ import {
   flashcardsSystemPrompt,
 } from "./flashcard-generation";
 
+type FlashcardGenerationTaskInput = {
+  courseId: number;
+  unitId: number;
+  fileContent: string;
+  systemPrompt: string;
+  llmSettings: LLMSettings;
+  customPrompt: string;
+};
+
+async function flashcardGenerationTask(
+  data: FlashcardGenerationTaskInput,
+  signal: AbortSignal
+) {
+  try {
+    const flashcards = FlashcardLLMOutputSchema.parse(
+      await generateJsonByProvider(
+        data.systemPrompt,
+        ` ${data.customPrompt}\n\nfileContent:\n${data.fileContent}`,
+        data.llmSettings
+      )
+    ).cards as Flashcard[];
+
+    if (signal.aborted) {
+      console.warn("Provider flashcard generation aborted");
+      await sendToBackground({
+        name: "units-delete",
+        body: {
+          courseId: data.courseId,
+          unitId: data.unitId,
+        },
+      });
+      return;
+    }
+
+    await sendToBackground({
+      name: "flashcards-save",
+      body: {
+        courseId: data.courseId,
+        unitId: data.unitId,
+        cards: flashcards,
+      },
+    });
+  } catch (e) {
+    console.error("Error generating flashcards with WASM LLM:", e);
+    await sendToBackground({
+      name: "units-delete",
+      body: {
+        courseId: data.courseId,
+        unitId: data.unitId,
+      },
+    });
+  }
+}
+
 const ProviderQueues: Map<
   LLMProvider,
-  WorkerQueue<{
-    courseId: number;
-    unitId: number;
-    fileContent: string;
-    systemPrompt: string;
-    llmSettings: LLMSettings;
-    customPrompt: string;
-  }>
+  WorkerQueue<FlashcardGenerationTaskInput>
 > = new Map();
 
 /**
@@ -49,35 +96,7 @@ export async function generateFlashcardsProvider(
   let queue = ProviderQueues.get(llmSettings.provider);
   if (!queue) {
     queue = new WorkerQueue(
-      async (data, signal) => {
-        let flashcards: Flashcard[] = [];
-        try {
-          flashcards = FlashcardLLMOutputSchema.parse(
-            await generateJsonByProvider(
-              data.systemPrompt,
-              ` ${data.customPrompt}\n\nfileContent:\n${data.fileContent}`,
-              data.llmSettings
-            )
-          ).cards as Flashcard[];
-        } catch (e) {
-          console.error("Error generating flashcards with WASM LLM:", e);
-          // if error appears, return empty flashcards to remove generating state
-        }
-
-        if (signal.aborted) {
-          console.warn("Provider flashcard generation aborted");
-          return;
-        }
-
-        await sendToBackground({
-          name: "flashcards-save",
-          body: {
-            courseId: data.courseId,
-            unitId: data.unitId,
-            cards: flashcards,
-          },
-        });
-      },
+      async (data, signal) => flashcardGenerationTask(data, signal),
       2 // limit to 2 concurrent provider requests
     );
     ProviderQueues.set(llmSettings.provider, queue);

@@ -29,24 +29,10 @@ export default function Offscreen() {
       "[Offscreen: flashcards-generate] Received flashcards-generate request\n",
       req.body
     );
-    const reqBodyParsed = RequestSchema.safeParse(req.body);
-    if (!reqBodyParsed.success) {
-      console.error("[Offscreen: flashcards-generate] Invalid body in request");
-      sendToBackground({
-        name: "alert",
-        body: {
-          alert: {
-            level: AlertLevel.Error,
-            message: "Failed to generate flashcards",
-          },
-        },
-      });
-      res.send({ unit: {} });
-      return;
-    }
-    const reqBody: RequestType = reqBodyParsed.data;
 
     try {
+      const reqBody = RequestSchema.parse(req.body);
+
       if (reqBody.llmSettings.provider === LLMProvider.WASM) {
         generateFlashcardsWasm(
           reqBody.courseId,
@@ -73,6 +59,13 @@ export default function Offscreen() {
             level: AlertLevel.Error,
             message: "Failed to generate flashcards",
           },
+        },
+      });
+      await sendToBackground({
+        name: "units-delete",
+        body: {
+          courseId: req.body?.courseId,
+          unitId: req.body?.unitId,
         },
       });
     } finally {

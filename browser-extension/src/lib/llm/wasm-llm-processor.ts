@@ -12,34 +12,41 @@ import { retry } from "~lib/retry";
 
 let enginePromise: Promise<MLCEngine> | null = null;
 
-const WasmQueue: WorkerQueue<{
+type FlashcardGenerationTaskInput = {
   courseId: number;
   unitId: number;
   fileContent: string;
   systemPrompt: string;
   llmModel: string;
   customPrompt: string;
-}> = new WorkerQueue(
-  async (data, signal) => {
+};
+
+async function flashcardGenerationTaskInput(
+  data: FlashcardGenerationTaskInput,
+  signal: AbortSignal
+) {
+  try {
     let flashcards: Flashcard[] = [];
-    try {
-      await retry(async () => {
-        flashcards = FlashcardLLMOutputSchema.parse(
-          await generateJsonWasm(
-            data.systemPrompt,
-            ` ${data.customPrompt}\n\nfileContent:\n${data.fileContent}`,
-            data.llmModel,
-            JSON.stringify(z.toJSONSchema(FlashcardLLMOutputSchema))
-          )
-        ).cards as Flashcard[];
-      }, 3);
-    } catch (e) {
-      console.error("Error generating flashcards with WASM LLM:", e);
-      // if error appears, return empty flashcards to remove generating state
-    }
+    await retry(async () => {
+      flashcards = FlashcardLLMOutputSchema.parse(
+        await generateJsonWasm(
+          data.systemPrompt,
+          ` ${data.customPrompt}\n\nfileContent:\n${data.fileContent}`,
+          data.llmModel,
+          JSON.stringify(z.toJSONSchema(FlashcardLLMOutputSchema))
+        )
+      ).cards as Flashcard[];
+    }, 3);
 
     if (signal.aborted) {
       console.warn("WASM flashcard generation aborted");
+      await sendToBackground({
+        name: "units-delete",
+        body: {
+          courseId: data.courseId,
+          unitId: data.unitId,
+        },
+      });
       return;
     }
 
@@ -51,7 +58,20 @@ const WasmQueue: WorkerQueue<{
         cards: flashcards,
       },
     });
-  },
+  } catch (e) {
+    console.error("[WASM LLM: flashcard generation] Error:", e);
+    await sendToBackground({
+      name: "units-delete",
+      body: {
+        courseId: data.courseId,
+        unitId: data.unitId,
+      },
+    });
+  }
+}
+
+const WasmQueue: WorkerQueue<FlashcardGenerationTaskInput> = new WorkerQueue(
+  async (data, signal) => flashcardGenerationTaskInput(data, signal),
   1 // limit to 1 concurrent WASM request
 );
 
@@ -74,30 +94,18 @@ export async function generateFlashcardsWasm(
   llmModel: string,
   customPrompt: string
 ): Promise<void> {
-  try {
-    // 1. parse PDF
-    const fileContent = await parsePDF(fileBase64 || "");
+  // 1. parse PDF
+  const fileContent = await parsePDF(fileBase64 || "");
 
-    // 2. Queue flashcard generation with sending to background
-    WasmQueue.push({
-      courseId: courseId,
-      unitId: unitId,
-      fileContent: fileContent,
-      systemPrompt: flashcardsSystemPrompt,
-      llmModel: llmModel,
-      customPrompt: customPrompt,
-    });
-  } catch (e) {
-    console.error("Error parsing PDF for flashcard generation:", e);
-    await sendToBackground({
-      name: "flashcards-save",
-      body: {
-        courseId: courseId,
-        unitId: unitId,
-        cards: [],
-      },
-    });
-  }
+  // 2. Queue flashcard generation with sending to background
+  WasmQueue.push({
+    courseId: courseId,
+    unitId: unitId,
+    fileContent: fileContent,
+    systemPrompt: flashcardsSystemPrompt,
+    llmModel: llmModel,
+    customPrompt: customPrompt,
+  });
 }
 
 async function generateJsonWasm(

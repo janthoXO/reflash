@@ -7,6 +7,7 @@ import { db } from "~db/db";
 import { LLMSettingsSchema } from "~models/settings";
 import z from "zod";
 import { AlertLevel } from "~models/alert";
+import { retry } from "~lib/retry";
 
 const RequestSchema = z.object({
   courseId: z.number(),
@@ -23,27 +24,13 @@ const handler: PlasmoMessaging.MessageHandler<
   // eslint-disable-next-line @typescript-eslint/no-empty-object-type
   {}
 > = async (req, res) => {
-  if (req.name !== "flashcards-generate") return;
+  if (req.name !== "units-setup") return;
 
-  console.debug(
-    "[Background: flashcards-generate] received request\n",
-    req.body
-  );
-
-  const reqBodyParsed = RequestSchema.safeParse(req.body);
-  if (!reqBodyParsed.success) {
-    // this should not happen
-    console.error("[Background: flashcards-generate] Invalid body in request");
-    await alertPopup({
-      level: AlertLevel.Error,
-      message: "Failed to generate flashcards",
-    });
-    res.send({});
-    return;
-  }
-  const reqBody: RequestType = reqBodyParsed.data;
+  console.debug("[Background: units-setup] received request\n", req.body);
 
   try {
+    const reqBody = RequestSchema.parse(req.body);
+
     await setupOffscreenDocument();
 
     // save unit with generationFlag true to indicate generation in progress
@@ -64,7 +51,10 @@ const handler: PlasmoMessaging.MessageHandler<
     });
     let unitId: number;
     if (existingUnit) {
-      console.debug("Unit already exists, updating ", unit.fileUrl);
+      console.debug(
+        "[Background: units-setup] Unit already exists, updating ",
+        unit.fileUrl
+      );
       unit.id = existingUnit.id;
       await db.units.update(existingUnit.id, unit);
       unitId = unit.id;
@@ -80,18 +70,25 @@ const handler: PlasmoMessaging.MessageHandler<
       llmSettings: reqBody.llmSettings,
       customPrompt: reqBody.customPrompt,
     };
-    console.debug("Requesting flashcard generation for file\n", payload);
+    console.debug(
+      "[Background: units-setup] Requesting flashcard generation for file\n",
+      payload
+    );
     // response gonna be returned asynchronously
     // TODO adjust to Firefox
-    await chrome.runtime.sendMessage({
-      name: "flashcards-generate",
-      body: payload,
-    });
+    await retry(
+      async () =>
+        await chrome.runtime.sendMessage({
+          name: "flashcards-generate",
+          body: payload,
+        }),
+      3
+    );
   } catch (e) {
-    console.error("Error in flashcards-generate handler:", e);
+    console.error("[Background: units-setup] Error:", e);
     await alertPopup({
       level: AlertLevel.Error,
-      message: `Failed to generate flashcards`,
+      message: `Failed to setup unit for flashcard generation`,
     });
   } finally {
     res.send({});

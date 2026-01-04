@@ -28,20 +28,9 @@ const handler: PlasmoMessaging.MessageHandler<
 
   console.debug("[Background: course-scan] received request\n", req.body);
 
-  const reqBodyParsed = RequestSchema.safeParse(req.body);
-  if (!reqBodyParsed.success) {
-    // this should not happen
-    console.error("[Background: course-scan] Invalid body in request");
-    await alertPopup({
-      level: AlertLevel.Error,
-      message: "Failed to scan course",
-    });
-    res.send({});
-    return;
-  }
-  const reqBody: RequestType = reqBodyParsed.data;
-
   try {
+    const reqBody = RequestSchema.parse(req.body);
+
     // request files on site
     const { courseUrl, files: filesOnlyUrl } = await sendToContentScript<
       // eslint-disable-next-line @typescript-eslint/no-empty-object-type

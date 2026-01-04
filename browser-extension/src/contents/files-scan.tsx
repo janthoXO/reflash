@@ -28,21 +28,6 @@ export default function FilesScan() {
 
     console.debug("[Content Script: files-scan] Received request\n", req.body);
 
-    if (!req.body) {
-      console.error("[Content Script: files-scan] Invalid body in request");
-      sendToBackground({
-        name: "alert",
-        body: {
-          alert: {
-            level: AlertLevel.Error,
-            message: "Failed to scan files",
-          },
-        },
-      });
-      res.send({ courseUrl: "", files: [] });
-      return;
-    }
-
     try {
       const courseUrl = window.location.href;
       const files = await scanForPDFLinks();

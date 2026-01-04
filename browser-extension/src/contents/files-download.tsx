@@ -76,7 +76,7 @@ export default function FilesDownload() {
             if (!file || !file.base64) return;
 
             sendToBackground({
-              name: "flashcards-generate",
+              name: "units-setup",
               body: {
                 courseId: reqBody.courseId,
                 llmSettings: reqBody.llmSettings,
