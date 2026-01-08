@@ -1,5 +1,6 @@
 {
   "name": "reflash-app",
+  "private": true,
   "main": "expo-router/entry",
   "type": "module",
   "version": "1.0.0",
@@ -19,7 +20,7 @@
   "dependencies": {
     "@ngraveio/bc-ur": "2.0.0-beta.9",
     "@react-navigation/native": "^7.0.0",
-    "@reflash/shared": "file:../shared",
+    "@reflash/shared": "*",
     "@rn-primitives/accordion": "^1.2.0",
     "@rn-primitives/collapsible": "^1.2.0",
     "@rn-primitives/context-menu": "^1.2.0",
@@ -77,6 +78,5 @@
     "tsx": "^4.20.6",
     "typescript": "~5.9.2",
     "typescript-eslint": "^8.50.0"
-  },
-  "private": true
+  }
 }
