@@ -17,7 +17,19 @@ on:
     secrets:
       EXPO_TOKEN:
         description: "Expo access token for EAS Build"
-        required: true
+        required: false
+      ANDROID_KEYSTORE_BASE64:
+        description: "Base64 encoded keystore for Android signing"
+        required: false
+      ANDROID_KEY_ALIAS:
+        description: "Alias for the Android signing key"
+        required: false
+      ANDROID_KEY_PASSWORD:
+        description: "Password for the Android signing key"
+        required: false
+      ANDROID_STORE_PASSWORD:
+        description: "Password for the Android keystore"
+        required: false
 
 jobs:
   package:
@@ -34,11 +46,11 @@ jobs:
           cache: "npm"
           cache-dependency-path: package-lock.json
 
-      - name: Setup EAS
-        uses: expo/expo-github-action@v8
+      - name: Setup Java
+        uses: actions/setup-java@v4
         with:
-          eas-version: latest
-          token: ${{ secrets.EXPO_TOKEN }}
+          distribution: "zulu"
+          java-version: "17"
 
       - name: Install dependencies
         run: npm ci
@@ -48,13 +60,33 @@ jobs:
         working-directory: ./mobile-app
         run: npm version ${{ inputs.version }} --no-git-tag-version
 
-      - name: Build Android APK
+      - name: Prebuild Android
         working-directory: ./mobile-app
-        run: eas build --platform android --profile preview --non-interactive --local --output ./mobile-app-${{ inputs.version || '0.0.0' }}.apk
+        env:
+          EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
+        run: npx expo prebuild --platform android
 
-      - name: Build Android AAB
+      - name: Configure Keystore
+        if: ${{ secrets.ANDROID_KEYSTORE_BASE64 != '' }}
+        working-directory: ./mobile-app/android
+        run: |
+          echo "${{ secrets.ANDROID_KEYSTORE_BASE64 }}" | base64 --decode > app/release.keystore
+          echo "storeFile=release.keystore" >> gradle.properties
+          echo "keyAlias=${{ secrets.ANDROID_KEY_ALIAS }}" >> gradle.properties
+          echo "storePassword=${{ secrets.ANDROID_STORE_PASSWORD }}" >> gradle.properties
+          echo "keyPassword=${{ secrets.ANDROID_KEY_PASSWORD }}" >> gradle.properties
+
+      - name: Build Android artifacts
+        working-directory: ./mobile-app/android
+        run: |
+          chmod +x gradlew
+          ./gradlew assembleRelease bundleRelease
+
+      - name: Move artifacts
         working-directory: ./mobile-app
-        run: eas build --platform android --profile production --non-interactive --local --output ./mobile-app-${{ inputs.version || '0.0.0' }}.aab
+        run: |
+          find android/app/build/outputs/apk/release -name "*.apk" -exec mv {} mobile-app-${{ inputs.version || '0.0.0' }}.apk \;
+          find android/app/build/outputs/bundle/release -name "*.aab" -exec mv {} mobile-app-${{ inputs.version || '0.0.0' }}.aab \;
 
       - name: Upload Android artifacts
         uses: actions/upload-artifact@v4
