@@ -7,6 +7,7 @@ on:
     paths:
       - "mobile-app/**"
       - "shared/**"
+      - ".github/workflows/package.mobile.yml"
   workflow_call:
     inputs:
       version:

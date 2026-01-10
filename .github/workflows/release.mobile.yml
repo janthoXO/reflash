@@ -9,6 +9,7 @@ on:
     paths:
       - "mobile-app/**"
       - "shared/**"
+      - ".github/workflows/release.mobile.yml"
 
 jobs:
   versioning:
