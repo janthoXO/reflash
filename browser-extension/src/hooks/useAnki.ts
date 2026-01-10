@@ -1,4 +1,5 @@
-import type { Course, Unit } from "@reflash/shared";
+import type { Course } from "~models/course";
+import type { Unit } from "~models/unit";
 import JSZip from "jszip";
 import { useSelected } from "~contexts/SelectedContext";
 import { db } from "~db/db";
@@ -9,14 +10,12 @@ import {
 } from "~lib/anki";
 
 export function useAnki() {
-  const { selectedMap } = useSelected();
+  const { selectedUnitsMap } = useSelected();
 
   async function exportAnki(legacy?: boolean) {
     const populatedCourses = await Promise.all(
-      Object.entries(selectedMap).map(async ([courseIdStr, unitIds]) => {
+      Object.entries(selectedUnitsMap).map(async ([courseIdStr, unitIds]) => {
         const courseId = parseInt(courseIdStr);
-        const allCourses = await db.courses.toArray();
-        console.debug("All courses in DB:", allCourses);
         const course = (await db.courses.get({ id: courseId })) as Course;
         if (!course) {
           console.warn(`Course ${courseId} not found for Anki export`);

@@ -42,7 +42,7 @@ export default function LibraryScreen() {
       ) : (
         <Accordion type="multiple" className="gap-2">
           {courses.map((course) => (
-            <CourseItem key={`course-${course.id}`} course={course} />
+            <CourseItem key={`course-${course.id}`} course={course as Course} />
           ))}
         </Accordion>
       )}

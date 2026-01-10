@@ -1,6 +1,6 @@
 import "~style.css";
 
-import type { Flashcard } from "@reflash/shared";
+import type { Flashcard } from "~models/flashcard";
 import { useLiveQuery } from "dexie-react-hooks";
 
 import TrainFlashcard from "~components/train-flashcard";

@@ -1,4 +1,4 @@
-import type { Course } from "@reflash/shared";
+import type { Course } from "~models/course";
 import { Check, X } from "lucide-react";
 import { useEffect, useState, type Dispatch, type SetStateAction } from "react";
 import { Button } from "~components/ui/button";

@@ -1,13 +1,20 @@
-import type { Flashcard } from "@reflash/shared";
+import type { Flashcard } from "~models/flashcard";
 import { useLiveQuery } from "dexie-react-hooks";
 import { ArrowLeft, Check, ChevronDown, ChevronUp, X } from "lucide-react";
-import { useEffect, useMemo, useState } from "react";
+import { Children, useEffect, useMemo, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import DeleteDialog from "~components/deleteDialog";
 import EditDropdown from "~components/editDropdown";
 import Header from "~components/header";
 import { Button } from "~components/ui/button";
-import { Card, CardContent } from "~components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from "~components/ui/card";
 import {
   Collapsible,
   CollapsibleContent,
@@ -22,10 +29,11 @@ import {
 import { Separator } from "~components/ui/separator";
 import { Textarea } from "~components/ui/textarea";
 import { db } from "~db/db";
-import { fuzzySearch, fuzzySearchAndMap } from "~lib/search";
+import { fuzzySearch, searchAndMap } from "~lib/search";
+import { Spinner } from "~components/ui/spinner";
 
 export default function UnitPage() {
-  const { courseId, unitId } = useParams();
+  const { courseId: courseIdParam, unitId: unitIdParam } = useParams();
   const navigate = useNavigate();
 
   const [isEdit, setIsEdit] = useState<boolean>(false);
@@ -34,38 +42,47 @@ export default function UnitPage() {
   const [searchQuery, setSearchQuery] = useState<string>("");
 
   const unit = useLiveQuery(async () => {
-    if (!courseId || !unitId) return;
+    if (!courseIdParam || !unitIdParam) {
+      console.debug("No courseId or unitId in params");
+      return;
+    }
+    const unitId = parseInt(unitIdParam);
+    const courseId = parseInt(courseIdParam);
 
-    const unit = await db.units.get({
-      id: parseInt(unitId),
-      courseId: parseInt(courseId),
-      deletedAt: null,
-    });
+    const unit = await db.units
+      .get({
+        id: unitId,
+        courseId: courseId,
+      })
+      .then((u) => (u?.deletedAt ? undefined : u));
 
-    if (!unit) return undefined;
+    setEditName(unit?.name || "");
+    return unit;
+  }, [unitIdParam, courseIdParam]);
 
-    setEditName(unit.name);
+  const flashcards = useLiveQuery(async () => {
+    if (!unit) {
+      return [];
+    }
 
-    unit.cards = await db.flashcards
+    return await db.flashcards
       .where({ unitId: unit.id })
       .filter((card) => card.deletedAt === null)
       .toArray();
+  }, [unit]);
 
-    return unit;
-  }, [unitId, courseId]);
-
-  const flashcards = useMemo(() => {
-    if (!unit?.cards || !searchQuery) {
-      return unit?.cards ?? [];
+  const filteredFlashcards = useMemo(() => {
+    if (!flashcards || !searchQuery) {
+      return flashcards ?? [];
     }
 
     const query = searchQuery.toLowerCase();
-    return unit.cards.filter((card) => {
+    return flashcards.filter((card) => {
       return (
         fuzzySearch(card.question, query) || fuzzySearch(card.answer, query)
       );
     });
-  }, [searchQuery, unit?.cards]);
+  }, [flashcards, searchQuery]);
 
   function onSave() {
     unit!.name = editName;
@@ -88,7 +105,30 @@ export default function UnitPage() {
   }
 
   if (!unit) {
-    return null;
+    return (
+      <div>
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-center text-base">
+              Unit not found
+            </CardTitle>
+            <CardDescription>
+              The requested unit does not exist or has been deleted.
+            </CardDescription>
+          </CardHeader>
+          <CardFooter className="flex justify-center">
+            <Button
+              variant="link"
+              onClick={() => {
+                navigate(-1);
+              }}
+            >
+              Go back
+            </Button>
+          </CardFooter>
+        </Card>
+      </div>
+    );
   }
 
   return (
@@ -172,7 +212,15 @@ export default function UnitPage() {
         className="my-4"
       />
       <div className="space-y-2">
-        {flashcards.map((card) => (
+        {unit.isGenerating && (
+          <div className="flex justify-center items-center gap-2">
+            <span className="text-muted-foreground">
+              Generating flashcards...
+            </span>
+            <Spinner className="text-muted-foreground" />
+          </div>
+        )}
+        {filteredFlashcards.map((card) => (
           <FlashcardItem
             key={card.id}
             flashcard={card}
@@ -286,14 +334,12 @@ function FlashcardItem({
             <CollapsibleTrigger asChild>
               <div className="cursor-pointer w-full group">
                 <p className="text-base text-card-foreground mb-2">
-                  {fuzzySearchAndMap(
-                    flashcard.question,
-                    searchQuery,
-                    (word) => (
-                      <mark>{word}</mark>
-                    ),
-                    (word) => (
-                      <span>{word}</span>
+                  {Children.toArray(
+                    searchAndMap(
+                      flashcard.question,
+                      searchQuery,
+                      (word) => <mark>{word}</mark>,
+                      (word) => <>{word}</>
                     )
                   )}
                 </p>
@@ -307,14 +353,12 @@ function FlashcardItem({
             <CollapsibleContent>
               <Separator className="my-2" />
               <p className="text-base text-card-foreground">
-                {fuzzySearchAndMap(
-                  flashcard.answer,
-                  searchQuery,
-                  (word) => (
-                    <mark>{word}</mark>
-                  ),
-                  (word) => (
-                    <span>{word}</span>
+                {Children.toArray(
+                  searchAndMap(
+                    flashcard.answer,
+                    searchQuery,
+                    (word) => <mark>{word}</mark>,
+                    (word) => <>{word}</>
                   )
                 )}
               </p>

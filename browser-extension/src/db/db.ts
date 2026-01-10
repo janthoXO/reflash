@@ -1,5 +1,7 @@
-import type { Course, Flashcard, Unit } from "@reflash/shared";
 import Dexie, { type EntityTable, type InsertType } from "dexie";
+import type { Course } from "~models/course";
+import type { Flashcard } from "~models/flashcard";
+import type { Unit } from "~models/unit";
 
 class ReflashDB extends Dexie {
   courses!: EntityTable<Course, "id", InsertType<Omit<Course, "units">, "id">>;

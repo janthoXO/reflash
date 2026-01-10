@@ -1,8 +1,9 @@
-import type { Course, Unit } from "@reflash/shared";
+import type { Course } from "~models/course";
+import type { Unit } from "~models/unit";
 import { useLiveQuery } from "dexie-react-hooks";
 import { Check, MessageSquareCode, X } from "lucide-react";
 import { useMemo, useState } from "react";
-import { Link } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import DeleteDialog from "~components/deleteDialog";
 import EditDropdown from "~components/editDropdown";
 import Header from "~components/header";
@@ -19,24 +20,23 @@ import {
   InputGroupButton,
   InputGroupInput,
 } from "~components/ui/input-group";
-import {
-  Tooltip,
-  TooltipTrigger,
-  TooltipContent,
-} from "~components/ui/tooltip";
 import { useSelected } from "~contexts/SelectedContext";
 import { db } from "~db/db";
 import PromptDialog from "./promptDialog";
 import { DropdownMenuItem } from "~components/ui/dropdown-menu";
 import AnkiExportButton from "~components/ankiExportButton";
 import SyncButton from "~components/syncButton";
+import { Button } from "~components/ui/button";
+import { Spinner } from "~components/ui/spinner";
 
 export default function LibraryPage() {
-  const courses = useLiveQuery(() => db.courses.toArray()) as
-    | Course[]
-    | undefined;
+  const courses = useLiveQuery(() =>
+    db.courses.filter((course) => course.deletedAt === null).toArray()
+  ) as Course[] | undefined;
 
-  const units = useLiveQuery(() => db.units.toArray()) as Unit[] | undefined;
+  const units = useLiveQuery(() =>
+    db.units.filter((unit) => unit.deletedAt === null).toArray()
+  ) as Unit[] | undefined;
 
   const populatedCourse = useMemo(() => {
     if (!courses || !units) return;
@@ -53,7 +53,10 @@ export default function LibraryPage() {
     return courses.map((course) => {
       return {
         ...course,
-        units: courseToUnits.get(course.id) || [],
+        units:
+          courseToUnits
+            .get(course.id)
+            ?.sort((a, b) => a.name.localeCompare(b.name)) || [],
       };
     });
   }, [courses, units]);
@@ -73,12 +76,7 @@ export default function LibraryPage() {
       <Header
         title="Library"
         suffix={[
-          <Tooltip key="export-anki-tooltip">
-            <TooltipTrigger asChild>
-              <AnkiExportButton />
-            </TooltipTrigger>
-            <TooltipContent>Export Flashcards to Anki Format</TooltipContent>
-          </Tooltip>,
+          <AnkiExportButton key="library-anki-export-button" />,
           <SyncButton key="library-sync-button" />,
           <TrackingButton key="library-tracking-button" />,
         ]}
@@ -97,8 +95,7 @@ export default function LibraryPage() {
 }
 
 function CourseItem({ course }: { course: Course }) {
-  const { isCourseSelected, isUnitSelected, toggleCourse, toggleUnit } =
-    useSelected();
+  const { isCourseSelected, toggleCourse } = useSelected();
 
   const [isEdit, setIsEdit] = useState<boolean>(false);
   const [editName, setEditName] = useState<string>(course.name);
@@ -207,20 +204,7 @@ function CourseItem({ course }: { course: Course }) {
         </a>
         <div className="pl-6 space-y-2 pb-3 pt-1 border-l-2 border-muted ml-2">
           {course.units?.map((unit) => (
-            <div key={unit.id} className="flex items-center gap-2">
-              <input
-                type="checkbox"
-                checked={isUnitSelected(course.id, unit.id)}
-                onChange={() => toggleUnit(unit)}
-                className="h-4 w-4 rounded border-gray-300 text-primary focus:ring-primary"
-              />
-              <Link
-                className="text-sm text-primary underline-offset-4 hover:underline"
-                to={`/courses/${course.id}/units/${unit.id}`}
-              >
-                {unit.fileName}
-              </Link>
-            </div>
+            <UnitItem key={unit.id} unit={unit} courseId={course.id} />
           ))}
           {course?.units?.length === 0 && (
             <p className="text-sm text-muted-foreground">No units</p>
@@ -236,5 +220,30 @@ function CourseItem({ course }: { course: Course }) {
         onDelete={onDelete}
       />
     </AccordionItem>
+  );
+}
+
+function UnitItem({ unit, courseId }: { unit: Unit; courseId: number }) {
+  const navigate = useNavigate();
+  const { isUnitSelected, toggleUnit } = useSelected();
+
+  return (
+    <div className="flex items-center">
+      <input
+        type="checkbox"
+        disabled={unit.isGenerating}
+        checked={isUnitSelected(courseId, unit.id)}
+        onChange={() => toggleUnit(unit)}
+        className="h-4 w-4 rounded border-gray-300 text-primary focus:ring-primary shrink-0"
+      />
+      <Button
+        variant="link"
+        onClick={() => navigate(`/courses/${courseId}/units/${unit.id}`)}
+        className="min-w-0 justify-start truncate"
+      >
+        {unit.isGenerating && <Spinner />}
+        <span className="truncate">{unit.fileName}</span>
+      </Button>
+    </div>
   );
 }

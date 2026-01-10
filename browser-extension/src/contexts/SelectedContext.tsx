@@ -1,6 +1,7 @@
 import { createContext, useContext, useEffect, type ReactNode } from "react";
 
-import type { Course, Unit } from "@reflash/shared";
+import type { Course } from "~models/course";
+import type { Unit } from "~models/unit";
 import { useSelectedUnitsStorage } from "~local-storage/selected-units";
 import { useUrl } from "./UrlContext";
 import { db } from "~db/db";
@@ -23,10 +24,12 @@ export function SelectedUnitsProvider({ children }: { children: ReactNode }) {
     useSelectedUnitsStorage();
 
   useEffect(() => {
+    // When the current URL changes, select all units for that course
     if (!currentUrlCourse) return;
 
     db.units
       .where({ courseId: currentUrlCourse.id })
+      .filter((unit) => unit.deletedAt === null)
       .toArray()
       .then((units) => {
         currentUrlCourse.units = units;
