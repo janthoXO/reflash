@@ -50,6 +50,7 @@ jobs:
     uses: ./.github/workflows/build.mobile.yml
 
   package:
+    needs: build
     runs-on: ubuntu-latest
 
     steps:
