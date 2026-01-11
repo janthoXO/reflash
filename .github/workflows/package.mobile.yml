@@ -15,22 +15,6 @@ on:
         default: "0.0.0"
         required: false
         type: string
-    secrets:
-      EXPO_TOKEN:
-        description: "Expo access token for EAS Build"
-        required: false
-      ANDROID_KEYSTORE_BASE64:
-        description: "Base64 encoded keystore for Android signing"
-        required: false
-      ANDROID_KEY_ALIAS:
-        description: "Alias for the Android signing key"
-        required: false
-      ANDROID_KEY_PASSWORD:
-        description: "Password for the Android signing key"
-        required: false
-      ANDROID_STORE_PASSWORD:
-        description: "Password for the Android keystore"
-        required: false
 
 jobs:
   package:

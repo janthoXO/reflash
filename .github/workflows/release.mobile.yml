@@ -31,12 +31,7 @@ jobs:
     uses: ./.github/workflows/package.mobile.yml
     with:
       version: ${{ needs.versioning.outputs.version }}
-    secrets:
-      EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
-      ANDROID_KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
-      ANDROID_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
-      ANDROID_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
-      ANDROID_STORE_PASSWORD: ${{ secrets.ANDROID_STORE_PASSWORD }}
+    secrets: inherit
 
   release:
     needs: [versioning, package]
