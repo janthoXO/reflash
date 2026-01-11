@@ -53,7 +53,6 @@ jobs:
         run: npx expo prebuild --platform android
 
       - name: Configure Keystore
-        if: ${{ secrets.ANDROID_KEYSTORE_BASE64 != '' }}
         working-directory: ./mobile-app/android
         run: |
           echo "${{ secrets.ANDROID_KEYSTORE_BASE64 }}" | base64 --decode > app/release.keystore
