@@ -6,6 +6,7 @@
   "author": "Dennis Jandow, Lara Liebmann",
   "scripts": {
     "dev": "plasmo dev",
+    "dev:edge": "plasmo dev --target=edge-mv3",
     "build": "plasmo build",
     "package": "plasmo package",
     "lint": "eslint .",
