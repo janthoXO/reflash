@@ -9,6 +9,7 @@ on:
     paths:
       - "mobile-app/**"
       - "shared/**"
+      - ".github/workflows/release.mobile.yml"
 
 jobs:
   versioning:
@@ -32,6 +33,10 @@ jobs:
       version: ${{ needs.versioning.outputs.version }}
     secrets:
       EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
+      ANDROID_KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
+      ANDROID_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
+      ANDROID_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
+      ANDROID_STORE_PASSWORD: ${{ secrets.ANDROID_STORE_PASSWORD }}
 
   release:
     needs: [versioning, package]

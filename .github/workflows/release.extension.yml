@@ -9,6 +9,7 @@ on:
     paths:
       - "browser-extension/**"
       - "shared/**"
+      - ".github/workflows/release.extension.yml"
 
 jobs:
   versioning:

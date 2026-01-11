@@ -5,6 +5,7 @@ on:
     paths:
       - "mobile-app/**"
       - "shared/**"
+      - ".github/workflows/build.mobile.yml"
 
 jobs:
   build:
