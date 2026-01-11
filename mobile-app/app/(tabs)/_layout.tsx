@@ -1,27 +1,29 @@
-import { THEME } from '@/lib/theme';
-import { Tabs } from 'expo-router';
-import { GraduationCapIcon } from 'lucide-react-native';
-import { useColorScheme } from 'nativewind';
-import React from 'react';
+import { Tabs } from "expo-router";
+import { Book, FolderSync, GraduationCapIcon } from "lucide-react-native";
+import React from "react";
 
 export default function TabLayout() {
-  const { colorScheme } = useColorScheme();
-  const theme = THEME[colorScheme ?? 'light'];
-
   return (
-    <Tabs
-      screenOptions={{
-        tabBarActiveTintColor: theme.primary,
-        tabBarInactiveTintColor: theme.mutedForeground,
-        headerShown: false,
-      }}>
+    <Tabs>
       <Tabs.Screen
-        name="training"
+        name="learn"
         options={{
-          title: 'Training',
-          tabBarIcon: ({ color, focused }) => (
-            <GraduationCapIcon size={24} color={color} strokeWidth={focused ? 2.5 : 2} />
-          ),
+          title: "Learn",
+          tabBarIcon: ({ color, size }) => <GraduationCapIcon color={color} size={size} />,
+        }}
+      />
+      <Tabs.Screen
+        name="library"
+        options={{
+          title: "Library",
+          tabBarIcon: ({ color, size }) => <Book color={color} size={size} />,
+        }}
+      />
+      <Tabs.Screen
+        name="sync"
+        options={{
+          title: "Sync",
+          tabBarIcon: ({ color, size }) => <FolderSync color={color} size={size} />,
         }}
       />
     </Tabs>

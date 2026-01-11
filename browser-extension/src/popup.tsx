@@ -1,16 +1,77 @@
-import "./style.css"
-import { MemoryRouter } from "react-router-dom"
-import { UserProvider } from "~contexts/UserContext"
-import { Routing } from "~routes"
+import "./style.css";
+
+import { useEffect } from "react";
+import { MemoryRouter } from "react-router-dom";
+import { toast } from "sonner";
+import { Toaster } from "~components/ui/sonner";
+import { TooltipProvider } from "~components/ui/tooltip";
+
+import { UrlProvider } from "~contexts/UrlContext";
+import { db, populateMockData } from "~db/db";
+import { useAlertStorage } from "~local-storage/alert";
+import { useSettingsStorage } from "~local-storage/settings";
+import { Routing } from "~routes";
 
 function IndexPopup() {
+  useEffect(() => {
+    // Uncomment to populate mock data on startup
+    populateMockData(db);
+  }, []);
+
+  const { settings } = useSettingsStorage();
+  const { alert, setAlert } = useAlertStorage();
+
+  useEffect(() => {
+    if (settings?.darkMode) {
+      document.documentElement.classList.add("dark");
+    } else {
+      document.documentElement.classList.remove("dark");
+    }
+  }, [settings?.darkMode]);
+
+  useEffect(() => {
+    if (!alert) return;
+
+    switch (alert.level) {
+      case "info": {
+        toast.info(alert.message);
+        break;
+      }
+      case "success": {
+        toast.success(alert.message);
+        break;
+      }
+      case "warning": {
+        toast.warning(alert.message);
+        break;
+      }
+      case "error": {
+        toast.error(alert.message);
+        break;
+      }
+    }
+    setAlert((prev) => {
+      // timestamp check to avoid clearing a new alert set during the toast display
+      if (!prev || prev.timestamp !== alert.timestamp) {
+        return prev;
+      }
+
+      return null;
+    });
+  }, [alert]);
+
   return (
-    <UserProvider>
-      <MemoryRouter>
-        <Routing />
-      </MemoryRouter>
-    </UserProvider>
-  )
+    <div>
+      <UrlProvider>
+        <TooltipProvider>
+          <MemoryRouter>
+            <Routing />
+          </MemoryRouter>
+        </TooltipProvider>
+      </UrlProvider>
+      <Toaster closeButton />
+    </div>
+  );
 }
 
-export default IndexPopup
+export default IndexPopup;

@@ -20,6 +20,8 @@ To run the development server:
     pnpm dev
     # or
     bun dev
+    # or
+    npx expo run
 ```
 
 This will start the Expo Dev Server. Open the app in:

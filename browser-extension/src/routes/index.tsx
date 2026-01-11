@@ -1,15 +1,81 @@
-import { Route, Routes } from "react-router-dom"
-import { useUser } from "~contexts/UserContext"
-import Login from "./login"
-import Training from "./training"
+import { Settings } from "lucide-react";
+import { useEffect } from "react";
+import {
+  Navigate,
+  Route,
+  Routes,
+  useLocation,
+  useNavigate,
+} from "react-router-dom";
+
+import { Tabs, TabsList, TabsTrigger } from "~components/ui/tabs";
+
+import LibraryPage from "./library";
+import SettingsPage from "./settings";
+import TrainingPage from "./training";
+import { SelectedUnitsProvider } from "~contexts/SelectedContext";
+import UnitPage from "./library/unit";
+import { getRouteFromStorage, useRouteStorage } from "~local-storage/routes";
+import SyncPage from "./sync";
 
 export const Routing = () => {
-  const { user } = useUser()
+  const location = useLocation();
+  const navigate = useNavigate();
+  const [route, setRoute] = useRouteStorage();
+
+  // Sync route from storage on mount
+  useEffect(() => {
+    // do not use the hook as it may still be loading and having an empty route on mount
+    getRouteFromStorage().then((route) => {
+      console.debug("Navigating to stored route:", route);
+      navigate(route);
+    });
+  }, []);
+
+  // Update storage route on location change
+  useEffect(() => {
+    const fullPath = location.pathname + location.search;
+    if (fullPath === route) return;
+
+    console.debug("Updating currentRoute to:", fullPath);
+    setRoute(fullPath);
+  }, [location.pathname, location.search, route, setRoute]);
 
   return (
-    <Routes>
-      <Route path="/login" element={<Login />} />
-      <Route path="/" element={user ? <Training /> : <Login />} />
-    </Routes>
-  )
-}
+    <div className="w-[400px] h-[500px] bg-background flex flex-col">
+      <div className="flex-1 flex flex-col p-4 overflow-y-auto">
+        <SelectedUnitsProvider>
+          <Routes>
+            <Route path="/" element={<Navigate to="/training" />} />
+            <Route path="/training" element={<TrainingPage />} />
+            <Route path="/library" element={<LibraryPage />} />
+            <Route path="/settings" element={<SettingsPage />} />
+            <Route path="/sync" element={<SyncPage />} />
+            <Route
+              path="/courses/:courseId/units/:unitId"
+              element={<UnitPage />}
+            />
+          </Routes>
+        </SelectedUnitsProvider>
+      </div>
+
+      <Tabs
+        value={location.pathname.slice(1)}
+        onValueChange={(value) => navigate(`/${value}`)}
+        className="w-full p-2"
+      >
+        <TabsList className="w-full flex flex-wrap">
+          <TabsTrigger value="training" className="flex-1">
+            Training
+          </TabsTrigger>
+          <TabsTrigger value="library" className="flex-1">
+            Library
+          </TabsTrigger>
+          <TabsTrigger value="settings" className="flex-1">
+            <Settings />
+          </TabsTrigger>
+        </TabsList>
+      </Tabs>
+    </div>
+  );
+};

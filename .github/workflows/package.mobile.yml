@@ -1,0 +1,100 @@
+name: Package Mobile App
+
+on:
+  pull_request:
+    branches:
+      - main
+    paths:
+      - "mobile-app/**"
+      - "shared/**"
+      - ".github/workflows/package.mobile.yml"
+  workflow_call:
+    inputs:
+      version:
+        description: "Version of the app to build"
+        default: "0.0.0"
+        required: false
+        type: string
+    secrets:
+      EXPO_TOKEN:
+        description: "Expo access token for EAS Build"
+        required: false
+      ANDROID_KEYSTORE_BASE64:
+        description: "Base64 encoded keystore for Android signing"
+        required: false
+      ANDROID_KEY_ALIAS:
+        description: "Alias for the Android signing key"
+        required: false
+      ANDROID_KEY_PASSWORD:
+        description: "Password for the Android signing key"
+        required: false
+      ANDROID_STORE_PASSWORD:
+        description: "Password for the Android keystore"
+        required: false
+
+jobs:
+  package:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: "npm"
+          cache-dependency-path: package-lock.json
+
+      - name: Setup Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: "zulu"
+          java-version: "17"
+          cache: 'gradle'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Change version
+        if: ${{ inputs.version != '0.0.0' }}
+        working-directory: ./mobile-app
+        run: npm version ${{ inputs.version }} --no-git-tag-version
+
+      - name: Prebuild Android
+        working-directory: ./mobile-app
+        env:
+          EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
+        run: npx expo prebuild --platform android
+
+      - name: Configure Keystore
+        if: ${{ secrets.ANDROID_KEYSTORE_BASE64 != '' }}
+        working-directory: ./mobile-app/android
+        run: |
+          echo "${{ secrets.ANDROID_KEYSTORE_BASE64 }}" | base64 --decode > app/release.keystore
+          echo "storeFile=release.keystore" >> gradle.properties
+          echo "keyAlias=${{ secrets.ANDROID_KEY_ALIAS }}" >> gradle.properties
+          echo "storePassword=${{ secrets.ANDROID_STORE_PASSWORD }}" >> gradle.properties
+          echo "keyPassword=${{ secrets.ANDROID_KEY_PASSWORD }}" >> gradle.properties
+
+      - name: Build Android artifacts
+        working-directory: ./mobile-app/android
+        run: |
+          chmod +x gradlew
+          ./gradlew assembleRelease bundleRelease
+
+      - name: Move artifacts
+        working-directory: ./mobile-app
+        run: |
+          find android/app/build/outputs/apk/release -name "*.apk" -exec mv {} mobile-app-${{ inputs.version || '0.0.0' }}.apk \;
+          find android/app/build/outputs/bundle/release -name "*.aab" -exec mv {} mobile-app-${{ inputs.version || '0.0.0' }}.aab \;
+
+      - name: Upload Android artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: mobile-app-${{ inputs.version || '0.0.0' }}
+          path: |
+            mobile-app/mobile-app-${{ inputs.version || '0.0.0' }}.apk
+            mobile-app/mobile-app-${{ inputs.version || '0.0.0' }}.aab
+          if-no-files-found: error
