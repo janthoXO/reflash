@@ -1,7 +1,7 @@
 import z from "zod";
-import { FlashcardSchema } from "./flashcard";
+import { FlashcardDTOSchema } from "./flashcard";
 
-export const UnitSchema = z.object({
+export const UnitDTOSchema = z.object({
   id: z.number(),
   name: z.string(),
   fileName: z.string(),
@@ -9,7 +9,7 @@ export const UnitSchema = z.object({
   courseId: z.number(),
   updatedAt: z.number(),
   deletedAt: z.number().nullable(),
-  cards: z.array(FlashcardSchema).default([]),
+  cards: z.array(FlashcardDTOSchema).default([]),
 });
 
-export type Unit= z.infer<typeof UnitSchema>;
+export type UnitDTO = z.infer<typeof UnitDTOSchema>;

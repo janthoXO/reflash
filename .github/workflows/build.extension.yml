@@ -7,7 +7,6 @@ on:
       - main
     paths:
       - "browser-extension/**"
-      - "shared/**"
       - ".github/workflows/build.extension.yml"
   workflow_call:
     inputs:

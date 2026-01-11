@@ -8,7 +8,7 @@ import { coursesTable } from "@/db/schema/course";
 import { flashcardsTable } from "@/db/schema/flashcard";
 import { unitsTable } from "@/db/schema/unit";
 import { UrFountainDecoder } from "@ngraveio/bc-ur";
-import { Course } from "@reflash/shared";
+import { Course } from "@/models/course";
 import { sql } from "drizzle-orm";
 import { CheckCircle } from "lucide-react-native";
 import { useEffect, useRef, useState } from "react";

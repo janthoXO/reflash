@@ -1,8 +1,8 @@
-import { UnitSchema as SharedUnitSchema } from "@reflash/shared";
+import { UnitDTOSchema } from "../dtos/unit";
 import { FlashcardSchema } from "./flashcard";
 import z from "zod";
 
-export const UnitSchema = SharedUnitSchema.extend({
+export const UnitSchema = UnitDTOSchema.extend({
   isGenerating: z.boolean().optional().default(false),
   cards: FlashcardSchema.array().optional().default([]),
 });

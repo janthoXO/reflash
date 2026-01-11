@@ -1,6 +1,6 @@
 import z from "zod";
 
-export const FlashcardSchema = z.object({
+export const FlashcardDTOSchema = z.object({
   id: z.number(),
   question: z.string(),
   answer: z.string(),
@@ -10,4 +10,4 @@ export const FlashcardSchema = z.object({
   deletedAt: z.number().nullable(),
 });
 
-export type Flashcard = z.infer<typeof FlashcardSchema>;
+export type FlashcardDTO = z.infer<typeof FlashcardDTOSchema>;
