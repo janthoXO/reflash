@@ -1,5 +1,5 @@
-import type { Course } from "@models/course";
-import { Unit } from "@models/unit";
+import type { Course } from "@/models/course";
+import { Unit } from "@/models/unit";
 import { createContext, useContext, useMemo, type ReactNode } from "react";
 import { useMMKVString } from "react-native-mmkv";
 
