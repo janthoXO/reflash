@@ -46,6 +46,9 @@ env:
   VERSION: ${{ inputs.version || '0.0.0' }}
 
 jobs:
+  build:
+    uses: ./.github/workflows/build.mobile.yml
+
   package:
     runs-on: ubuntu-latest
 
@@ -67,7 +70,9 @@ jobs:
           java-version: "21"
 
       - name: Install dependencies
-        run: npm ci
+        run: |
+          npm ci
+          cd mobile-app && npm install --legacy-peer-deps
 
       - name: Change version
         if: ${{ env.VERSION != '0.0.0' }}

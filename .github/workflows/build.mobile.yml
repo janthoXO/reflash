@@ -2,6 +2,9 @@ name: Build Mobile App
 
 on:
   pull_request:
+    # Run for PRs targeting branches other than `main` (package handles PRs to main)
+    branches-ignore:
+      - main
     paths:
       - "mobile-app/**"
       - "shared/**"

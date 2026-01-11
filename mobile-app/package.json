@@ -62,8 +62,7 @@
     "react-native-web": "^0.21.0",
     "react-native-worklets": "0.5.1",
     "tailwind-merge": "^3.3.1",
-    "tailwindcss-animate": "^1.0.7",
-    "whatwg-fetch": "^3.6.20"
+    "tailwindcss-animate": "^1.0.7"
   },
   "devDependencies": {
     "@babel/core": "^7.26.0",
