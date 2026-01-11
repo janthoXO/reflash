@@ -3,7 +3,7 @@ name: Release Mobile App
 on:
   push:
     tags:
-      - 'v*'
+      - "v*"
     branches:
       - main
     paths:
@@ -32,7 +32,7 @@ jobs:
     with:
       version: ${{ needs.versioning.outputs.version }}
       android_build_apk: true
-      android_build_aab: true
+      android_build_aab: false # TODO: Set to true after play store was setup
     secrets: inherit
 
   release:
@@ -57,8 +57,8 @@ jobs:
           tag_name: v${{ needs.versioning.outputs.version }}
           name: v${{ needs.versioning.outputs.version }}
           files: |
-            dist/*.apk
-            dist/*.aab
+            dist/**/*.apk
+            dist/**/*.aab
           generate_release_notes: true
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

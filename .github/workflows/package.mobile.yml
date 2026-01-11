@@ -29,19 +29,21 @@ on:
     inputs:
       version:
         description: "Version of the app to build"
-        default: "0.0.0"
         required: false
         type: string
       android_build_apk:
         description: "Andoid build apk"
-        default: true
         required: false
         type: boolean
       android_build_aab:
         description: "Andoid build aab"
-        default: false
         required: false
         type: boolean
+
+env:
+  ANDROID_BUILD_APK: ${{ inputs.android_build_apk || true }}
+  ANDROID_BUILD_AAB: ${{ inputs.android_build_aab || false }}
+  VERSION: ${{ inputs.version || '0.0.0' }}
 
 jobs:
   package:
@@ -68,9 +70,9 @@ jobs:
         run: npm ci
 
       - name: Change version
-        if: ${{ inputs.version != '0.0.0' }}
+        if: ${{ env.VERSION != '0.0.0' }}
         working-directory: ./mobile-app
-        run: npm version ${{ inputs.version }} --no-git-tag-version
+        run: npm version ${{ env.VERSION }} --no-git-tag-version
 
       - name: Prebuild Android
         working-directory: ./mobile-app
@@ -88,30 +90,31 @@ jobs:
           echo "keyPassword=${{ secrets.ANDROID_KEY_PASSWORD }}" >> gradle.properties
 
       - name: Build Android APK
-        if: ${{ inputs.android_build_apk }}
+        if: ${{ env.ANDROID_BUILD_APK }}
         working-directory: ./mobile-app/android
         run: |
           chmod +x gradlew
           ./gradlew assembleRelease
 
       - name: Build Android AAB
-        if: ${{ inputs.android_build_aab }}
+        if: ${{ env.ANDROID_BUILD_AAB }}
         working-directory: ./mobile-app/android
         run: |
           chmod +x gradlew
           ./gradlew bundleRelease
 
-      - name: Move artifacts
-        working-directory: ./mobile-app
-        run: |
-          find android/app/build/outputs/apk/release -name "*.apk" -exec mv {} mobile-app-${{ inputs.version || '0.0.0' }}.apk \;
-          find android/app/build/outputs/bundle/release -name "*.aab" -exec mv {} mobile-app-${{ inputs.version || '0.0.0' }}.aab \;
-
-      - name: Upload Android artifacts
+      - name: Upload Android APK
+        if: ${{ env.ANDROID_BUILD_APK }}
         uses: actions/upload-artifact@v6
         with:
-          name: mobile-app-${{ inputs.version || '0.0.0' }}
-          path: |
-            mobile-app/mobile-app-${{ inputs.version || '0.0.0' }}.apk
-            mobile-app/mobile-app-${{ inputs.version || '0.0.0' }}.aab
+          name: mobile-app-${{ env.VERSION || '0.0.0' }}
+          path: mobile-app/android/app/build/outputs/apk/release/*.apk
+          if-no-files-found: error
+
+      - name: Upload Android AAB
+        if: ${{ env.ANDROID_BUILD_AAB }}
+        uses: actions/upload-artifact@v6
+        with:
+          name: mobile-app-${{ env.VERSION || '0.0.0' }}
+          path: mobile-app/android/app/build/outputs/bundle/release/*.aab
           if-no-files-found: error
