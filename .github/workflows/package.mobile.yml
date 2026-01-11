@@ -61,8 +61,6 @@ jobs:
         uses: actions/setup-node@v6
         with:
           node-version: 24
-          cache: "npm"
-          cache-dependency-path: package-lock.json
 
       - name: Setup Java
         uses: actions/setup-java@v5
@@ -71,9 +69,12 @@ jobs:
           java-version: "21"
 
       - name: Install dependencies
-        run: |
-          npm ci
-          cd mobile-app && npm install --legacy-peer-deps
+        run: npm ci
+
+      # fix for missing dependency in github runner
+      - name: Install whatwg-fetch
+        working-directory: ./mobile-app
+        run: npm install whatwg-fetch --save --legacy-peer-deps
 
       - name: Change version
         if: ${{ env.VERSION != '0.0.0' }}
