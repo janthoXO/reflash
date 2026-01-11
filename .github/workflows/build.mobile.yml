@@ -9,6 +9,7 @@ on:
       - "mobile-app/**"
       - "shared/**"
       - ".github/workflows/build.mobile.yml"
+  workflow_call:
 
 jobs:
   build:
