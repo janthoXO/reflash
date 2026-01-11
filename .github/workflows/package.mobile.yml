@@ -1,6 +1,23 @@
 name: Package Mobile App
 
 on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: "Version of the app to build"
+        default: "0.0.0"
+        required: false
+        type: string
+      android_build_apk:
+        description: "Andoid build apk"
+        default: true
+        required: false
+        type: boolean
+      android_build_aab:
+        description: "Andoid build aab"
+        default: false
+        required: false
+        type: boolean
   pull_request:
     branches:
       - main
@@ -15,6 +32,16 @@ on:
         default: "0.0.0"
         required: false
         type: string
+      android_build_apk:
+        description: "Andoid build apk"
+        default: true
+        required: false
+        type: boolean
+      android_build_aab:
+        description: "Andoid build aab"
+        default: false
+        required: false
+        type: boolean
 
 jobs:
   package:
@@ -60,11 +87,19 @@ jobs:
           echo "storePassword=${{ secrets.ANDROID_STORE_PASSWORD }}" >> gradle.properties
           echo "keyPassword=${{ secrets.ANDROID_KEY_PASSWORD }}" >> gradle.properties
 
-      - name: Build Android artifacts
+      - name: Build Android APK
+        if: ${{ inputs.android_build_apk }}
         working-directory: ./mobile-app/android
         run: |
           chmod +x gradlew
-          ./gradlew assembleRelease bundleRelease
+          ./gradlew assembleRelease
+
+      - name: Build Android AAB
+        if: ${{ inputs.android_build_aab }}
+        working-directory: ./mobile-app/android
+        run: |
+          chmod +x gradlew
+          ./gradlew bundleRelease
 
       - name: Move artifacts
         working-directory: ./mobile-app

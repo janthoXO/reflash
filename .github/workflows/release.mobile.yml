@@ -31,6 +31,8 @@ jobs:
     uses: ./.github/workflows/package.mobile.yml
     with:
       version: ${{ needs.versioning.outputs.version }}
+      android_build_apk: true
+      android_build_aab: true
     secrets: inherit
 
   release:
