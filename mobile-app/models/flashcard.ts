@@ -1,4 +1,4 @@
-import type z from "zod";
+import z from "zod";
 import { FlashcardDTOSchema } from "../dtos/flashcard";
 
 export const FlashcardSchema = FlashcardDTOSchema;

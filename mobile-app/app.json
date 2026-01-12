@@ -27,7 +27,7 @@
         "foregroundImage": "./assets/images/adaptive-icon.png",
         "backgroundColor": "#ffffff"
       },
-      "permissions": ["android.permission.CAMERA", "android.permission.CAMERA"],
+      "permissions": ["android.permission.CAMERA"],
       "package": "com.dennis.jandow.reflashapp"
     },
     "web": {

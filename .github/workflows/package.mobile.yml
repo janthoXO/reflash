@@ -1,75 +1,90 @@
 name: Package Mobile App
 
 on:
-  pull_request:
-    branches:
-      - main
-    paths:
-      - "mobile-app/**"
-      - "shared/**"
-      - ".github/workflows/package.mobile.yml"
-  workflow_call:
+  workflow_dispatch:
     inputs:
       version:
         description: "Version of the app to build"
         default: "0.0.0"
         required: false
         type: string
-    secrets:
-      EXPO_TOKEN:
-        description: "Expo access token for EAS Build"
+      android_build_apk:
+        description: "Andoid build apk"
+        default: true
         required: false
-      ANDROID_KEYSTORE_BASE64:
-        description: "Base64 encoded keystore for Android signing"
+        type: boolean
+      android_build_aab:
+        description: "Andoid build aab"
+        default: false
         required: false
-      ANDROID_KEY_ALIAS:
-        description: "Alias for the Android signing key"
+        type: boolean
+  pull_request:
+    branches:
+      - main
+    paths:
+      - "mobile-app/**"
+      - ".github/workflows/package.mobile.yml"
+  workflow_call:
+    inputs:
+      version:
+        description: "Version of the app to build"
         required: false
-      ANDROID_KEY_PASSWORD:
-        description: "Password for the Android signing key"
+        type: string
+      android_build_apk:
+        description: "Andoid build apk"
         required: false
-      ANDROID_STORE_PASSWORD:
-        description: "Password for the Android keystore"
+        type: boolean
+      android_build_aab:
+        description: "Andoid build aab"
         required: false
+        type: boolean
+
+env:
+  ANDROID_BUILD_APK: ${{ inputs.android_build_apk || true }}
+  ANDROID_BUILD_AAB: ${{ inputs.android_build_aab || false }}
+  VERSION: ${{ inputs.version || '0.0.0' }}
 
 jobs:
+  build:
+    uses: ./.github/workflows/build.mobile.yml
+
   package:
+    needs: build
     runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ./mobile-app
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
 
       - name: Setup Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v6
         with:
-          node-version: 20
+          node-version: 24
           cache: "npm"
-          cache-dependency-path: package-lock.json
+          cache-dependency-path: mobile-app/package-lock.json
 
       - name: Setup Java
-        uses: actions/setup-java@v4
+        uses: actions/setup-java@v5
         with:
-          distribution: "zulu"
-          java-version: "17"
-          cache: 'gradle'
+          distribution: "temurin"
+          java-version: "21"
 
       - name: Install dependencies
         run: npm ci
 
       - name: Change version
-        if: ${{ inputs.version != '0.0.0' }}
-        working-directory: ./mobile-app
-        run: npm version ${{ inputs.version }} --no-git-tag-version
+        if: ${{ env.VERSION != '0.0.0' }}
+        run: npm version ${{ env.VERSION }} --no-git-tag-version
 
       - name: Prebuild Android
-        working-directory: ./mobile-app
         env:
           EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
         run: npx expo prebuild --platform android
 
       - name: Configure Keystore
-        if: ${{ secrets.ANDROID_KEYSTORE_BASE64 != '' }}
         working-directory: ./mobile-app/android
         run: |
           echo "${{ secrets.ANDROID_KEYSTORE_BASE64 }}" | base64 --decode > app/release.keystore
@@ -78,23 +93,32 @@ jobs:
           echo "storePassword=${{ secrets.ANDROID_STORE_PASSWORD }}" >> gradle.properties
           echo "keyPassword=${{ secrets.ANDROID_KEY_PASSWORD }}" >> gradle.properties
 
-      - name: Build Android artifacts
+      - name: Build Android APK
+        if: ${{ env.ANDROID_BUILD_APK == 'true' }}
         working-directory: ./mobile-app/android
         run: |
           chmod +x gradlew
-          ./gradlew assembleRelease bundleRelease
+          ./gradlew assembleRelease
 
-      - name: Move artifacts
-        working-directory: ./mobile-app
+      - name: Build Android AAB
+        if: ${{ env.ANDROID_BUILD_AAB == 'true' }}
+        working-directory: ./mobile-app/android
         run: |
-          find android/app/build/outputs/apk/release -name "*.apk" -exec mv {} mobile-app-${{ inputs.version || '0.0.0' }}.apk \;
-          find android/app/build/outputs/bundle/release -name "*.aab" -exec mv {} mobile-app-${{ inputs.version || '0.0.0' }}.aab \;
+          chmod +x gradlew
+          ./gradlew bundleRelease
 
-      - name: Upload Android artifacts
-        uses: actions/upload-artifact@v4
+      - name: Upload Android APK
+        if: ${{ env.ANDROID_BUILD_APK == 'true' }}
+        uses: actions/upload-artifact@v6
         with:
-          name: mobile-app-${{ inputs.version || '0.0.0' }}
-          path: |
-            mobile-app/mobile-app-${{ inputs.version || '0.0.0' }}.apk
-            mobile-app/mobile-app-${{ inputs.version || '0.0.0' }}.aab
+          name: mobile-app-${{ env.VERSION || '0.0.0' }}-apk
+          path: mobile-app/android/app/build/outputs/apk/release/*.apk
+          if-no-files-found: error
+
+      - name: Upload Android AAB
+        if: ${{ env.ANDROID_BUILD_AAB == 'true' }}
+        uses: actions/upload-artifact@v6
+        with:
+          name: mobile-app-${{ env.VERSION || '0.0.0' }}-aab
+          path: mobile-app/android/app/build/outputs/bundle/release/*.aab
           if-no-files-found: error

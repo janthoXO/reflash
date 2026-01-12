@@ -1,20 +1,28 @@
 name: Package Extension
 
 on:
-  pull_request:
-    branches:
-      - main
-    paths:
-      - "browser-extension/**"
-      - "shared/**"
-      - ".github/workflows/package.extension.yml"
-  workflow_call:
+  workflow_dispatch:
     inputs:
       version:
         description: "Version of the plugin to build"
         default: "0.0.0"
         required: false
         type: string
+  pull_request:
+    branches:
+      - main
+    paths:
+      - "browser-extension/**"
+      - ".github/workflows/package.extension.yml"
+  workflow_call:
+    inputs:
+      version:
+        description: "Version of the plugin to build"
+        required: false
+        type: string
+  
+env:
+  VERSION: ${{ inputs.version || '0.0.0' }}
 
 jobs:
   build:
@@ -25,34 +33,36 @@ jobs:
   package:
     needs: build
     runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ./browser-extension
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
 
       - name: Setup Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v6
         with:
-          node-version: 20
+          node-version: 24
           cache: "npm"
-          cache-dependency-path: package-lock.json
+          cache-dependency-path: browser-extension/package-lock.json
 
       - name: Install dependencies
         run: npm ci
 
       - name: Download build artifact
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v7
         with:
           name: build-artifact
           path: browser-extension/build
 
       - name: Package extension
-        working-directory: ./browser-extension
         run: npm run package
 
       - name: Upload artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         with:
-          name: extension-${{ inputs.version || '0.0.0' }}
+          name: extension-${{ env.VERSION }}
           path: browser-extension/build/**/*.zip
           if-no-files-found: error

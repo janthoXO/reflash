@@ -1,4 +1,3 @@
-import type { Course } from "@reflash/shared";
 import { useEffect, useState } from "react";
 import { useSearchParams } from "react-router-dom";
 import { toast } from "sonner";
@@ -8,14 +7,15 @@ import { QRCodeSVG } from "qrcode.react";
 import { Button } from "~components/ui/button";
 import { UR, UrFountainEncoder } from "@ngraveio/bc-ur";
 import { Ban, Play } from "lucide-react";
+import { CourseDTO } from "~dtos/course";
 
 export default function SyncPage() {
   const [searchParams] = useSearchParams();
   const mode = searchParams.get("mode");
   const { selectedUnitsMap } = useSelected();
 
-  // use shared model here to have proper dto
-  const [populatedCourses, setPopulatedCourses] = useState<Course[]>([]);
+  // use dto model here to have proper syncing with app
+  const [populatedCourses, setPopulatedCourses] = useState<CourseDTO[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
   const [qrCodeValue, setQrCodeValue] = useState("");
