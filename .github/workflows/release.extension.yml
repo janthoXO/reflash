@@ -9,6 +9,9 @@ on:
     paths:
       - "browser-extension/**"
       - ".github/workflows/release.extension.yml"
+      - ".github/workflows/package.extension.yml"
+      - ".github/workflows/build.extension.yml"
+      - ".github/actions/determine-version/action.yml"
 
 jobs:
   versioning:

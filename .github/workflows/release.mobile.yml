@@ -9,6 +9,9 @@ on:
     paths:
       - "mobile-app/**"
       - ".github/workflows/release.mobile.yml"
+      - ".github/workflows/package.mobile.yml"
+      - ".github/workflows/build.mobile.yml"
+      - ".github/actions/determine-version/action.yml"
 
 jobs:
   versioning:

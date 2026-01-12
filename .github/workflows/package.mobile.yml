@@ -24,6 +24,7 @@ on:
     paths:
       - "mobile-app/**"
       - ".github/workflows/package.mobile.yml"
+      - ".github/workflows/build.mobile.yml"
   workflow_call:
     inputs:
       version:

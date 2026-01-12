@@ -14,6 +14,8 @@ on:
     paths:
       - "browser-extension/**"
       - ".github/workflows/package.extension.yml"
+      - ".github/workflows/build.extension.yml"
+
   workflow_call:
     inputs:
       version:
