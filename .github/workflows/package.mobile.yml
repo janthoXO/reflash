@@ -5,7 +5,7 @@ on:
     inputs:
       version:
         description: "Version of the app to build"
-        default: "0.0.0"
+        default: "0.0.1"
         required: false
         type: string
       android_build_apk:
@@ -42,7 +42,7 @@ on:
 env:
   ANDROID_BUILD_APK: ${{ inputs.android_build_apk || true }}
   ANDROID_BUILD_AAB: ${{ inputs.android_build_aab || false }}
-  VERSION: ${{ inputs.version || '0.0.0' }}
+  VERSION: ${{ inputs.version || '0.0.1' }}
 
 jobs:
   build:
@@ -76,7 +76,7 @@ jobs:
         run: npm ci
 
       - name: Change version
-        if: ${{ env.VERSION != '0.0.0' }}
+        if: ${{ env.VERSION != '0.0.1' }}
         run: npm version ${{ env.VERSION }} --no-git-tag-version
 
       - name: Prebuild Android
@@ -111,7 +111,7 @@ jobs:
         if: ${{ env.ANDROID_BUILD_APK == 'true' }}
         uses: actions/upload-artifact@v6
         with:
-          name: mobile-app-${{ env.VERSION || '0.0.0' }}-apk
+          name: mobile-app-${{ env.VERSION }}-apk
           path: mobile-app/android/app/build/outputs/apk/release/*.apk
           if-no-files-found: error
 
@@ -119,6 +119,6 @@ jobs:
         if: ${{ env.ANDROID_BUILD_AAB == 'true' }}
         uses: actions/upload-artifact@v6
         with:
-          name: mobile-app-${{ env.VERSION || '0.0.0' }}-aab
+          name: mobile-app-${{ env.VERSION }}-aab
           path: mobile-app/android/app/build/outputs/bundle/release/*.aab
           if-no-files-found: error

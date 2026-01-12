@@ -5,7 +5,7 @@ on:
     inputs:
       version:
         description: "Version of the plugin to build"
-        default: "0.0.0"
+        default: "0.0.1"
         required: false
         type: string
   pull_request:
@@ -22,7 +22,7 @@ on:
         type: string
   
 env:
-  VERSION: ${{ inputs.version || '0.0.0' }}
+  VERSION: ${{ inputs.version || '0.0.1' }}
 
 jobs:
   build:

@@ -16,7 +16,7 @@ on:
         type: string
   
 env:
-  VERSION: ${{ inputs.version || '0.0.0' }}
+  VERSION: ${{ inputs.version || '0.0.1' }}
 
 jobs:
   build:
@@ -40,7 +40,7 @@ jobs:
         run: npm ci
 
       - name: Change version
-        if: ${{ env.VERSION != '0.0.0' }}
+        if: ${{ env.VERSION != '0.0.1' }}
         run: npm version ${{ env.VERSION }} --no-git-tag-version
 
       - name: Check formatting
