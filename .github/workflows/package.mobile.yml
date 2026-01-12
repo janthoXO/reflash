@@ -94,31 +94,31 @@ jobs:
           echo "keyPassword=${{ secrets.ANDROID_KEY_PASSWORD }}" >> gradle.properties
 
       - name: Build Android APK
-        if: ${{ env.ANDROID_BUILD_APK }}
+        if: ${{ env.ANDROID_BUILD_APK == 'true' }}
         working-directory: ./mobile-app/android
         run: |
           chmod +x gradlew
           ./gradlew assembleRelease
 
       - name: Build Android AAB
-        if: ${{ env.ANDROID_BUILD_AAB }}
+        if: ${{ env.ANDROID_BUILD_AAB == 'true' }}
         working-directory: ./mobile-app/android
         run: |
           chmod +x gradlew
           ./gradlew bundleRelease
 
       - name: Upload Android APK
-        if: ${{ env.ANDROID_BUILD_APK }}
+        if: ${{ env.ANDROID_BUILD_APK == 'true' }}
         uses: actions/upload-artifact@v6
         with:
-          name: mobile-app-${{ env.VERSION || '0.0.0' }}
+          name: mobile-app-${{ env.VERSION || '0.0.0' }}-apk
           path: mobile-app/android/app/build/outputs/apk/release/*.apk
           if-no-files-found: error
 
       - name: Upload Android AAB
-        if: ${{ env.ANDROID_BUILD_AAB }}
+        if: ${{ env.ANDROID_BUILD_AAB == 'true' }}
         uses: actions/upload-artifact@v6
         with:
-          name: mobile-app-${{ env.VERSION || '0.0.0' }}
+          name: mobile-app-${{ env.VERSION || '0.0.0' }}-aab
           path: mobile-app/android/app/build/outputs/bundle/release/*.aab
           if-no-files-found: error

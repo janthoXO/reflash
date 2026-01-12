@@ -47,7 +47,7 @@ jobs:
       - name: Download artifact
         uses: actions/download-artifact@v7
         with:
-          name: mobile-app-${{ needs.versioning.outputs.version }}
+          pattern: mobile-app-${{ needs.versioning.outputs.version }}-{apk,aab}
           path: dist
 
       - name: Create Release
