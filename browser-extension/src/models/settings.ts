@@ -10,9 +10,16 @@ export enum LLMProvider {
 
 export const OLLAMA_DEFAULT_URL = "http://localhost:11434";
 
+// Phi-3.5-vision-instruct-q4f16_1-MLC
+
+// Phi-3.5-vision-instruct-q0f16-MLC
+
 export enum LLMModel {
   // WASM Models
   QWEN = "Qwen3-0.6B-q4f16_1-MLC",
+  PHI = "Phi-3.5-vision-instruct-q4f32_1-MLC",
+  GEMMA = "Gemma-3-1b-it-q4f16_1-MLC",
+
   // OpenAI Models
   GPT_5_2 = "gpt-5.2",
   GPT_5 = "gpt-5",
@@ -35,7 +42,7 @@ export enum LLMModel {
 }
 
 export const ProvidersToModels: Record<LLMProvider, LLMModel[]> = {
-  [LLMProvider.WASM]: [LLMModel.QWEN],
+  [LLMProvider.WASM]: [LLMModel.GEMMA],
   [LLMProvider.OPENAI]: [
     LLMModel.GPT_5_2,
     LLMModel.GPT_5,

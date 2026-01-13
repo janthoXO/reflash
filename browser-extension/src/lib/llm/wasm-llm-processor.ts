@@ -1,4 +1,4 @@
-import { CreateMLCEngine, MLCEngine } from "@mlc-ai/web-llm";
+import { CreateMLCEngine, MLCEngine, modelVersion, modelLibURLPrefix } from "@mlc-ai/web-llm";
 import { sendToBackground } from "@plasmohq/messaging";
 import z from "zod";
 import { parsePDF } from "~lib/pdf";
@@ -31,7 +31,8 @@ async function flashcardGenerationTaskInput(
       flashcards = FlashcardLLMOutputSchema.parse(
         await generateJsonWasm(
           data.systemPrompt,
-          ` ${data.customPrompt}\n\nfileContent:\n${data.fileContent}`,
+          //` ${data.customPrompt}\n\nfileContent:\n${data.fileContent}`,
+          ` ${data.customPrompt}\n\nGenerate flashcards for the following PDF:\n\n--- DOCUMENT START ---\n${data.fileContent}\n--- DOCUMENT END ---\n`,
           data.llmModel,
           JSON.stringify(z.toJSONSchema(FlashcardLLMOutputSchema))
         )
@@ -78,24 +79,26 @@ const WasmQueue: WorkerQueue<FlashcardGenerationTaskInput> = new WorkerQueue(
 async function loadModel(model: string): Promise<MLCEngine> {
   return CreateMLCEngine(model, {
     appConfig: {
-      model_list: [{
-      model: "https://huggingface.co/mlc-ai/Qwen3-0.6B-q4f16_1-MLC",
-      model_id: "Qwen3-0.6B-q4f16_1-MLC",
-      model_lib:
-        "https://raw.githubusercontent.com/mlc-ai/binary-mlc-llm-libs/main/web-llm-models/" +
-        "v0_2_80" +
-        "/Qwen3-0.6B-q4f16_1-ctx4k_cs1k-webgpu.wasm",
-      vram_required_MB: 1924.98,
-      low_resource_required: true,
-      overrides: {
-        context_window_size: -1,
-        sliding_window_size: 4096,
-        attention_sink_size: 0,
-      }}]
+      model_list: [
+        {
+          model: "https://huggingface.co/mlc-ai/gemma-3-1b-it-q4f16_1-MLC",
+          model_id: "Gemma-3-1b-it-q4f16_1-MLC",
+          model_lib: 
+          "https://raw.githubusercontent.com/mlc-ai/binary-mlc-llm-libs/main/web-llm-models/" +
+          "v0_2_80" +
+           "/gemma-3-1b-it-q4f16_1-ctx4k_cs1k-webgpu.wasm",
+          low_resource_required: true,
+          //required_features: ["shader-f16"],
+          overrides: {
+            context_window_size: 4096,
+          },
+        },
+      ],
     },
     initProgressCallback: (progress) => {
       console.debug("Model loading progress:", progress.text);
-    },
+    }
+    
   });
 }
 
@@ -136,18 +139,24 @@ async function generateJsonWasm(
 
   const _engine = await enginePromise;
 
+  _engine.resetChat();
+
   await _engine.chatCompletion({
     stream: false,
     messages: [
       {
+        role: "system",
+        content: systemPrompt,
+      },
+      {
         role: "user",
-        content: `${systemPrompt}\n\n${userPrompt}`,
+        content: userPrompt,
       },
     ],
     max_tokens: Infinity,
-    response_format: jsonSchema
-      ? { type: "json_object", schema: jsonSchema }
-      : { type: "json_object" },
+    // response_format: jsonSchema
+    //   ? { type: "json_object", schema: jsonSchema }
+    //   : { type: "json_object" },
   });
   const responseMessage = await _engine.getMessage();
 
